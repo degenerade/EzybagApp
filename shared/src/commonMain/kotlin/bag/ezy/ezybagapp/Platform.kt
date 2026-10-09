@@ -1,0 +1,7 @@
+package bag.ezy.ezybagapp
+
+interface Platform {
+    val name: String
+}
+
+expect fun getPlatform(): Platform
