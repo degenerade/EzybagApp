@@ -39,7 +39,7 @@ class AuthViewModel(
         run(onSuccess) { repo.signUp(state.name.trim(), state.email.trim(), state.password) }
     }
 
-    fun forgotPassword(onSuccess: () -> Unit) {
+    fun forgotPassword() {
         if (!state.email.isValidEmail()) {
             state = state.copy(error = "Enter your email first, then click Forgot password")
             return
