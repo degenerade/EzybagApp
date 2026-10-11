@@ -1,6 +1,7 @@
 package bag.ezy.ezybagapp
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -29,39 +32,43 @@ private data class BookingUiModel(
     val wasteType: String,
     val status: String,
     val date: String,
-    val isEmptyState: Boolean = false
+    val category: String
 )
 
 @Composable
 fun BookingsScreen() {
+
+    val selectedTab = remember {
+        mutableStateOf("Upcoming")
+    }
 
     val bookings = listOf(
         BookingUiModel(
             reference = "CC-10482",
             wasteType = "Mixed waste",
             status = "En route",
-            date = "2 Oct"
+            date = "2 Oct",
+            category = "Active"
         ),
         BookingUiModel(
             reference = "CC-10511",
             wasteType = "Garden waste",
             status = "Upcoming",
-            date = "13 Oct"
+            date = "13 Oct",
+            category = "Upcoming"
         ),
         BookingUiModel(
             reference = "CC-10274",
             wasteType = "Furniture",
             status = "Completed",
-            date = "18 Sep"
-        ),
-        BookingUiModel(
-            reference = "Cancelled",
-            wasteType = "No bookings",
-            status = "",
-            date = "",
-            isEmptyState = true
+            date = "18 Sep",
+            category = "Completed"
         )
     )
+
+    val visibleBookings = bookings.filter {
+        it.category == selectedTab.value
+    }
 
     Column(
         modifier = Modifier
@@ -77,13 +84,14 @@ fun BookingsScreen() {
         )
 
         Spacer(
-            modifier = Modifier.height(8.dp)
+            modifier = Modifier.height(12.dp)
         )
 
-        Text(
-            text = "Upcoming · Active · Completed",
-            fontSize = 14.sp,
-            color = Color.Gray
+        BookingTabs(
+            selectedTab = selectedTab.value,
+            onTabSelected = {
+                selectedTab.value = it
+            }
         )
 
         Spacer(
@@ -104,8 +112,13 @@ fun BookingsScreen() {
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(bookings) { booking ->
+
+            items(visibleBookings) { booking ->
                 BookingCard(booking)
+            }
+
+            item {
+                CancelledCard()
             }
         }
 
@@ -120,8 +133,61 @@ fun BookingsScreen() {
                 containerColor = Color(0xFF087A3D)
             )
         ) {
+            Text("Book another")
+        }
+    }
+}
+
+@Composable
+private fun BookingTabs(
+    selectedTab: String,
+    onTabSelected: (String) -> Unit
+) {
+
+    val tabs = listOf(
+        "Upcoming",
+        "Active",
+        "Completed"
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+
+        tabs.forEach { tab ->
+
+            val isSelected = tab == selectedTab
+
             Text(
-                text = "Book another"
+                text = tab,
+                fontSize = 13.sp,
+                fontWeight = if (isSelected) {
+                    FontWeight.SemiBold
+                } else {
+                    FontWeight.Normal
+                },
+                color = if (isSelected) {
+                    Color(0xFF087A3D)
+                } else {
+                    Color.Gray
+                },
+                modifier = Modifier
+                    .background(
+                        color = if (isSelected) {
+                            Color(0xFFE3F6E9)
+                        } else {
+                            Color.Transparent
+                        },
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .clickable {
+                        onTabSelected(tab)
+                    }
+                    .padding(
+                        horizontal = 12.dp,
+                        vertical = 8.dp
+                    )
             )
         }
     }
@@ -140,77 +206,85 @@ private fun BookingCard(
         )
     ) {
 
-        if (booking.isEmptyState) {
+        Column(
+            modifier = Modifier.padding(14.dp)
+        ) {
+
+            Text(
+                text = booking.reference,
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+
+            Spacer(
+                modifier = Modifier.height(6.dp)
+            )
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
 
                 Text(
-                    text = "Cancelled",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-
-                Text(
-                    text = "No bookings",
-                    fontSize = 14.sp,
+                    text = booking.wasteType,
                     fontWeight = FontWeight.SemiBold
                 )
-            }
-
-        } else {
-
-            Column(
-                modifier = Modifier.padding(14.dp)
-            ) {
 
                 Text(
-                    text = booking.reference,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-
-                Spacer(
-                    modifier = Modifier.height(6.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-
-                    Text(
-                        text = booking.wasteType,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Text(
-                        text = booking.date,
-                        fontSize = 13.sp
-                    )
-                }
-
-                Spacer(
-                    modifier = Modifier.height(6.dp)
-                )
-
-                Text(
-                    text = booking.status,
-                    fontSize = 13.sp,
-                    color = Color(0xFF087A3D),
-                    fontWeight = FontWeight.Medium
+                    text = booking.date,
+                    fontSize = 13.sp
                 )
             }
+
+            Spacer(
+                modifier = Modifier.height(6.dp)
+            )
+
+            Text(
+                text = booking.status,
+                fontSize = 13.sp,
+                color = Color(0xFF087A3D),
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
-    @androidx.compose.ui.tooling.preview.Preview
-    @Composable
-    fun BookingsScreenPreview() {
-        BookingsScreen()
 
+@Composable
+private fun CancelledCard() {
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFE3F6E9)
+        )
+    ) {
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Text(
+                text = "Cancelled",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+
+            Text(
+                text = "No bookings",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+fun BookingsScreenPreview() {
+    BookingsScreen()
 }
