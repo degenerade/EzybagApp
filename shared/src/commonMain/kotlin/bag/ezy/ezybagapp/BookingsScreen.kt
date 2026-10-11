@@ -39,7 +39,7 @@ private data class BookingUiModel(
 fun BookingsScreen() {
 
     val selectedTab = remember {
-        mutableStateOf("Upcoming")
+        mutableStateOf("All")
     }
 
     val bookings = listOf(
@@ -66,9 +66,21 @@ fun BookingsScreen() {
         )
     )
 
-    val visibleBookings = bookings.filter {
-        it.category == selectedTab.value
-    }
+    val visibleBookings =
+        if (selectedTab.value == "All") {
+            bookings
+        } else {
+            bookings.filter {
+                it.category == selectedTab.value
+            }
+        }
+
+    val bookingCountText =
+        if (visibleBookings.size == 1) {
+            "1 booking"
+        } else {
+            "${visibleBookings.size} bookings"
+        }
 
     Column(
         modifier = Modifier
@@ -99,7 +111,7 @@ fun BookingsScreen() {
         )
 
         Text(
-            text = "3 bookings",
+            text = bookingCountText,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium
         )
@@ -145,6 +157,7 @@ private fun BookingTabs(
 ) {
 
     val tabs = listOf(
+        "All",
         "Upcoming",
         "Active",
         "Completed"
@@ -185,7 +198,7 @@ private fun BookingTabs(
                         onTabSelected(tab)
                     }
                     .padding(
-                        horizontal = 12.dp,
+                        horizontal = 10.dp,
                         vertical = 8.dp
                     )
             )
