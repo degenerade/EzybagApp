@@ -17,31 +17,3 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
-
-# signing keys & secrets
-*.jks
-*.keystore
-*.p12
-*.pem
-keystore.properties
-secrets.properties
-.env
-.env.*
-
-# firebase config
-google-services.json
-GoogleService-Info.plist
-
-# build outputs that can end up outside build/
-*.apk
-*.aab
-*.ap_
-*.dex
-/release/
-*.hprof
-
-# sther editors / OS
-.vscode/
-.fleet/
-Thumbs.db
-desktop.ini
