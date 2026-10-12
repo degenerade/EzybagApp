@@ -20,6 +20,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -27,7 +28,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,34 +41,31 @@ import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
 
-private val AppBackground = Color(0xFF0D1718)
-private val CardBackground = Color(0xFF192A2D)
-private val FieldBackground = Color(0xFF101A1C)
-private val AccentGreen = Color(0xFF39B596)
-private val MainText = Color(0xFFE8F0EF)
-private val MutedText = Color(0xFF94A8AC)
-private val BorderColor = Color(0xFF2B4145)
-
 @Composable
-fun CreateJobScreen() {
-    var address by remember { mutableStateOf("") }
-    var postcode by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+fun CreateJobScreen(
+    onContinue: () -> Unit = {}
+) {
+    var address by rememberSaveable { mutableStateOf("") }
+    var postcode by rememberSaveable { mutableStateOf("") }
+    var phone by rememberSaveable { mutableStateOf("") }
+    var description by rememberSaveable { mutableStateOf("") }
 
-    var selectedWaste by remember {
+    var selectedWaste by rememberSaveable {
         mutableStateOf("Construction")
     }
 
-    var selectedVolume by remember {
+    var selectedVolume by rememberSaveable {
         mutableStateOf("Half van")
     }
 
-    var selectedFiles by remember {
-        mutableStateOf<List<String>>(emptyList())
+    // Save the selected filenames as a list of strings.
+    var selectedFiles by rememberSaveable {
+        mutableStateOf(emptyList<String>())
     }
 
-    var message by remember { mutableStateOf("") }
+    var message by rememberSaveable {
+        mutableStateOf("")
+    }
 
     val wasteTypes = listOf(
         "Household",
@@ -81,7 +79,6 @@ fun CreateJobScreen() {
 
     val volumes = listOf("Small", "Half van", "Full van")
 
-    // Opens the device's file picker for multiple photos/videos.
     val mediaPicker = rememberFilePickerLauncher(
         type = PickerType.File(
             extensions = listOf(
@@ -93,15 +90,16 @@ fun CreateJobScreen() {
         title = "Choose photos or videos"
     ) { files ->
         if (files != null) {
-            selectedFiles =
-                (selectedFiles + files.map { it.name }).distinct()
+            selectedFiles = (
+                    selectedFiles + files.map { it.name }
+                    ).distinct()
             message = ""
         }
     }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = AppBackground
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -111,7 +109,7 @@ fun CreateJobScreen() {
         ) {
             Text(
                 text = "EZY BAG",
-                color = AccentGreen,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 3.sp
@@ -124,11 +122,14 @@ fun CreateJobScreen() {
                     .fillMaxWidth()
                     .weight(1f)
                     .border(
-                        BorderStroke(2.dp, MainText),
+                        BorderStroke(
+                            2.dp,
+                            MaterialTheme.colorScheme.outline
+                        ),
                         RoundedCornerShape(28.dp)
                     )
                     .background(
-                        CardBackground,
+                        MaterialTheme.colorScheme.surface,
                         RoundedCornerShape(28.dp)
                     )
                     .verticalScroll(rememberScrollState())
@@ -137,7 +138,7 @@ fun CreateJobScreen() {
             ) {
                 Text(
                     text = "New booking",
-                    color = MainText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -146,7 +147,10 @@ fun CreateJobScreen() {
                     label = "Collection address",
                     placeholder = "Enter collection address",
                     value = address,
-                    onValueChange = { address = it }
+                    onValueChange = {
+                        address = it
+                        message = ""
+                    }
                 )
 
                 Row(
@@ -158,7 +162,10 @@ fun CreateJobScreen() {
                             label = "Postcode",
                             placeholder = "Enter postcode",
                             value = postcode,
-                            onValueChange = { postcode = it }
+                            onValueChange = {
+                                postcode = it
+                                message = ""
+                            }
                         )
                     }
 
@@ -167,7 +174,10 @@ fun CreateJobScreen() {
                             label = "Phone",
                             placeholder = "Phone number",
                             value = phone,
-                            onValueChange = { phone = it }
+                            onValueChange = {
+                                phone = it
+                                message = ""
+                            }
                         )
                     }
                 }
@@ -177,7 +187,7 @@ fun CreateJobScreen() {
                 ) {
                     Text(
                         text = "Waste type",
-                        color = MutedText,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp
                     )
 
@@ -189,7 +199,9 @@ fun CreateJobScreen() {
                                 SelectionChip(
                                     text = type,
                                     selected = selectedWaste == type,
-                                    onClick = { selectedWaste = type }
+                                    onClick = {
+                                        selectedWaste = type
+                                    }
                                 )
                             }
                         }
@@ -209,7 +221,7 @@ fun CreateJobScreen() {
                 ) {
                     Text(
                         text = "Estimated volume",
-                        color = MutedText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
 
@@ -220,7 +232,9 @@ fun CreateJobScreen() {
                             SelectionChip(
                                 text = volume,
                                 selected = selectedVolume == volume,
-                                onClick = { selectedVolume = volume }
+                                onClick = {
+                                    selectedVolume = volume
+                                }
                             )
                         }
                     }
@@ -235,9 +249,12 @@ fun CreateJobScreen() {
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, BorderColor),
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline
+                        ),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MainText
+                            contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {
                         Text("+ Add photos / videos")
@@ -251,7 +268,7 @@ fun CreateJobScreen() {
                             Text(
                                 text = fileName,
                                 modifier = Modifier.weight(1f),
-                                color = MutedText,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 12.sp
                             )
 
@@ -263,7 +280,7 @@ fun CreateJobScreen() {
                             ) {
                                 Text(
                                     text = "Remove",
-                                    color = AccentGreen
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -273,25 +290,32 @@ fun CreateJobScreen() {
                 if (message.isNotEmpty()) {
                     Text(
                         text = message,
-                        color = AccentGreen,
+                        color = MaterialTheme.colorScheme.error,
                         fontSize = 13.sp
                     )
                 }
 
                 Button(
                     onClick = {
-                        message = when {
-                            address.isBlank() ->
-                                "Please enter the collection address."
+                        when {
+                            address.isBlank() -> {
+                                message =
+                                    "Please enter the collection address."
+                            }
 
-                            postcode.isBlank() ->
-                                "Please enter the postcode."
+                            postcode.isBlank() -> {
+                                message = "Please enter the postcode."
+                            }
 
-                            phone.isBlank() ->
-                                "Please enter your phone number."
+                            phone.isBlank() -> {
+                                message =
+                                    "Please enter your phone number."
+                            }
 
-                            else ->
-                                "Your job details are ready for the next step."
+                            else -> {
+                                message = ""
+                                onContinue()
+                            }
                         }
                     },
                     modifier = Modifier
@@ -299,8 +323,8 @@ fun CreateJobScreen() {
                         .height(52.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AccentGreen,
-                        contentColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text(
@@ -326,7 +350,7 @@ private fun BookingField(
     ) {
         Text(
             text = label,
-            color = MutedText,
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 12.sp
         )
 
@@ -336,14 +360,14 @@ private fun BookingField(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    FieldBackground,
+                    MaterialTheme.colorScheme.surfaceVariant,
                     RoundedCornerShape(12.dp)
                 )
                 .padding(12.dp),
             singleLine = singleLine,
             maxLines = if (singleLine) 1 else 4,
             textStyle = TextStyle(
-                color = MainText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp
             ),
             decorationBox = { innerTextField ->
@@ -351,11 +375,10 @@ private fun BookingField(
                     if (value.isEmpty()) {
                         Text(
                             text = placeholder,
-                            color = MutedText,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp
                         )
                     }
-
                     innerTextField()
                 }
             }
@@ -374,15 +397,23 @@ private fun SelectionChip(
         shape = CircleShape,
         border = BorderStroke(
             1.dp,
-            if (selected) AccentGreen else BorderColor
+            if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outline
+            }
         ),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = if (selected) {
-                AccentGreen.copy(alpha = 0.12f)
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             } else {
                 Color.Transparent
             },
-            contentColor = if (selected) AccentGreen else MainText
+            contentColor = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
         )
     ) {
         Text(
