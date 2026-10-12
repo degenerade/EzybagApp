@@ -1,3 +1,11 @@
 package bag.ezy.ezybagapp.model.data
+import kotlinx.serialization.Serializable
 
-data class customers()
+@Serializable
+data class Customer(
+    val customerId: String = "",
+    val fullName: String = "",
+    val email: String = "",
+    val phone: String = "",
+    val createdAt: String = ""
+)
