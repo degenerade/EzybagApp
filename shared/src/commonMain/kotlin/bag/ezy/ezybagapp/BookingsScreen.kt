@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 
 private data class BookingUiModel(
     val reference: String,
@@ -47,7 +48,7 @@ fun BookingsScreen() {
             reference = "CC-10482",
             wasteType = "Mixed waste",
             status = "En route",
-            date = "2 Oct",
+            date = "Fri 2 Oct",
             category = "Active"
         ),
         BookingUiModel(
@@ -85,14 +86,15 @@ fun BookingsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(20.dp)
     ) {
 
         Text(
             text = "Bookings",
             fontSize = 28.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(
@@ -113,7 +115,8 @@ fun BookingsScreen() {
         Text(
             text = bookingCountText,
             fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(
@@ -142,7 +145,8 @@ fun BookingsScreen() {
             onClick = { },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF087A3D)
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
             Text("Book another")
@@ -181,18 +185,18 @@ private fun BookingTabs(
                     FontWeight.Normal
                 },
                 color = if (isSelected) {
-                    Color(0xFF087A3D)
+                    MaterialTheme.colorScheme.primary
                 } else {
-                    Color.Gray
+                    MaterialTheme.colorScheme.onSurfaceVariant
                 },
                 modifier = Modifier
                     .background(
                         color = if (isSelected) {
-                            Color(0xFFE3F6E9)
+                            MaterialTheme.colorScheme.primaryContainer
                         } else {
                             Color.Transparent
                         },
-                        shape = RoundedCornerShape(10.dp)
+                        shape = MaterialTheme.shapes.small
                     )
                     .clickable {
                         onTabSelected(tab)
@@ -213,9 +217,9 @@ private fun BookingCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFE3F6E9)
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
 
@@ -226,7 +230,7 @@ private fun BookingCard(
             Text(
                 text = booking.reference,
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(
@@ -240,12 +244,14 @@ private fun BookingCard(
 
                 Text(
                     text = booking.wasteType,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Text(
                     text = booking.date,
-                    fontSize = 13.sp
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -256,7 +262,7 @@ private fun BookingCard(
             Text(
                 text = booking.status,
                 fontSize = 13.sp,
-                color = Color(0xFF087A3D),
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -268,9 +274,9 @@ private fun CancelledCard() {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFE3F6E9)
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
 
@@ -284,13 +290,14 @@ private fun CancelledCard() {
             Text(
                 text = "Cancelled",
                 fontSize = 14.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
                 text = "No bookings",
                 fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
     }
@@ -299,5 +306,7 @@ private fun CancelledCard() {
 @androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun BookingsScreenPreview() {
-    BookingsScreen()
+    ClearawayTheme {
+        BookingsScreen()
+    }
 }
