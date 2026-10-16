@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp.feature.newbooking_tmp
+package bag.ezy.ezybagapp.feature.newbooking
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
