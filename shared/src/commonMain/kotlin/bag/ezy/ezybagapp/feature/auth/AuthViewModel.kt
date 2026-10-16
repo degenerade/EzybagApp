@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.model.repository.AuthRepository
-import bag.ezy.ezybagapp.model.repository.FakeAuthRepository
 import kotlinx.coroutines.launch
 
 data class AuthUiState(
