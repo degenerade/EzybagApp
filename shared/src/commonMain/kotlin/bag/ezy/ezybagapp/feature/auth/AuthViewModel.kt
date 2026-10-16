@@ -1,6 +1,8 @@
 package bag.ezy.ezybagapp.feature.auth
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bag.ezy.ezybagapp.di.AppContainer
@@ -19,7 +21,7 @@ data class AuthUiState(
 )
 
 class AuthViewModel(
-    private val repo: AppContainer.authRepository
+    private val repo: AuthRepository = AppContainer.authRepository
 ) : ViewModel() {
     var state by mutableStateOf(AuthUiState())
         private set
