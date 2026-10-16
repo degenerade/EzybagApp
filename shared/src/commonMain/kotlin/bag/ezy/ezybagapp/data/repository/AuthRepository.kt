@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp.auth
+package bag.ezy.ezybagapp.data.repository
 
 import kotlinx.coroutines.delay
 

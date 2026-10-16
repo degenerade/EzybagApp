@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.newBooking
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -34,10 +33,8 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -111,7 +108,7 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                     )
                     .background(
                         MaterialTheme.colorScheme.surface,
-                        RoundedCornerShape(28.dp)
+                        androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
                     )
                     .padding(18.dp)
             ) {
@@ -185,7 +182,7 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                             .border(
                                 1.dp,
                                 MaterialTheme.colorScheme.outline,
-                                RoundedCornerShape(22.dp)
+                                androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
                             )
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -244,11 +241,11 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                             .border(
                                 1.5.dp,
                                 MaterialTheme.colorScheme.primary,
-                                RoundedCornerShape(22.dp)
+                                androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
                             )
                             .background(
                                 MaterialTheme.colorScheme.primaryContainer,
-                                RoundedCornerShape(22.dp)
+                                androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
                             )
                             .padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -287,7 +284,7 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(58.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                         border = BorderStroke(
                             1.dp,
                             MaterialTheme.colorScheme.outline
@@ -312,7 +309,7 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(66.dp),
-                    shape = RoundedCornerShape(18.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
@@ -391,11 +388,11 @@ private fun PickerField(
             .border(
                 1.dp,
                 MaterialTheme.colorScheme.outline,
-                RoundedCornerShape(14.dp)
+                androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
             )
             .background(
                 MaterialTheme.colorScheme.surfaceVariant,
-                RoundedCornerShape(14.dp)
+                androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
             )
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -433,11 +430,11 @@ private fun ScheduleTextField(
             .border(
                 1.dp,
                 MaterialTheme.colorScheme.outline,
-                RoundedCornerShape(14.dp)
+                androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
             )
             .background(
                 MaterialTheme.colorScheme.surfaceVariant,
-                RoundedCornerShape(14.dp)
+                androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
             )
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)

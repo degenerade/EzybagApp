@@ -7,9 +7,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import bag.ezy.ezybagapp.auth.AuthViewModel
-import bag.ezy.ezybagapp.auth.SignInScreen
-import bag.ezy.ezybagapp.auth.SignUpScreen
+import bag.ezy.ezybagapp.feature.auth.AuthViewModel
+import bag.ezy.ezybagapp.feature.auth.SignInScreen
+import bag.ezy.ezybagapp.feature.auth.SignUpScreen
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 
 enum class Screen { SignIn, SignUp, Home }

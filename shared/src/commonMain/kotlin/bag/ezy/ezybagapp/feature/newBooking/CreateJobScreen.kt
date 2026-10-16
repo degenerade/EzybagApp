@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.newBooking
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -26,10 +25,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +37,8 @@ import androidx.compose.ui.unit.sp
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
+import kotlin.collections.minus
+import kotlin.collections.plus
 
 @Composable
 fun CreateJobScreen(
@@ -130,7 +129,7 @@ fun CreateJobScreen(
                     )
                     .background(
                         MaterialTheme.colorScheme.surface,
-                        RoundedCornerShape(28.dp)
+                        androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
                     )
                     .verticalScroll(rememberScrollState())
                     .padding(18.dp),
@@ -248,7 +247,7 @@ fun CreateJobScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                         border = BorderStroke(
                             1.dp,
                             MaterialTheme.colorScheme.outline
@@ -321,7 +320,7 @@ fun CreateJobScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
@@ -361,7 +360,7 @@ private fun BookingField(
                 .fillMaxWidth()
                 .background(
                     MaterialTheme.colorScheme.surfaceVariant,
-                    RoundedCornerShape(12.dp)
+                    androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
                 )
                 .padding(12.dp),
             singleLine = singleLine,

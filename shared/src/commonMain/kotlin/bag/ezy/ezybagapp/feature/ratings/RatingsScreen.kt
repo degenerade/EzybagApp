@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.ratings
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -24,10 +23,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -85,7 +82,7 @@ fun RatingsScreen() {
                     )
                     .background(
                         RatingCardBackground,
-                        RoundedCornerShape(28.dp)
+                        androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
                     )
                     .verticalScroll(rememberScrollState())
                     .padding(18.dp),
@@ -110,7 +107,7 @@ fun RatingsScreen() {
                         .fillMaxWidth()
                         .background(
                             RatingFieldBackground,
-                            RoundedCornerShape(12.dp)
+                            androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
                         )
                         .padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -215,7 +212,7 @@ fun RatingsScreen() {
                             .fillMaxWidth()
                             .background(
                                 RatingFieldBackground,
-                                RoundedCornerShape(12.dp)
+                                androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
                             )
                             .padding(12.dp),
                         singleLine = false,
@@ -266,7 +263,7 @@ fun RatingsScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = RatingAccentGreen,
                         contentColor = Color.White
@@ -286,7 +283,7 @@ fun RatingsScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     border = BorderStroke(
                         1.dp,
                         RatingIssueColor
