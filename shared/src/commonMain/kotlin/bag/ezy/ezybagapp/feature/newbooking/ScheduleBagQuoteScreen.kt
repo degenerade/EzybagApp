@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,56 +35,70 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import kotlinx.datetime.LocalDate
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
-    wasteType: String = "Construction",
-    volume: String = "Half van",
-    onRequestQuote: () -> Unit = {},
-    onPaySecurely: () -> Unit = {}
+fun ScheduleBagQuoteScreen(
+    vm: NewBookingViewModel,
+    onBack: () -> Unit,
+    onBooked: (bookingId: String) -> Unit
+) {
+    NewBookingScheduleContent(
+        state = vm.state,
+        onBack = onBack,
+        onDateSelected = vm::onDateSelected,
+        onTimeSelected = vm::onTimeSelected,
+        onAccessInfoChange = vm::onAccessInfoChange,
+        onInstructionsChange = vm::onInstructionChange,
+        onNeedsBagChange = vm::onNeedsBagChange,
+        onBagSizeChange = vm::onBagSizeChange,
+        onRequestQuote = vm::requestQuote,
+        onPay = { vm.pay(onBooked) },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NewBookingScheduleContent(
+    state: NewBookingState,
+    onBack: () -> Unit,
+    onDateSelected: (Long?) -> Unit,
+    onTimeSelected: (hour: Int, minute: Int) -> Unit,
+    onAccessInfoChange: (String) -> Unit,
+    onInstructionsChange: (String) -> Unit,
+    onNeedsBagChange: (Boolean) -> Unit,
+    onBagSizeChange: (String) -> Unit,
+    onRequestQuote: () -> Unit,
+    onPay: () -> Unit,
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    var accessInfo by remember {
-        mutableStateOf("Side gate, code 1234")
-    }
-
-    var specialInstructions by remember {
-        mutableStateOf("Call on arrival")
-    }
-
-    var needsBag by remember { mutableStateOf(true) }
-    var bagSize by remember { mutableStateOf("Medium") }
-
-    val datePickerState = rememberDatePickerState()
-
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = state.dateMillis)
     val timePickerState = rememberTimePickerState(
-        initialHour = 9,
-        initialMinute = 0,
+        initialHour = state.hour,
+        initialMinute = state.minute,
         is24Hour = false
     )
 
-    val selectedDateText = datePickerState.selectedDateMillis
-        ?.let { formatBookingDate(it) }
-        ?: "Choose date"
-
-    val selectedTimeText = formatBookingTime(
-        timePickerState.hour,
-        timePickerState.minute
-    )
+    val selectedDateText = state.dateMillis?.let { formatBookingDate(it) } ?: "Choose date"
+    val selectedTimeText = formatBookingTime(state.hour, state.minute)
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -93,17 +109,12 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                 .fillMaxSize()
                 .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {
-
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .border(
-                        BorderStroke(
-                            2.dp,
-                            MaterialTheme.colorScheme.outline
-                        ),
+                        BorderStroke(2.dp, MaterialTheme.colorScheme.outline),
                         RoundedCornerShape(28.dp)
                     )
                     .background(
@@ -161,16 +172,16 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                     // Access information
                     ScheduleTextField(
                         label = "Access information",
-                        value = accessInfo,
-                        onValueChange = { accessInfo = it },
+                        value = state.accessInfo,
+                        onValueChange = onAccessInfoChange,
                         placeholder = "Gate, door code, or access details"
                     )
 
                     // Special instructions
                     ScheduleTextField(
                         label = "Special instructions",
-                        value = specialInstructions,
-                        onValueChange = { specialInstructions = it },
+                        value = state.specialInstructions,
+                        onValueChange = onInstructionsChange,
                         placeholder = "Instructions for the contractor",
                         singleLine = false
                     )
@@ -204,19 +215,19 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                             ) {
                                 BagOption(
                                     text = "Yes",
-                                    selected = needsBag,
-                                    onClick = { needsBag = true }
+                                    selected = state.needsBag,
+                                    onClick = { onNeedsBagChange(true) }
                                 )
 
                                 BagOption(
                                     text = "No",
-                                    selected = !needsBag,
-                                    onClick = { needsBag = false }
+                                    selected = !state.needsBag,
+                                    onClick = { onNeedsBagChange(false) }
                                 )
                             }
                         }
 
-                        if (needsBag) {
+                        if (state.needsBag) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -225,8 +236,8 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                                     Box(modifier = Modifier.weight(1f)) {
                                         BagOption(
                                             text = size,
-                                            selected = bagSize == size,
-                                            onClick = { bagSize = size }
+                                            selected = state.bagSize == size,
+                                            onClick = { onBagSizeChange(size) }
                                         )
                                     }
                                 }
@@ -257,21 +268,21 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                         )
 
                         Text(
-                            text = "£145",
+                            text = state.estimate?.let { "£${it.toInt()}" } ?: "-",
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             fontSize = 38.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
 
                         Text(
-                            text = "$volume · ${wasteType.lowercase()} waste",
+                            text = "${state.volume} · ${state.wasteType.lowercase()} waste",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 16.sp
                         )
 
-                        if (needsBag) {
+                        if (state.needsBag) {
                             Text(
-                                text = "$bagSize bag selected",
+                                text = "${state.bagSize} bag selected",
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 fontSize = 14.sp
                             )
@@ -281,9 +292,8 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                     // Request final quote
                     OutlinedButton(
                         onClick = onRequestQuote,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(58.dp),
+                        enabled = !state.quoteRequested,
+                        modifier = Modifier.fillMaxWidth().height(58.dp),
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                         border = BorderStroke(
                             1.dp,
@@ -294,18 +304,28 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                         )
                     ) {
                         Text(
-                            text = "Request a final quote",
+                            text = if (state.quoteRequested) "Final quote requested" else "Request a final quote",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
 
+                state.error?.let { msg ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = msg,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 13.sp
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Pay button stays at the bottom
                 Button(
-                    onClick = onPaySecurely,
+                    onClick = onPay,
+                    enabled = !state.isSubmitting,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(66.dp),
@@ -315,11 +335,19 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
-                    Text(
-                        text = "Pay securely",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (state.isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(
+                            text = "Pay securely",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -330,18 +358,15 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                TextButton(
-                    onClick = { showDatePicker = false }
-                ) {
-                    Text("Confirm")
-                }
+                TextButton(onClick = {
+                    onDateSelected(datePickerState.selectedDateMillis)
+                    showDatePicker = false
+                }) { Text("Confirm") }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showDatePicker = false }
-                ) {
-                    Text("Cancel")
-                }
+                ) { Text("Cancel") }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -352,25 +377,18 @@ fun ScheduleBagQuoteScreen(onBack: () -> Unit = {},
     if (showTimePicker) {
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
-            title = {
-                Text("Select collection time")
-            },
-            text = {
-                TimePicker(state = timePickerState)
-            },
+            title = { Text("Select collection time") },
+            text = { TimePicker(state = timePickerState) },
             confirmButton = {
-                TextButton(
-                    onClick = { showTimePicker = false }
-                ) {
-                    Text("Confirm")
-                }
+                TextButton(onClick = {
+                    onTimeSelected(timePickerState.hour, timePickerState.minute)
+                    showTimePicker = false
+                }) { Text("Confirm") }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showTimePicker = false }
-                ) {
-                    Text("Cancel")
-                }
+                ) { Text("Cancel") }
             }
         )
     }
@@ -532,7 +550,7 @@ private fun formatBookingDate(epochMillis: Long): String {
     )
 
     return "${days[date.dayOfWeek.ordinal]} " +
-            "${date.dayOfMonth} ${months[date.month.ordinal]}"
+            "${date.day} ${months[date.month.ordinal]}"
 }
 
 private fun formatBookingTime(hour: Int, minute: Int): String {
@@ -545,4 +563,47 @@ private fun formatBookingTime(hour: Int, minute: Int): String {
     val period = if (hour < 12) "AM" else "PM"
 
     return "$displayHour:$displayMinute $period"
+}
+
+@Preview
+@Composable
+private fun NewBookingScheduleEmptyPreview() {
+    ClearawayTheme {
+        NewBookingScheduleContent(
+            NewBookingState(estimate = 145.0),
+            {},
+            {},
+            { _, _ -> },
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun NewBookingScheduleFilledPreview() {
+    ClearawayTheme {
+        NewBookingScheduleContent(
+            NewBookingState(
+                wasteType = "Furniture", volume = "Small", estimate = 70.0,
+                dateMillis = 1792627200000, hour = 14, minute = 30,
+                needsBag = false, quoteRequested = true,
+                error = "Please choose a collection date."
+            ),
+            {},
+            {},
+            { _, _ -> },
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+        )
+    }
 }
