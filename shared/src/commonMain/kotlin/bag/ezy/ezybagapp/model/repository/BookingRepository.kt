@@ -8,7 +8,7 @@ import kotlinx.coroutines.delay
 interface BookingRepository {
     suspend fun getBookings(customerId: String): Result<List<Booking>>
     suspend fun getEstimate(wasteType: String, volume: String): Double
-    suspend fun createBooking(booking: Booking): Result<String>
+    suspend fun newBooking(booking: Booking): Result<String>
     suspend fun requestFinalQuote(booking: Booking): Result<Unit>
 }
 
@@ -36,7 +36,7 @@ class FakeBookingRepository : BookingRepository {
         else -> 0.0
     }
 
-    override suspend fun createBooking(booking: Booking): Result<String> {
+    override suspend fun newBooking(booking: Booking): Result<String> {
         delay(800)
         val id = "CC-" + (10600..19999).random()
         bookings.add(0, booking.copy(bookingId = id, status = "Upcoming"))
