@@ -1,49 +1,49 @@
 package bag.ezy.ezybagapp
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
+import androidx.lifecycle.viewmodel.compose.viewModel
+import bag.ezy.ezybagapp.auth.AuthViewModel
+import bag.ezy.ezybagapp.auth.SignInScreen
+import bag.ezy.ezybagapp.auth.SignUpScreen
+import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 
-import ezybagapp.shared.generated.resources.Res
-import ezybagapp.shared.generated.resources.compose_multiplatform
+enum class Screen { SignIn, SignUp, Home }
 
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+    ClearawayTheme {
+        var screen by rememberSaveable { mutableStateOf(Screen.SignIn) }
+        val authVm = viewModel { AuthViewModel() }
+
+        when (screen) {
+            Screen.SignIn -> SignInScreen(
+                vm = authVm,
+                onSignedIn = { screen = Screen.Home },
+                onCreateAccount = { authVm.clearMessage(); screen = Screen.SignUp },
+            )
+            Screen.SignUp -> SignUpScreen(
+                vm = authVm,
+                onSignedUp = { screen = Screen.Home },
+                onBackToSignIn = { authVm.clearMessage(); screen = Screen.SignIn },
+            )
+            Screen.Home -> HomePlaceholder(onSignOut = { screen = Screen.SignIn })
         }
+    }
+}
+
+@Composable
+private fun HomePlaceholder(onSignOut: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().safeContentPadding(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("Signed in! Booking screen goes here.")
+        Button(onClick = onSignOut) { Text("Sign out") }
     }
 }
