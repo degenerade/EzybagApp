@@ -1,17 +1,37 @@
-package bag.ezy.ezybagapp.auth
+package bag.ezy.ezybagapp.feature.auth
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,16 +64,24 @@ fun SignInScreen(
         OutlinedTextField(
             value = s.email, onValueChange = vm::onEmailChange,
             label = { Text("Email") }, singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
             value = s.password, onValueChange = vm::onPasswordChange,
             label = { Text("Password") }, singleLine = true,
             visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
             trailingIcon = {
-                TextButton(onClick = { showPassword = !showPassword }) { Text(if (showPassword) "Hide" else "Show") }
+                TextButton(onClick = {
+                    showPassword = !showPassword
+                }) { Text(if (showPassword) "Hide" else "Show") }
             },
             modifier = Modifier.fillMaxWidth(),
         )
@@ -71,7 +99,11 @@ fun SignInScreen(
             shape = MaterialTheme.shapes.small,
             modifier = Modifier.fillMaxWidth().height(48.dp),
         ) {
-            if (s.isLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+            if (s.isLoading) CircularProgressIndicator(
+                Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
             else Text("Sign in")
         }
         OutlinedButton(
@@ -86,8 +118,16 @@ fun SignInScreen(
             modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { /* TODO: Google via Firebase */ }, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f)) { Text("Google") }
-            OutlinedButton(onClick = { /* TODO: Apple via Firebase*/ }, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f)) { Text("Apple") }
+            OutlinedButton(
+                onClick = { /* TODO: Google via Firebase */ },
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.weight(1f)
+            ) { Text("Google") }
+            OutlinedButton(
+                onClick = { /* TODO: Apple via Firebase*/ },
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.weight(1f)
+            ) { Text("Apple") }
         }
     }
 }

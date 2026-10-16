@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.newbooking
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -26,77 +25,64 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
 
+private val wasteTypes = listOf("Household", "garden", "Construction", "Furniture", "Electrical", "Mixed", "Other")
+private val volumes = listOf("Small", "Half van", "Full van")
+
 @Composable
-fun CreateJobScreen(
-    onContinue: () -> Unit = {}
+fun NewBookingDetailsScreen(
+    vm: NewBookingViewModel,
+    onContinue: () -> Unit
 ) {
-    var address by rememberSaveable { mutableStateOf("") }
-    var postcode by rememberSaveable { mutableStateOf("") }
-    var phone by rememberSaveable { mutableStateOf("") }
-    var description by rememberSaveable { mutableStateOf("") }
-
-    var selectedWaste by rememberSaveable {
-        mutableStateOf("Construction")
-    }
-
-    var selectedVolume by rememberSaveable {
-        mutableStateOf("Half van")
-    }
-
-    // Save the selected filenames as a list of strings.
-    var selectedFiles by rememberSaveable {
-        mutableStateOf(emptyList<String>())
-    }
-
-    var message by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    val wasteTypes = listOf(
-        "Household",
-        "Garden",
-        "Construction",
-        "Furniture",
-        "Electrical",
-        "Mixed",
-        "Other"
-    )
-
-    val volumes = listOf("Small", "Half van", "Full van")
-
     val mediaPicker = rememberFilePickerLauncher(
         type = PickerType.File(
-            extensions = listOf(
-                "jpg", "jpeg", "png", "webp", "heic",
-                "mp4", "mov", "m4v", "webm", "avi"
-            )
+            extensions = listOf("jpg", "jpeg", "png", "webp", "heic", "mp4", "mov", "m4v", "webm", "avi")
         ),
         mode = PickerMode.Multiple(),
         title = "Choose photos or videos"
     ) { files ->
-        if (files != null) {
-            selectedFiles = (
-                    selectedFiles + files.map { it.name }
-                    ).distinct()
-            message = ""
-        }
+        if (files != null) vm.onFilesPicked(files.map { it.name })
+        // todo: keep actual files (not just names) when uploading to firebase
     }
+    NewBookingDetailsContent(
+        state = vm.state,
+        onAddressChange = vm::onAddressChange,
+        onPostcodeChange = vm::onPostcodeChange,
+        onPhoneChange = vm::onPhoneChange,
+        onWasteTypeSelected = vm::onWasteTypeSelected,
+        onDescriptionChange = vm::onDescriptionChange,
+        onVolumeSelected = vm::onVolumeSelected,
+        onAddMediaClick = { mediaPicker.launch() },
+        onFileRemoved = vm::onFileRemoved,
+        onContinue = { vm.continueFromDetails(onValid = onContinue) },
+    )
+}
 
+@Composable
+fun NewBookingDetailsContent(
+    state: NewBookingState,
+    onAddressChange: (String) -> Unit,
+    onPostcodeChange: (String) -> Unit,
+    onPhoneChange: (String) -> Unit,
+    onWasteTypeSelected: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onVolumeSelected: (String) -> Unit,
+    onAddMediaClick: () -> Unit,
+    onFileRemoved: (String) -> Unit,
+    onContinue: () -> Unit,
+) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -121,16 +107,14 @@ fun CreateJobScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .border(
-                        BorderStroke(
-                            2.dp,
-                            MaterialTheme.colorScheme.outline
-                        ),
+                    .border(BorderStroke(
+                        2.dp,
+                        MaterialTheme.colorScheme.outline),
                         RoundedCornerShape(28.dp)
                     )
                     .background(
                         MaterialTheme.colorScheme.surface,
-                        RoundedCornerShape(28.dp)
+                        androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
                     )
                     .verticalScroll(rememberScrollState())
                     .padding(18.dp),
@@ -146,11 +130,8 @@ fun CreateJobScreen(
                 BookingField(
                     label = "Collection address",
                     placeholder = "Enter collection address",
-                    value = address,
-                    onValueChange = {
-                        address = it
-                        message = ""
-                    }
+                    value = state.address,
+                    onValueChange = onAddressChange
                 )
 
                 Row(
@@ -161,11 +142,8 @@ fun CreateJobScreen(
                         BookingField(
                             label = "Postcode",
                             placeholder = "Enter postcode",
-                            value = postcode,
-                            onValueChange = {
-                                postcode = it
-                                message = ""
-                            }
+                            value = state.postcode,
+                            onValueChange = onPostcodeChange
                         )
                     }
 
@@ -173,11 +151,8 @@ fun CreateJobScreen(
                         BookingField(
                             label = "Phone",
                             placeholder = "Phone number",
-                            value = phone,
-                            onValueChange = {
-                                phone = it
-                                message = ""
-                            }
+                            value = state.phone,
+                            onValueChange = onPhoneChange
                         )
                     }
                 }
@@ -198,10 +173,8 @@ fun CreateJobScreen(
                             rowTypes.forEach { type ->
                                 SelectionChip(
                                     text = type,
-                                    selected = selectedWaste == type,
-                                    onClick = {
-                                        selectedWaste = type
-                                    }
+                                    selected = state.wasteType == type,
+                                    onClick = { onWasteTypeSelected(type) }
                                 )
                             }
                         }
@@ -211,8 +184,8 @@ fun CreateJobScreen(
                 BookingField(
                     label = "Description",
                     placeholder = "Describe the waste",
-                    value = description,
-                    onValueChange = { description = it },
+                    value = state.description,
+                    onValueChange = onDescriptionChange,
                     singleLine = false
                 )
 
@@ -231,10 +204,8 @@ fun CreateJobScreen(
                         volumes.forEach { volume ->
                             SelectionChip(
                                 text = volume,
-                                selected = selectedVolume == volume,
-                                onClick = {
-                                    selectedVolume = volume
-                                }
+                                selected = state.volume == volume,
+                                onClick = { onVolumeSelected(volume) }
                             )
                         }
                     }
@@ -244,11 +215,11 @@ fun CreateJobScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
-                        onClick = { mediaPicker.launch() },
+                        onClick = onAddMediaClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                         border = BorderStroke(
                             1.dp,
                             MaterialTheme.colorScheme.outline
@@ -260,7 +231,7 @@ fun CreateJobScreen(
                         Text("+ Add photos / videos")
                     }
 
-                    selectedFiles.forEach { fileName ->
+                    state.mediaFileNames.forEach { fileName ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -272,12 +243,7 @@ fun CreateJobScreen(
                                 fontSize = 12.sp
                             )
 
-                            TextButton(
-                                onClick = {
-                                    selectedFiles =
-                                        selectedFiles - fileName
-                                }
-                            ) {
+                            TextButton(onClick = { onFileRemoved(fileName) }) {
                                 Text(
                                     text = "Remove",
                                     color = MaterialTheme.colorScheme.primary
@@ -287,50 +253,24 @@ fun CreateJobScreen(
                     }
                 }
 
-                if (message.isNotEmpty()) {
+                state.error?.let { msg ->
                     Text(
-                        text = message,
+                        text = msg,
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 13.sp
                     )
                 }
 
                 Button(
-                    onClick = {
-                        when {
-                            address.isBlank() -> {
-                                message =
-                                    "Please enter the collection address."
-                            }
-
-                            postcode.isBlank() -> {
-                                message = "Please enter the postcode."
-                            }
-
-                            phone.isBlank() -> {
-                                message =
-                                    "Please enter your phone number."
-                            }
-
-                            else -> {
-                                message = ""
-                                onContinue()
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    onClick = onContinue,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
-                    Text(
-                        text = "Continue",
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "Continue", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -361,7 +301,7 @@ private fun BookingField(
                 .fillMaxWidth()
                 .background(
                     MaterialTheme.colorScheme.surfaceVariant,
-                    RoundedCornerShape(12.dp)
+                    androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
                 )
                 .padding(12.dp),
             singleLine = singleLine,
@@ -419,6 +359,48 @@ private fun SelectionChip(
         Text(
             text = text,
             fontSize = 12.sp
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun NewBookingDetailsEmptyPreview() {
+    ClearawayTheme {
+        NewBookingDetailsContent(
+            NewBookingState(),
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {})
+    }
+}
+
+@Preview
+@Composable
+private fun NewBookingDetailsFilledPreview() {
+    ClearawayTheme {
+        NewBookingDetailsContent(
+            NewBookingState(
+                address = "12 Elm Road", postcode = "M1 4BT", wasteType = "Furniture",
+                description = "Old sofa and two chairs", volume = "Small",
+                mediaFileNames = listOf("sofa.jpg", "chairs.jpg"),
+                error = "Please enter your phone number."
+            ),
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
         )
     }
 }

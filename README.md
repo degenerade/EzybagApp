@@ -70,3 +70,10 @@ Implemented the initial customer-facing Create Job screen using Kotlin and Compo
 - Selected filenames are displayed locally; media is not uploaded to a backend yet.
 - The Continue button validates the required fields but does not navigate to another screen yet.
 - Booking submission, data persistence, pricing, and payment integration remain future work.
+
+### Naming
+- The customer-facing thing is a Booking.
+- The flow to make one is NewBooking (feature/newbooking).
+- “Job” is only used as UI text in the contractor app.
+- Feature packages are lowercase nouns.
+- Actions are verbs (createBooking, submitReview)
