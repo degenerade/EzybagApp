@@ -3,8 +3,8 @@ package bag.ezy.ezybagapp.feature.auth
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import bag.ezy.ezybagapp.data.repository.AuthRepository
-import bag.ezy.ezybagapp.data.repository.FakeAuthRepository
+import bag.ezy.ezybagapp.model.repository.AuthRepository
+import bag.ezy.ezybagapp.model.repository.FakeAuthRepository
 import kotlinx.coroutines.launch
 
 data class AuthUiState(
