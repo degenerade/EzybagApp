@@ -62,7 +62,7 @@ class NewBookingViewModel (
         val error = when {
             state.address.isBlank() -> "Please enter the collection address."
             state.postcode.isBlank() -> "Please enter the postcode."
-            state.phone.isBlank() -> "Please enter a phone number."
+            state.phone.isBlank() -> "Please enter your phone number."
             else -> null
         }
         if (error != null) {
@@ -75,7 +75,7 @@ class NewBookingViewModel (
         }
     }
 
-    fun onDataSelected(millis: Long?) { state = state.copy(dateMillis = millis, error = null) }
+    fun onDateSelected(millis: Long?) { state = state.copy(dateMillis = millis, error = null) }
     fun onTimeSelected(hour: Int, minute: Int) { state = state.copy(hour = hour, minute = minute) }
     fun onAccessInfoChange(v: String) { state = state.copy(accessInfo = v) }
     fun onInstructionChange(v: String) { state = state.copy(specialInstructions = v) }
@@ -97,7 +97,7 @@ class NewBookingViewModel (
         }
         viewModelScope.launch {
             state = state.copy(isSubmitting = true, error = null)
-            repo.newBooking(toBooking())
+            repo.createBooking(toBooking())
                 .onSuccess { id -> state = state.copy(isSubmitting = false); onBooked(id) }
                 .onFailure { state = state.copy(isSubmitting = false, error = it.message ?: "Booking failed") }
         }
