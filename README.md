@@ -41,3 +41,32 @@ Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-mu
 We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
 If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
 
+---
+
+## Customer Create Job Screen
+
+### Overview
+
+Implemented the initial customer-facing Create Job screen using Kotlin and Compose Multiplatform.
+
+### Features
+
+- Collection address, postcode, and phone number fields.
+- Selectable waste categories: Household, Garden, Construction, Furniture, Electrical, Mixed, and Other.
+- Estimated waste volume selection.
+- Multiple photo and video file selection using the device file picker.
+- Ability to remove selected files.
+- Basic validation for required address, postcode, and phone fields.
+- Dark teal interface with green accents.
+
+### Dependency Added
+
+- **FileKit Compose — `io.github.vinceglb:filekit-compose:0.8.8`**
+  - Added to `shared/build.gradle.kts` under `commonMain.dependencies`.
+  - Used to open the device file picker and select multiple photos or videos.
+
+### Current Limitations
+
+- Selected filenames are displayed locally; media is not uploaded to a backend yet.
+- The Continue button validates the required fields but does not navigate to another screen yet.
+- Booking submission, data persistence, pricing, and payment integration remain future work.
