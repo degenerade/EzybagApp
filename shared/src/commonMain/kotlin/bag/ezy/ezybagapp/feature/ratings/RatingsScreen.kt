@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,15 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 
-private val RatingAppBackground = Color(0xFF0D1718)
-private val RatingCardBackground = Color(0xFF192A2D)
-private val RatingFieldBackground = Color(0xFF101A1C)
-private val RatingAccentGreen = Color(0xFF39B596)
-private val RatingMainText = Color(0xFFE8F0EF)
-private val RatingMutedText = Color(0xFF94A8AC)
-private val RatingBorderColor = Color(0xFF2B4145)
-private val RatingIssueColor = Color(0xFFE58A79)
+private val RatingAccentGreen = Color(0xFF1E6F5C)
+private val RatingIssueColor = Color(0xFFC4472F)
 
 @Composable
 fun RatingsScreen(
@@ -58,7 +53,7 @@ fun RatingsScreen(
         onRatingSelected = vm::onRatingSelected,
         onCommentChange = vm::onCommentChange,
         onSubmit = vm::submit,
-        onReportIssue = onReportIssue,
+        onReportIssue = onReportIssue
     )
 }
 
@@ -68,94 +63,91 @@ fun RatingsContent(
     onRatingSelected: (Int) -> Unit,
     onCommentChange: (String) -> Unit,
     onSubmit: () -> Unit,
-    onReportIssue: () -> Unit,
+    onReportIssue: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
+    val cardShape = RoundedCornerShape(24.dp)
+    val fieldShape = RoundedCornerShape(12.dp)
+
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = RatingAppBackground
+        color = colors.background
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "EZYBAG",
-                color = RatingAccentGreen,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 3.sp
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .background(colors.surface, cardShape)
                     .border(
-                        BorderStroke(2.dp, RatingMainText),
-                        RoundedCornerShape(28.dp)
-                    )
-                    .background(
-                        RatingCardBackground,
-                        androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+                        BorderStroke(1.dp, colors.outline),
+                        cardShape
                     )
                     .verticalScroll(rememberScrollState())
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
                 Text(
                     text = "Rate your contractor",
-                    color = RatingMainText,
+                    color = colors.onSurface,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
+
                 Text(
-                    text = "How was your waste removal service?",
-                    color = RatingMutedText,
+                    text = "How was the service?",
+                    color = colors.onSurfaceVariant,
                     fontSize = 14.sp
                 )
 
+                // Completed job information.
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            RatingFieldBackground,
-                            RoundedCornerShape(12.dp)
+                        .background(colors.background, fieldShape)
+                        .border(
+                            BorderStroke(1.dp, colors.outline),
+                            fieldShape
                         )
                         .padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "Completed job",
+                        text = "COMPLETED JOB",
                         color = RatingAccentGreen,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
 
                     Text(
                         text = "Your contractor",
-                        color = RatingMainText,
+                        color = colors.onSurface,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
 
                     Text(
                         text = "Share your experience with this contractor.",
-                        color = RatingMutedText,
+                        color = colors.onSurfaceVariant,
                         fontSize = 12.sp
                     )
                 }
 
-                // Star rating section.
+                // Five selectable rating stars.
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
                         text = "Your rating",
-                        color = RatingMutedText,
-                        fontSize = 13.sp
+                        color = colors.onSurface,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
                     )
 
                     Row(
@@ -163,17 +155,22 @@ fun RatingsContent(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Creates five clickable stars.
                         repeat(5) { index ->
                             val starNumber = index + 1
                             val filled = starNumber <= state.rating
 
                             Text(
                                 text = if (filled) "★" else "☆",
-                                color = if (filled) RatingAccentGreen else RatingMutedText,
+                                color = if (filled) {
+                                    Color(0xFFE8A33D)
+                                } else {
+                                    colors.onSurfaceVariant
+                                },
                                 fontSize = 38.sp,
                                 modifier = Modifier
-                                    .clickable(enabled = !state.submitted) {
+                                    .clickable(
+                                        enabled = !state.submitted
+                                    ) {
                                         onRatingSelected(starNumber)
                                     }
                                     .padding(horizontal = 5.dp)
@@ -190,19 +187,20 @@ fun RatingsContent(
                             5 -> "5 stars - Excellent"
                             else -> "Tap a star to rate the service"
                         },
-                        color = RatingMutedText,
+                        color = colors.onSurfaceVariant,
                         fontSize = 13.sp
                     )
                 }
 
-                // Review comment section.
+                // Review comment input.
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
                         text = "Write a review",
-                        color = RatingMutedText,
-                        fontSize = 13.sp
+                        color = colors.onSurface,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
                     )
 
                     BasicTextField(
@@ -211,15 +209,16 @@ fun RatingsContent(
                         enabled = !state.submitted,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(
-                                RatingFieldBackground,
-                                RoundedCornerShape(12.dp)
+                            .background(colors.background, fieldShape)
+                            .border(
+                                BorderStroke(1.dp, colors.outline),
+                                fieldShape
                             )
-                            .padding(12.dp),
+                            .padding(14.dp),
                         singleLine = false,
                         maxLines = 5,
                         textStyle = TextStyle(
-                            color = RatingMainText,
+                            color = colors.onSurface,
                             fontSize = 14.sp
                         ),
                         decorationBox = { innerTextField ->
@@ -227,21 +226,26 @@ fun RatingsContent(
                                 if (state.comment.isEmpty()) {
                                     Text(
                                         text = "Describe your experience...",
-                                        color = RatingMutedText,
+                                        color = colors.onSurfaceVariant,
                                         fontSize = 13.sp
                                     )
                                 }
+
                                 innerTextField()
                             }
                         }
                     )
                 }
 
-                // Feedback message.
-                state.message?.let { msg ->
+                // Success, validation, or error message.
+                state.message?.let { message ->
                     Text(
-                        text = msg,
-                        color = if (state.isError) RatingIssueColor else RatingAccentGreen,
+                        text = message,
+                        color = if (state.isError) {
+                            RatingIssueColor
+                        } else {
+                            RatingAccentGreen
+                        },
                         fontSize = 13.sp
                     )
                 }
@@ -267,22 +271,24 @@ fun RatingsContent(
                         )
                     } else {
                         Text(
-                            text = if (state.submitted) "Review submitted" else "Submit review",
+                            text = if (state.submitted) {
+                                "Review submitted"
+                            } else {
+                                "Submit review"
+                            },
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
 
+                // Report issue button.
                 OutlinedButton(
                     onClick = onReportIssue,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(
-                        1.dp,
-                        RatingIssueColor
-                    ),
+                    border = BorderStroke(1.dp, RatingIssueColor),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = RatingIssueColor
                     )
@@ -297,43 +303,56 @@ fun RatingsContent(
     }
 }
 
+// Preview: empty review.
 @Preview
 @Composable
 private fun RatingsEmptyPreview() {
-    RatingsContent(
-        RatingsUiState(),
-        {},
-        {},
-        {},
-        {}
-    )
+    ClearawayTheme {
+        RatingsContent(
+            state = RatingsUiState(),
+            onRatingSelected = {},
+            onCommentChange = {},
+            onSubmit = {},
+            onReportIssue = {}
+        )
+    }
 }
 
+// Preview: validation error.
 @Preview
 @Composable
 private fun RatingsErrorPreview() {
-    RatingsContent(
-        RatingsUiState(rating = 4, message = "Please write a review comment.", isError = true),
-        {},
-        {},
-        {},
-        {}
-    )
+    ClearawayTheme {
+        RatingsContent(
+            state = RatingsUiState(
+                rating = 4,
+                message = "Please write a review comment.",
+                isError = true
+            ),
+            onRatingSelected = {},
+            onCommentChange = {},
+            onSubmit = {},
+            onReportIssue = {}
+        )
+    }
 }
 
+// Preview: successfully submitted review.
 @Preview
 @Composable
 private fun RatingsSubmittedPreview() {
-    RatingsContent(
-        RatingsUiState(
-            rating = 5,
-            comment = "Quick, tidy and on time.",
-            submitted = true,
-            message = "Thanks for your review!"
-        ),
-        {},
-        {},
-        {},
-        {}
-    )
+    ClearawayTheme {
+        RatingsContent(
+            state = RatingsUiState(
+                rating = 5,
+                comment = "Quick, tidy and on time.",
+                submitted = true,
+                message = "Thanks for your review!"
+            ),
+            onRatingSelected = {},
+            onCommentChange = {},
+            onSubmit = {},
+            onReportIssue = {}
+        )
+    }
 }
