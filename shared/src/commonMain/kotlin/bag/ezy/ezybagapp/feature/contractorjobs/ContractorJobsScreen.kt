@@ -1,6 +1,7 @@
 package bag.ezy.ezybagapp.feature.contractorjobs
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,6 +45,7 @@ fun ContractorJobsContent(
     state: ContractorJobsUiState,
     onOpenJob: (String) -> Unit
 ) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -65,7 +66,9 @@ fun ContractorJobsContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(
+            modifier = Modifier.height(24.dp)
+        )
 
         Text(
             text = "${state.nearbyCount} nearby opportunities",
@@ -74,7 +77,9 @@ fun ContractorJobsContent(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
 
         Text(
             text = "List / map · ${state.area} · all waste types",
@@ -82,13 +87,17 @@ fun ContractorJobsContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(
+            modifier = Modifier.height(24.dp)
+        )
 
         MapPlaceholder(
             radiusMiles = state.radiusMiles
         )
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(
+            modifier = Modifier.height(28.dp)
+        )
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -97,24 +106,45 @@ fun ContractorJobsContent(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         ) {
+
             Column(
-                modifier = Modifier.padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                modifier = Modifier.padding(12.dp)
             ) {
-                state.jobs.forEach { job ->
-                    JobRow(job)
+
+                state.jobs.forEachIndexed { index, job ->
+
+                    JobRow(
+                        job = job,
+                        onClick = {
+                            onOpenJob(job.reference)
+                        }
+                    )
+
+                    if (index < state.jobs.lastIndex) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.outline
+                                )
+                        )
+                    }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(
+            modifier = Modifier.weight(1f)
+        )
 
         Button(
             onClick = {
-                state.nearestJob?.let {
-                    onOpenJob(it.reference)
+                state.nearestJob?.let { job ->
+                    onOpenJob(job.reference)
                 }
-            }
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Open nearest job")
         }
@@ -125,16 +155,18 @@ fun ContractorJobsContent(
 private fun MapPlaceholder(
     radiusMiles: Int
 ) {
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(170.dp)
             .background(
                 color = MaterialTheme.colorScheme.primaryContainer,
-                shape = RoundedCornerShape(14.dp)
+                shape = MaterialTheme.shapes.medium
             ),
         contentAlignment = Alignment.Center
     ) {
+
         Text(
             text = "Map / route preview",
             color = MaterialTheme.colorScheme.primary,
@@ -145,9 +177,10 @@ private fun MapPlaceholder(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(12.dp),
-            shape = RoundedCornerShape(20.dp),
+            shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.surface
         ) {
+
             Text(
                 text = "Live route · $radiusMiles min away",
                 modifier = Modifier.padding(
@@ -163,35 +196,48 @@ private fun MapPlaceholder(
 
 @Composable
 private fun JobRow(
-    job: ContractorJobUiModel
+    job: ContractorJobUiModel,
+    onClick: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onClick()
+            }
+            .padding(
+                horizontal = 10.dp,
+                vertical = 12.dp
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+
+        Column {
+
             Text(
                 text = "${job.reference} · ${job.time}",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
+
             Text(
-                text = job.price,
-                fontSize = 13.sp,
+                text = "${job.wasteType} · ${job.distanceMiles} mi",
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
 
-        Spacer(modifier = Modifier.height(5.dp))
-
         Text(
-            text = "${job.wasteType} · ${job.distanceMiles} mi",
+            text = job.price,
             fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
     }
@@ -203,18 +249,18 @@ private val previewState = ContractorJobsUiState(
     area = "South London",
     jobs = listOf(
         ContractorJobUiModel(
-            "CC-10518",
-            "Today 16:00",
-            "Furniture",
-            6.1,
-            "£88.40"
+            reference = "CC-10518",
+            time = "Today 16:00",
+            wasteType = "Furniture",
+            distanceMiles = 6.1,
+            price = "£88.40"
         ),
         ContractorJobUiModel(
-            "CC-10522",
-            "Tomorrow 09:00",
-            "Construction",
-            10.4,
-            "£144.70"
+            reference = "CC-10522",
+            time = "Tomorrow 09:00",
+            wasteType = "Construction",
+            distanceMiles = 10.4,
+            price = "£144.70"
         )
     )
 )
