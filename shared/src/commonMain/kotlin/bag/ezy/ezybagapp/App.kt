@@ -30,8 +30,9 @@ import bag.ezy.ezybagapp.feature.newbooking.NewBookingViewModel
 import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
 import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.feature.admin.AdminDashboardScreen
 
-enum class Screen { DevMenu, SignIn, SignUp, Home, Bookings, NewBookingDetails, NewBookingSchedule, Ratings}
+enum class Screen { DevMenu, SignIn, SignUp, Home, Bookings, NewBookingDetails, NewBookingSchedule, Ratings, AdminDashboard}
 
 @Composable
 fun App() {
@@ -76,6 +77,7 @@ fun App() {
                     bookingId = "demo",
                     onReportIssue = { /* todo */ }
                 )
+                Screen.AdminDashboard -> AdminDashboardScreen()
             }
 
             if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {
