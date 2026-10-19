@@ -6,11 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -26,15 +24,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import ezybagapp.shared.generated.resources.Res
+import ezybagapp.shared.generated.resources.ic_support_agent
+import org.jetbrains.compose.resources.vectorResource
 
 enum class MainTab(
     val title: String,
-    val icon: ImageVector
+    val icon: @Composable () -> ImageVector
 ) {
-    Home("Home", Icons.Default.Home),
-    CreatePickup("Book", Icons.Default.AddCircle),
-    Support("Support", Icons.Default.SupportAgent),
-    Account("Account", Icons.Default.Person)
+    Home("Home", { Icons.Default.Home }),
+    CreatePickup("Book", { Icons.Default.AddCircle }),
+    Support("Support", { vectorResource(Res.drawable.ic_support_agent) }),
+    Account("Account", { Icons.Default.Person })
 }
 
 @Composable
@@ -56,7 +57,7 @@ fun MainContainer(
                             onClick = { selectedTab = tab },
                             icon = {
                                 Icon(
-                                    imageVector = tab.icon,
+                                    imageVector = tab.icon(),
                                     contentDescription = tab.title
                                 )
                             },
@@ -78,7 +79,7 @@ fun MainContainer(
                                 onClick = { selectedTab = tab },
                                 icon = {
                                     Icon(
-                                        imageVector = tab.icon,
+                                        imageVector = tab.icon(),
                                         contentDescription = tab.title
                                     )
                                 },

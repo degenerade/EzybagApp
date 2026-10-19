@@ -23,16 +23,20 @@ const val DEV_MENU_ENABLED = true
 private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
     "Auth" to listOf(
         Screen.SignIn to "Sign in",
-        Screen.SignUp to "Sign up"
+        Screen.SignUp to "Sign up",
     ),
     "Customer" to listOf(
+        Screen.Home to "Home (with bottom nav)",
         Screen.Bookings to "Bookings",
         Screen.NewBookingDetails to "New booking - 1 details",
         Screen.NewBookingSchedule to "New booking - 2 schedule",
-        Screen.Ratings to "Ratings"
+        Screen.Ratings to "Ratings",
+    ),
+    "Contractor" to listOf(
+        Screen.ContractorSignup to "Contractor signup",
     ),
     "Admin" to listOf(
-        Screen.AdminDashboard to "Admin Dashboard"
+        Screen.AdminDashboard to "Admin Dashboard",
     )
 )
 
