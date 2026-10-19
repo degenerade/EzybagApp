@@ -58,8 +58,8 @@ fun App() {
                     onSignedUp = { screen = Screen.Home },
                     onBackToSignIn = { authVm.clearMessage(); screen = Screen.SignIn },
                 )
-                Screen.Home -> HomePlaceholder(
-                    onSignOut = { screen = Screen.SignIn }
+                Screen.Home -> MainContainer(
+                    /*onSignOut = { screen = Screen.SignIn }*/
                 )
                 Screen.Bookings -> BookingsScreen(
                     onBookAnother = { newBookingVm.reset(); screen = Screen.NewBookingDetails }
