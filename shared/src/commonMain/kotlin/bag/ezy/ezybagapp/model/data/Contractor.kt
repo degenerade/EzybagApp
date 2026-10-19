@@ -1,5 +1,7 @@
 package bag.ezy.ezybagapp.model.data
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Contractor(
     val contractorId: String = "",
     val companyName: String = "",
