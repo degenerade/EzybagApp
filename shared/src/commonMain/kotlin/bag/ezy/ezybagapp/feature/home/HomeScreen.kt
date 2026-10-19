@@ -61,8 +61,9 @@ enum class BookingTab { Upcoming, Completed }
 
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier.Companion,
-    onBookingClick: (Booking) -> Unit = {}
+    onStartBooking: (wasteType: String?) -> Unit = {},
+    onOpenBooking: (bookingId: String) -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(BookingTab.Upcoming) }
     var upcomingBookings by remember {
@@ -102,7 +103,7 @@ fun HomeScreen(
                 onTabSelected = { selectedTab = it },
                 upcomingBookings = upcomingBookings,
                 completedBookings = completedBookings,
-                onBookingClick = onBookingClick
+                onBookingClick = { onOpenBooking(it.id) }
             )
         }
     }

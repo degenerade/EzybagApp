@@ -38,7 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun AccountScreen(modifier: Modifier = Modifier.Companion) {
+fun AccountScreen(
+    onSignOut: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         modifier = modifier
     ) { innerPadding ->

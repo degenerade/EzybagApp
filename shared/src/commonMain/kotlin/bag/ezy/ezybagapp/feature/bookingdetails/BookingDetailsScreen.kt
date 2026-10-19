@@ -48,14 +48,15 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingDetailsScreen(
-    modifier: Modifier = Modifier.Companion,
-    onBackClick: () -> Unit = {}
+    bookingId: String,
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit,
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { BackButton(onBackClick = onBackClick) }
+                title = { BackButton(onBackClick = onBack) }
             )
         }
     ) { innerPadding ->
