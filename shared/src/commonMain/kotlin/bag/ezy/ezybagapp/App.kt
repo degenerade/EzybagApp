@@ -93,11 +93,11 @@ fun App() {
                     }
                 )
 
+                
                 Screen.ContractorSignup -> ContractorSignupScreen()
 
-                Screen.Home -> HomePlaceholder(
-                    onSignOut = { screen = Screen.SignIn }
-                )
+                Screen.Home -> MainContainer()
+
 
                 Screen.Bookings -> BookingsScreen(
                     onBookAnother = {
