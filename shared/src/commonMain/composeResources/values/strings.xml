@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">EzybagApp</string>
+    <string name="welcome_message">Welcome</string>
+    <string name="rate_contractor">Rate</string>
+    <string name="invoice">Invoice</string>
+    <string name="edit_booking">Edit booking</string>
+    <string name="cancel">Cancel</string>
+    <string name="track">Track</string>
+    <string name="message">Message</string>
+    <string name="call">Call</string>
+    <string name="rebook_quote">Rebook or update quote</string>
+    <string name="get_help">Get help</string>
+    <string name="view_booking">View Booking</string>
+    <string name="book_a_pickup">Book a pickup</string>
+    <string name="no_upcoming_booking">No upcoming bookings</string>
+    <string name="no_completed_booking">No completed bookings yet</string>
+</resources>
