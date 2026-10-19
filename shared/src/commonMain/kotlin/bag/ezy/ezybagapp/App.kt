@@ -1,13 +1,10 @@
+
 package bag.ezy.ezybagapp
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +18,7 @@ import bag.ezy.ezybagapp.dev.DEV_MENU_ENABLED
 import bag.ezy.ezybagapp.dev.DevMenu
 import bag.ezy.ezybagapp.dev.DevMenuButton
 import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.feature.admin.AdminDashboardScreen
 import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
@@ -31,51 +29,81 @@ import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
 import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 
-enum class Screen { DevMenu, SignIn, SignUp, Home, Bookings, NewBookingDetails, NewBookingSchedule, Ratings}
+enum class Screen { DevMenu, SignIn, SignUp, ContractorSignup, Home, Bookings, NewBookingDetails, NewBookingSchedule, Ratings, AdminDashboard }
 
 @Composable
 fun App() {
     ClearawayTheme {
         var screen by rememberSaveable {
-            mutableStateOf(if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignUp)
+            mutableStateOf(
+                if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn
+            )
         }
+
         val authVm = viewModel { AuthViewModel() }
-        val newBookingVm = viewModel { NewBookingViewModel(AppContainer.bookingRepository) }
+        val newBookingVm = viewModel {
+            NewBookingViewModel(AppContainer.bookingRepository)
+        }
 
         Box(Modifier.fillMaxSize()) {
             when (screen) {
                 Screen.DevMenu -> DevMenu(
                     onOpen = { screen = it }
                 )
+
                 Screen.SignIn -> SignInScreen(
                     vm = authVm,
                     onSignedIn = { screen = Screen.Home },
-                    onCreateAccount = { authVm.clearMessage(); screen = Screen.SignUp },
+                    onCreateAccount = {
+                        authVm.clearMessage()
+                        screen = Screen.SignUp
+                    }
                 )
+
                 Screen.SignUp -> SignUpScreen(
                     vm = authVm,
                     onSignedUp = { screen = Screen.Home },
-                    onBackToSignIn = { authVm.clearMessage(); screen = Screen.SignIn },
+                    onBackToSignIn = {
+                        authVm.clearMessage()
+                        screen = Screen.SignIn
+                    }
                 )
-                Screen.Home -> HomePlaceholder(
-                    onSignOut = { screen = Screen.SignIn }
-                )
+
+                Screen.ContractorSignup -> ContractorSignupScreen()
+
+                Screen.Home -> MainContainer()
+
                 Screen.Bookings -> BookingsScreen(
-                    onBookAnother = { newBookingVm.reset(); screen = Screen.NewBookingDetails }
+                    onBookAnother = {
+                        newBookingVm.reset()
+                        screen = Screen.NewBookingDetails
+                    }
                 )
+
                 Screen.NewBookingDetails -> NewBookingDetailsScreen(
                     vm = newBookingVm,
-                    onContinue = { screen = Screen.NewBookingSchedule }
+                    onContinue = {
+                        screen = Screen.NewBookingSchedule
+                    }
                 )
+
                 Screen.NewBookingSchedule -> ScheduleBagQuoteScreen(
                     vm = newBookingVm,
-                    onBack = { screen = Screen.NewBookingDetails },
-                    onBooked = { newBookingVm.reset(); screen = Screen.Bookings }
+                    onBack = {
+                        screen = Screen.NewBookingDetails
+                    },
+                    onBooked = {
+                        newBookingVm.reset()
+                        screen = Screen.Bookings
+                    }
                 )
+
                 Screen.Ratings -> RatingsScreen(
                     bookingId = "demo",
-                    onReportIssue = { /* todo */ }
+                    onReportIssue = { /* TODO */ }
                 )
+
+                Screen.AdminDashboard -> AdminDashboardScreen()
             }
 
             if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {
@@ -88,17 +116,5 @@ fun App() {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun HomePlaceholder(onSignOut: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().safeContentPadding(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text("Signed in! Booking screen goes here.")
-        Button(onClick = onSignOut) { Text("Sign out") }
     }
 }
