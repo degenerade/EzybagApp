@@ -45,3 +45,4 @@ GoogleService-Info.plist
 .fleet/
 Thumbs.db
 desktop.ini
+kotlin-js-store/
