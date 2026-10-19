@@ -126,7 +126,9 @@ private fun ScreenContent(
 ) {
     when (selectedTab) {
         MainTab.Home -> HomeScreen(onStartBooking = onStartBooking, onOpenBooking = onOpenBooking)
-        MainTab.Bookings -> BookingsScreen(onBookAnother = { onStartBooking(null) })
+        MainTab.Bookings -> BookingsScreen(
+            onBookAnother = {onStartBooking(null) },
+            onBookingClick = onOpenBooking)
         MainTab.Support -> SupportScreen()
         MainTab.Account -> AccountScreen(onSignOut = onSignOut)
     }

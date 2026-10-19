@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,8 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 import ezybagapp.shared.generated.resources.Res
 import ezybagapp.shared.generated.resources.call
 import ezybagapp.shared.generated.resources.cancel
@@ -45,12 +50,26 @@ import ezybagapp.shared.generated.resources.get_help
 import ezybagapp.shared.generated.resources.message
 import org.jetbrains.compose.resources.stringResource
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingDetailsScreen(
     bookingId: String,
-    modifier: Modifier = Modifier,
     onBack: () -> Unit,
+    vm: BookingDetailsViewModel = viewModel(key = "booking-$bookingId") {
+        BookingDetailsViewModel(bookingId, AppContainer.bookingRepository)
+    }
+) {
+    BookingDetailsContent(
+        state = vm.state,
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BookingDetailsContent(
+    state: BookingDetailsUiState,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
@@ -60,46 +79,58 @@ fun BookingDetailsScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Title(
-                wasteType = "Construction waste",
-                volume = "half van"
-            )
-            JobStatusAndDateRow(
-                jobStatus = "En route",
-                date = "Thu 8 Oct",
-                time = "9am–12pm"
-            )
-            Map()
-            Job(
-                description = "Old kitchen units and rubble",
-                volume = "Half van",
-                bag = "Medium bag"
-            )
-            Collection(
-                address = "12 Elm Road, M1 4BT",
-                access = "Side gate, code 1234",
-                instructions = "Call on arrival"
-            )
-            Contractor(
-                contractorName = "Jake R.",
-                contractorInitial = "J",
-                contractorRating = "4.8",
-                contractorCompanyName = "Drop Waste Ltd"
-            )
-            Payment(
-                totalPrice = "£145",
-                paymentStatus = "Paid",
-                paymentMethod = "Visa ending 4417"
-            )
-            ButtonsRow()
+        when {
+            state.isLoading -> Box(
+                Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) { CircularProgressIndicator() }
+
+            state.error != null -> Box(
+                Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) { Text(state.error, color = MaterialTheme.colorScheme.error) }
+
+            else -> Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Title(
+                    wasteType = state.title,
+                    volume = state.volume
+                )
+                JobStatusAndDateRow(
+                    jobStatus = state.status,
+                    date = state.date,
+                    time = state.time
+                )
+                Map()
+                Job(
+                    description = state.description,
+                    volume = state.volume,
+                    bag = state.bag
+                )
+                Collection(
+                    address = state.address,
+                    access = "Side gate, code 1234", // todo
+                    instructions = "Call on arrival" // todo
+                )
+                Contractor(
+                    contractorName = "Jake R.", // todo
+                    contractorInitial = "J", // todo
+                    contractorRating = "4.8", // todo
+                    contractorCompanyName = "Drop Waste Ltd" // todo
+                )
+                Payment(
+                    totalPrice = state.price,
+                    paymentStatus = "Paid", // todo
+                    paymentMethod = "Visa ending 4417" // todo
+                )
+                ButtonsRow()
+            }
         }
     }
 }
@@ -458,5 +489,29 @@ private fun ButtonsRow(modifier: Modifier = Modifier.Companion) {
                 fontWeight = FontWeight.SemiBold
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun BookingDetailsPreview() {
+    ClearawayTheme {
+        BookingDetailsContent(
+            state = BookingDetailsUiState(
+                isLoading = false,
+                title = "Construction waste", volume = "Half van", status = "En route",
+                date = "Thu 8 Oct", time = "9:00 AM", description = "Old kitchen units and rubble",
+                bag = "Medium bag", address = "12 Elm Road, M1 4BT", price = "£145",
+            ),
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun BookingDetailsNotFoundPreview() {
+    ClearawayTheme {
+        BookingDetailsContent(BookingDetailsUiState(isLoading = false, error = "Booking not found"), onBack = {})
     }
 }
