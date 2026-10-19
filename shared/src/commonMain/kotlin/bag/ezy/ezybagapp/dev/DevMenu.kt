@@ -22,6 +22,7 @@ const val DEV_MENU_ENABLED = true
 
 private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
     "Auth" to listOf(
+        Screen.Start to "Start Page",
         Screen.SignIn to "Sign in",
         Screen.SignUp to "Sign up",
     ),
