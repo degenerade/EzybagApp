@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.account
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun AccountScreen(modifier: Modifier = Modifier) {
+fun AccountScreen(modifier: Modifier = Modifier.Companion) {
     Scaffold(
         modifier = modifier
     ) { innerPadding ->
@@ -62,12 +62,12 @@ fun AccountScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ProfileHeader(
+private fun ProfileHeader(
     name: String,
     email: String,
     phone: String,
     initial: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -105,7 +105,7 @@ fun ProfileHeader(
 }
 
 @Composable
-fun Settings(modifier: Modifier) {
+private fun Settings(modifier: Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = "Manage Account",
@@ -127,7 +127,7 @@ fun Settings(modifier: Modifier) {
         OutlinedButton(
             onClick = {},
             modifier = Modifier.fillMaxWidth().height(48.dp),
-            shape = RoundedCornerShape(9.dp),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = MaterialTheme.colorScheme.error
@@ -139,7 +139,7 @@ fun Settings(modifier: Modifier) {
 }
 
 @Composable
-fun SettingsCard(modifier: Modifier = Modifier) {
+private fun SettingsCard(modifier: Modifier = Modifier.Companion) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(

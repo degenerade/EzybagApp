@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.support
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,12 +29,18 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SupportScreen(modifier: Modifier = Modifier) {
+fun SupportScreen(modifier: Modifier = Modifier.Companion) {
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Support", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold) }
+                title = {
+                    Text(
+                        text = "Support",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
             )
         }
     ) { innerPadding ->
@@ -62,7 +68,7 @@ fun SupportScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun CallUs(modifier: Modifier = Modifier, companyPhoneNumber: String) {
+private fun CallUs(modifier: Modifier = Modifier.Companion, companyPhoneNumber: String) {
     Column(modifier = modifier.fillMaxWidth()) {
         ElevatedCard(
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -70,7 +76,7 @@ fun CallUs(modifier: Modifier = Modifier, companyPhoneNumber: String) {
                 containerColor = MaterialTheme.colorScheme.surface
             ),
             modifier = modifier.fillMaxWidth()
-        ){
+        ) {
             Row(
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -99,7 +105,7 @@ fun CallUs(modifier: Modifier = Modifier, companyPhoneNumber: String) {
 }
 
 @Composable
-fun EmailUs(modifier: Modifier = Modifier, companyEmail: String) {
+private fun EmailUs(modifier: Modifier = Modifier.Companion, companyEmail: String) {
     Column(modifier = modifier.fillMaxWidth()) {
         ElevatedCard(
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -128,9 +134,9 @@ fun EmailUs(modifier: Modifier = Modifier, companyEmail: String) {
         Button(
             onClick = {},
             modifier = modifier.fillMaxWidth().height(48.dp),
-            shape = RoundedCornerShape(9.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
         ) {
-            Text(text = "Send an email",fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(text = "Send an email", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }

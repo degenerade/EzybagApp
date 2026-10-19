@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.bookingdetails
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,7 +48,7 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingDetailsScreen(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.Companion,
     onBackClick: () -> Unit = {}
 ) {
     Scaffold(
@@ -104,8 +104,8 @@ fun BookingDetailsScreen(
 }
 
 @Composable
-fun BackButton(
-    modifier: Modifier = Modifier,
+private fun BackButton(
+    modifier: Modifier = Modifier.Companion,
     onBackClick: () -> Unit = {}
 ) {
     Row(
@@ -129,10 +129,10 @@ fun BackButton(
 }
 
 @Composable
-fun Title(
+private fun Title(
     wasteType: String,
     volume: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Text(
         text = "$wasteType · $volume",
@@ -143,11 +143,11 @@ fun Title(
 }
 
 @Composable
-fun JobStatusAndDateRow(
+private fun JobStatusAndDateRow(
     jobStatus: String,
     date: String,
     time: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -168,7 +168,7 @@ fun JobStatusAndDateRow(
 }
 
 @Composable
-fun Map(modifier: Modifier = Modifier) {
+private fun Map(modifier: Modifier = Modifier.Companion) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -186,11 +186,11 @@ fun Map(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun Job(
+private fun Job(
     description: String,
     volume: String,
     bag: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -216,11 +216,11 @@ fun Job(
 }
 
 @Composable
-fun Collection(
+private fun Collection(
     address: String,
     access: String,
     instructions: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -246,12 +246,12 @@ fun Collection(
 }
 
 @Composable
-fun Contractor(
+private fun Contractor(
     contractorName: String,
     contractorInitial: String,
     contractorRating: String,
     contractorCompanyName: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -320,7 +320,7 @@ fun Contractor(
                 Button(
                     onClick = {},
                     modifier = Modifier.weight(1f).height(40.dp),
-                    shape = RoundedCornerShape(9.dp)
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
                 ) {
                     Text(
                         text = stringResource(Res.string.message),
@@ -331,7 +331,7 @@ fun Contractor(
                 OutlinedButton(
                     onClick = {},
                     modifier = Modifier.weight(1f).height(40.dp),
-                    shape = RoundedCornerShape(9.dp)
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
                 ) {
                     Text(
                         text = stringResource(Res.string.call),
@@ -345,11 +345,11 @@ fun Contractor(
 }
 
 @Composable
-fun Payment(
+private fun Payment(
     totalPrice: String,
     paymentStatus: String,
     paymentMethod: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -375,14 +375,14 @@ fun Payment(
 }
 
 @Composable
-fun CardRows(
+private fun CardRows(
     parameterHeaderOne: String,
     parameterNameOne: String,
     parameterHeaderTwo: String,
     parameterNameTwo: String,
     parameterHeaderThree: String,
     parameterNameThree: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -419,7 +419,7 @@ fun CardRows(
 }
 
 @Composable
-fun ButtonsRow(modifier: Modifier = Modifier) {
+private fun ButtonsRow(modifier: Modifier = Modifier.Companion) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -427,7 +427,7 @@ fun ButtonsRow(modifier: Modifier = Modifier) {
         OutlinedButton(
             onClick = {},
             modifier = Modifier.weight(1f).height(40.dp),
-            shape = RoundedCornerShape(9.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
         ) {
             Text(
                 text = stringResource(Res.string.edit_booking),
@@ -438,7 +438,7 @@ fun ButtonsRow(modifier: Modifier = Modifier) {
         OutlinedButton(
             onClick = {},
             modifier = Modifier.weight(1f).height(40.dp),
-            shape = RoundedCornerShape(9.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
         ) {
             Text(
                 text = stringResource(Res.string.cancel),
@@ -449,7 +449,7 @@ fun ButtonsRow(modifier: Modifier = Modifier) {
         Button(
             onClick = {},
             modifier = Modifier.weight(1f).height(40.dp),
-            shape = RoundedCornerShape(9.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
         ) {
             Text(
                 text = stringResource(Res.string.get_help),

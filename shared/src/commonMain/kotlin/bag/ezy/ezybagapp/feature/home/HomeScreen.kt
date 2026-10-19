@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,18 +40,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import bag.ezy.ezybagapp.Booking
 import ezybagapp.shared.generated.resources.Res
 import ezybagapp.shared.generated.resources.ic_bungalow
 import ezybagapp.shared.generated.resources.ic_calendar_month
 import ezybagapp.shared.generated.resources.ic_construction
-import ezybagapp.shared.generated.resources.ic_grass
 import ezybagapp.shared.generated.resources.ic_weekend
+import ezybagapp.shared.generated.resources.ic_grass
 import ezybagapp.shared.generated.resources.no_completed_booking
 import ezybagapp.shared.generated.resources.no_upcoming_booking
 import org.jetbrains.compose.resources.stringResource
@@ -61,7 +61,7 @@ enum class BookingTab { Upcoming, Completed }
 
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.Companion,
     onBookingClick: (Booking) -> Unit = {}
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(BookingTab.Upcoming) }
@@ -109,13 +109,13 @@ fun HomeScreen(
 }
 
 @Composable
-fun BookingsDisplayColumn(
+private fun BookingsDisplayColumn(
     selectedTab: BookingTab,
     onTabSelected: (BookingTab) -> Unit,
     upcomingBookings: List<Booking>,
     completedBookings: List<Booking>,
     onBookingClick: (Booking) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Column(modifier = modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
         BookingsButtonsRow(
@@ -157,11 +157,11 @@ fun BookingsDisplayColumn(
 }
 
 @Composable
-fun AccountAvatar(
+private fun AccountAvatar(
     initial: String = "J",
     hasUnread: Boolean = true,
     onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     BadgedBox(
         badge = {
@@ -180,7 +180,7 @@ fun AccountAvatar(
             onClick = onClick,
             shape = CircleShape,
             color = MaterialTheme.colorScheme.primary,
-            contentColor = White,
+            contentColor = Color.White,
             modifier = Modifier.size(40.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -195,9 +195,9 @@ fun AccountAvatar(
 }
 
 @Composable
-fun WelcomeMessage(
+private fun WelcomeMessage(
     userName: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Row(
         modifier = modifier
@@ -222,7 +222,7 @@ fun WelcomeMessage(
 }
 
 @Composable
-fun DashBoard(modifier: Modifier = Modifier) {
+private fun DashBoard(modifier: Modifier = Modifier.Companion) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         colors = CardDefaults.cardColors(
@@ -268,7 +268,7 @@ fun DashBoard(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun WasteTypeRow(modifier: Modifier = Modifier) {
+private fun WasteTypeRow(modifier: Modifier = Modifier.Companion) {
     Row(
         modifier = modifier
             .padding(horizontal = 16.dp)
@@ -299,10 +299,10 @@ fun WasteTypeRow(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun WasteTypeCard(
+private fun WasteTypeCard(
     icon: ImageVector,
     heading: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -320,13 +320,16 @@ fun WasteTypeCard(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(9.dp)),
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = White,
+                    tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -343,10 +346,10 @@ fun WasteTypeCard(
 }
 
 @Composable
-fun BookingItem(
+private fun BookingItem(
     booking: Booking,
     onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -398,7 +401,7 @@ fun BookingItem(
 }
 
 @Composable
-fun EmptyUpcomingBooking(modifier: Modifier = Modifier) {
+private fun EmptyUpcomingBooking(modifier: Modifier = Modifier.Companion) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
@@ -416,13 +419,16 @@ fun EmptyUpcomingBooking(modifier: Modifier = Modifier) {
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.ic_calendar_month),
                     contentDescription = null,
-                    tint = White,
+                    tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -444,7 +450,7 @@ fun EmptyUpcomingBooking(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EmptyCompletedBooking(modifier: Modifier = Modifier) {
+private fun EmptyCompletedBooking(modifier: Modifier = Modifier.Companion) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
@@ -462,13 +468,16 @@ fun EmptyCompletedBooking(modifier: Modifier = Modifier) {
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
-                    tint = White,
+                    tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -490,10 +499,10 @@ fun EmptyCompletedBooking(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun BookingsButtonsRow(
+private fun BookingsButtonsRow(
     selectedTab: BookingTab,
     onTabSelected: (BookingTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -516,7 +525,7 @@ fun BookingsButtonsRow(
             modifier = Modifier
                 .weight(1f)
                 .height(40.dp),
-            shape = RoundedCornerShape(9.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
         ) {
             Text(
                 text = "Upcoming",
@@ -542,7 +551,7 @@ fun BookingsButtonsRow(
             modifier = Modifier
                 .weight(1f)
                 .height(40.dp),
-            shape = RoundedCornerShape(9.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
         ) {
             Text(
                 text = "Completed",

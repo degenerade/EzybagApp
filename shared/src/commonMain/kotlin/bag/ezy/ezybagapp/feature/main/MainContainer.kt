@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.main
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,9 +24,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import bag.ezy.ezybagapp.feature.account.AccountScreen
+import bag.ezy.ezybagapp.CreatePickupScreen
+import bag.ezy.ezybagapp.feature.home.HomeScreen
+import bag.ezy.ezybagapp.feature.support.SupportScreen
 import ezybagapp.shared.generated.resources.Res
-import ezybagapp.shared.generated.resources.ic_support_agent
 import org.jetbrains.compose.resources.vectorResource
+import ezybagapp.shared.generated.resources.ic_support_agent
 
 enum class MainTab(
     val title: String,
@@ -40,7 +44,7 @@ enum class MainTab(
 
 @Composable
 fun MainContainer(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.Companion,
     initialTab: MainTab = MainTab.Home
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
