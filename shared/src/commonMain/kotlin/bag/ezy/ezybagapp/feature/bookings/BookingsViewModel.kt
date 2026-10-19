@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bag.ezy.ezybagapp.model.data.Booking
 import bag.ezy.ezybagapp.model.repository.BookingRepository
+import bag.ezy.ezybagapp.ui.format.formatDisplayDate
 import kotlinx.coroutines.launch
 
 enum class BookingTab { All, Upcoming, Active, Completed }
@@ -58,7 +59,7 @@ class BookingsViewModel(
         reference = bookingId,
         wasteType = wasteDetails.type,
         status = status,
-        date = schedule.preferredDate,
+        date = formatDisplayDate(schedule.preferredDate),
         tab = when (status) {
             "En route", "On site" -> BookingTab.Active
             "Completed" -> BookingTab.Completed

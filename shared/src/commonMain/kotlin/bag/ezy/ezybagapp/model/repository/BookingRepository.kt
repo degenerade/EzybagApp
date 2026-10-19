@@ -1,12 +1,15 @@
 package bag.ezy.ezybagapp.model.repository
 
+import bag.ezy.ezybagapp.model.data.Address
 import bag.ezy.ezybagapp.model.data.Booking
+import bag.ezy.ezybagapp.model.data.Pricing
 import bag.ezy.ezybagapp.model.data.Schedule
 import bag.ezy.ezybagapp.model.data.WasteDetails
 import kotlinx.coroutines.delay
 
 interface BookingRepository {
     suspend fun getBookings(customerId: String): Result<List<Booking>>
+    suspend fun getBooking(bookingId: String): Result<Booking?>
     suspend fun getEstimate(wasteType: String, volume: String): Double
     suspend fun createBooking(booking: Booking): Result<String>
     suspend fun requestFinalQuote(booking: Booking): Result<Unit>
@@ -14,19 +17,51 @@ interface BookingRepository {
 
 class FakeBookingRepository : BookingRepository {
     private val bookings = mutableListOf(
-        Booking(bookingId = "CC-10482", wasteDetails = WasteDetails(type = "Mixed waste"),
-            schedule = Schedule(preferredDate = "Fri 2 Oct"), status = "En route"),
-        Booking(bookingId = "CC-10511", wasteDetails = WasteDetails(type = "Garden waste"),
-            schedule = Schedule(preferredDate = "13 Oct"), status = "Upcoming"),
-        Booking(bookingId = "CC-10274", wasteDetails = WasteDetails(type = "Furniture"),
-            schedule = Schedule(preferredDate = "18 Sep"), status = "Completed"),
-        Booking(bookingId = "CC-10199", wasteDetails = WasteDetails(type = "Household"),
-            schedule = Schedule(preferredDate = "4 Sep"), status = "Cancelled"),
+        Booking(
+            bookingId = "CC-10482",
+            collectionAddress = Address(
+                street = "12 Elm Road",
+                city = "Manchester",
+                postcode = "M1 4BT"
+            ),
+            wasteDetails = WasteDetails(type = "Construction", description = "Old kitchen units and rubble",
+                estimatedVolume = "Half van", bagRequired = true, bagSize = "Medium"),
+            schedule = Schedule(preferredDate = "2026-10-08", preferredTime = "09:00"),
+            pricing = Pricing(estimatedQuote = 145.0),
+            status = "En route",
+        ),
+        Booking(
+            bookingId = "CC-10511",
+            collectionAddress = Address(street = "4 Park Lane", city = "Manchester", postcode = "M14 6QL"),
+            wasteDetails = WasteDetails(type = "Garden", estimatedVolume = "Small"),
+            schedule = Schedule(preferredDate = "2026-10-17", preferredTime = "13:00"),
+            pricing = Pricing(estimatedQuote = 60.0),
+            status = "Upcoming",
+        ),
+        Booking(
+            bookingId = "CC-10274",
+            collectionAddress = Address(street = "9 Oak Street", city = "Stockport", postcode = "SK4 2DA"),
+            wasteDetails = WasteDetails(type = "Furniture", estimatedVolume = "Small"),
+            schedule = Schedule(preferredDate = "2026-09-18", preferredTime = "10:00"),
+            pricing = Pricing(estimatedQuote = 70.0),
+            status = "Completed",
+        ),
+        Booking(
+            bookingId = "CC-10199",
+            wasteDetails = WasteDetails(type = "Household", estimatedVolume = "Full van"),
+            schedule = Schedule(preferredDate = "2026-09-04", preferredTime = "08:00"),
+            status = "Cancelled",
+        ),
     )
 
     override suspend fun getBookings(customerId: String): Result<List<Booking>> {
         delay(500)
         return Result.success(bookings.toList())
+    }
+
+    override suspend fun getBooking(bookingId: String): Result<Booking?> {
+        delay(300)
+        return Result.success(bookings.find { it.bookingId == bookingId })
     }
 
     override suspend fun getEstimate(wasteType: String, volume: String): Double = when (volume) {
