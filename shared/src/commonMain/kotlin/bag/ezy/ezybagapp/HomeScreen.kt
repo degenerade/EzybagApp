@@ -19,12 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bungalow
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Construction
-import androidx.compose.material.icons.filled.Grass
-import androidx.compose.material.icons.filled.Weekend
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
@@ -52,9 +47,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ezybagapp.shared.generated.resources.Res
+import ezybagapp.shared.generated.resources.ic_bungalow
+import ezybagapp.shared.generated.resources.ic_calendar_month
+import ezybagapp.shared.generated.resources.ic_construction
+import ezybagapp.shared.generated.resources.ic_grass
+import ezybagapp.shared.generated.resources.ic_weekend
 import ezybagapp.shared.generated.resources.no_completed_booking
 import ezybagapp.shared.generated.resources.no_upcoming_booking
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
 
 enum class BookingTab { Upcoming, Completed }
 
@@ -275,22 +276,22 @@ fun WasteTypeRow(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         WasteTypeCard(
-            icon = Icons.Default.Bungalow,
+            icon = vectorResource(Res.drawable.ic_bungalow),
             heading = "Household",
             modifier = Modifier.weight(1f)
         )
         WasteTypeCard(
-            icon = Icons.Default.Grass,
+            icon = vectorResource(Res.drawable.ic_grass),
             heading = "Garden",
             modifier = Modifier.weight(1f)
         )
         WasteTypeCard(
-            icon = Icons.Default.Weekend,
+            icon = vectorResource(Res.drawable.ic_weekend),
             heading = "Furniture",
             modifier = Modifier.weight(1f)
         )
         WasteTypeCard(
-            icon = Icons.Default.Construction,
+            icon = vectorResource(Res.drawable.ic_construction),
             heading = "Building",
             modifier = Modifier.weight(1f)
         )
@@ -419,7 +420,7 @@ fun EmptyUpcomingBooking(modifier: Modifier = Modifier) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.CalendarMonth,
+                    imageVector = vectorResource(Res.drawable.ic_calendar_month),
                     contentDescription = null,
                     tint = White,
                     modifier = Modifier.size(28.dp)

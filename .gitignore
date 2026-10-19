@@ -45,4 +45,6 @@ GoogleService-Info.plist
 .fleet/
 Thumbs.db
 desktop.ini
-kotlin-js-store/
+
+# this folder hold the web depenceny lock fine and should be committed
+# kotlin-js-store/
