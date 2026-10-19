@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -28,24 +27,22 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import bag.ezy.ezybagapp.Booking
+import androidx.lifecycle.viewmodel.compose.viewModel
+import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 import ezybagapp.shared.generated.resources.Res
 import ezybagapp.shared.generated.resources.ic_bungalow
 import ezybagapp.shared.generated.resources.ic_calendar_month
@@ -57,101 +54,69 @@ import ezybagapp.shared.generated.resources.no_upcoming_booking
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
-enum class BookingTab { Upcoming, Completed }
-
 @Composable
 fun HomeScreen(
     onStartBooking: (wasteType: String?) -> Unit = {},
     onOpenBooking: (bookingId: String) -> Unit = {},
-    modifier: Modifier = Modifier
+    vm: HomeViewModel = viewModel { HomeViewModel("demo-customer", AppContainer.bookingRepository) },
 ) {
-    var selectedTab by rememberSaveable { mutableStateOf(BookingTab.Upcoming) }
-    var upcomingBookings by remember {
-        mutableStateOf(
-            listOf(
-                Booking(
-                    id = "1",
-                    jobStatus = "On site",
-                    wasteType = "Construction waste",
-                    estimatedVolume = "Full van",
-                    address = "12 Elm Road, M1 4BT",
-                    date = "Thu 8 Oct",
-                    time = "9am-12pm",
-                    price = "£145"
-                )
-            )
+    LaunchedEffect(Unit) { vm.load() }
+    HomeContent(
+        state = vm.state,
+        onFilterSelected = vm::selectFilter,
+        onStartBooking = onStartBooking,
+        onOpenBooking = onOpenBooking,
+    )
+}
+
+@Composable
+fun HomeContent(
+    state: HomeUiState,
+    onFilterSelected: (HomeBookingFilter) -> Unit,
+    onStartBooking: (wasteType: String?) -> Unit,
+    onOpenBooking: (bookingId: String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 24.dp)
+    ) {
+        WelcomeMessage(userName = state.userName)
+        DashBoard(onBookClick = { onStartBooking(null) })
+        Spacer(modifier = Modifier.height(12.dp))
+        WasteTypeRow(onWasteTypeClick = onStartBooking)
+        Spacer(modifier = Modifier.height(16.dp))
+        BookingsDisplayColumn(
+            filter = state.filter,
+            onFilterSelected = onFilterSelected,
+            bookings = state.visibleBookings,
+            onBookingClick = { onOpenBooking(it.id) }
         )
-    }
-    var completedBookings by remember { mutableStateOf(emptyList<Booking>()) }
-
-    Scaffold(modifier = modifier.safeDrawingPadding()) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp)
-        ) {
-            WelcomeMessage(userName = "John")
-            DashBoard()
-            Spacer(modifier = Modifier.height(12.dp))
-            WasteTypeRow()
-            Spacer(modifier = Modifier.height(16.dp))
-
-            BookingsDisplayColumn(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-                upcomingBookings = upcomingBookings,
-                completedBookings = completedBookings,
-                onBookingClick = { onOpenBooking(it.id) }
-            )
-        }
     }
 }
 
 @Composable
 private fun BookingsDisplayColumn(
-    selectedTab: BookingTab,
-    onTabSelected: (BookingTab) -> Unit,
-    upcomingBookings: List<Booking>,
-    completedBookings: List<Booking>,
-    onBookingClick: (Booking) -> Unit = {},
-    modifier: Modifier = Modifier.Companion
+    filter: HomeBookingFilter,
+    onFilterSelected: (HomeBookingFilter) -> Unit,
+    bookings: List<HomeBookingUiModel>,
+    onBookingClick: (HomeBookingUiModel) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
         BookingsButtonsRow(
-            selectedTab = selectedTab,
-            onTabSelected = onTabSelected
+            filter = filter,
+            onFilterSelected = onFilterSelected
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        when (selectedTab) {
-            BookingTab.Upcoming -> {
-                if (upcomingBookings.isEmpty()) {
-                    EmptyUpcomingBooking()
-                } else {
-                    upcomingBookings.forEach { booking ->
-                        BookingItem(
-                            booking = booking,
-                            onClick = { onBookingClick(booking) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-            }
-
-            BookingTab.Completed -> {
-                if (completedBookings.isEmpty()) {
-                    EmptyCompletedBooking()
-                } else {
-                    completedBookings.forEach { booking ->
-                        BookingItem(
-                            booking = booking,
-                            onClick = { onBookingClick(booking) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
+        if (bookings.isEmpty()) {
+            if (filter == HomeBookingFilter.Upcoming) EmptyUpcomingBooking() else EmptyCompletedBooking()
+        } else {
+            bookings.forEach { booking ->
+                BookingItem(booking = booking, onClick = { onBookingClick(booking) })
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
@@ -218,18 +183,20 @@ private fun WelcomeMessage(
                 fontWeight = FontWeight.ExtraBold
             )
         }
-        AccountAvatar()
+        AccountAvatar(initial = userName.take(1))
     }
 }
 
 @Composable
-private fun DashBoard(modifier: Modifier = Modifier.Companion) {
+private fun DashBoard(
+    onBookClick: () -> Unit,
+) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primary
         ),
-        modifier = modifier
+        modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
     ) {
@@ -248,7 +215,7 @@ private fun DashBoard(modifier: Modifier = Modifier.Companion) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = {},
+                onClick = onBookClick,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary
                 ),
@@ -269,9 +236,9 @@ private fun DashBoard(modifier: Modifier = Modifier.Companion) {
 }
 
 @Composable
-private fun WasteTypeRow(modifier: Modifier = Modifier.Companion) {
+private fun WasteTypeRow(onWasteTypeClick: (String) -> Unit) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -279,21 +246,25 @@ private fun WasteTypeRow(modifier: Modifier = Modifier.Companion) {
         WasteTypeCard(
             icon = vectorResource(Res.drawable.ic_bungalow),
             heading = "Household",
+            onClick = { onWasteTypeClick("Household") },
             modifier = Modifier.weight(1f)
         )
         WasteTypeCard(
             icon = vectorResource(Res.drawable.ic_grass),
             heading = "Garden",
+            onClick = { onWasteTypeClick("Garden") },
             modifier = Modifier.weight(1f)
         )
         WasteTypeCard(
             icon = vectorResource(Res.drawable.ic_weekend),
             heading = "Furniture",
+            onClick = { onWasteTypeClick("Furniture") },
             modifier = Modifier.weight(1f)
         )
         WasteTypeCard(
             icon = vectorResource(Res.drawable.ic_construction),
             heading = "Building",
+            onClick = { onWasteTypeClick("Construction") },
             modifier = Modifier.weight(1f)
         )
     }
@@ -303,9 +274,11 @@ private fun WasteTypeRow(modifier: Modifier = Modifier.Companion) {
 private fun WasteTypeCard(
     icon: ImageVector,
     heading: String,
-    modifier: Modifier = Modifier.Companion
+    modifier: Modifier = Modifier.Companion,
+    onClick: () -> Unit,
 ) {
     ElevatedCard(
+        onClick = onClick,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -348,7 +321,7 @@ private fun WasteTypeCard(
 
 @Composable
 private fun BookingItem(
-    booking: Booking,
+    booking: HomeBookingUiModel,
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier.Companion
 ) {
@@ -365,7 +338,7 @@ private fun BookingItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "${booking.wasteType} · ${booking.estimatedVolume}",
+                        text = booking.title,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
                     )
@@ -377,7 +350,7 @@ private fun BookingItem(
                     )
                 }
                 Text(
-                    text = booking.jobStatus,
+                    text = booking.status,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
@@ -386,7 +359,7 @@ private fun BookingItem(
             Spacer(modifier = Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "${booking.date} · ${booking.time}",
+                    text = booking.dateTime,
                     modifier = Modifier.weight(1f),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -501,8 +474,8 @@ private fun EmptyCompletedBooking(modifier: Modifier = Modifier.Companion) {
 
 @Composable
 private fun BookingsButtonsRow(
-    selectedTab: BookingTab,
-    onTabSelected: (BookingTab) -> Unit,
+    filter: HomeBookingFilter,
+    onFilterSelected: (HomeBookingFilter) -> Unit,
     modifier: Modifier = Modifier.Companion
 ) {
     Row(
@@ -510,14 +483,14 @@ private fun BookingsButtonsRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Button(
-            onClick = { onTabSelected(BookingTab.Upcoming) },
+            onClick = { onFilterSelected(HomeBookingFilter.Upcoming) },
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedTab == BookingTab.Upcoming) {
+                containerColor = if (filter == HomeBookingFilter.Upcoming) {
                     MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.surfaceVariant
                 },
-                contentColor = if (selectedTab == BookingTab.Upcoming) {
+                contentColor = if (filter == HomeBookingFilter.Upcoming) {
                     MaterialTheme.colorScheme.onPrimary
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -536,14 +509,14 @@ private fun BookingsButtonsRow(
         }
 
         Button(
-            onClick = { onTabSelected(BookingTab.Completed) },
+            onClick = { onFilterSelected(HomeBookingFilter.Completed) },
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedTab == BookingTab.Completed) {
+                containerColor = if (filter == HomeBookingFilter.Completed) {
                     MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.surfaceVariant
                 },
-                contentColor = if (selectedTab == BookingTab.Completed) {
+                contentColor = if (filter == HomeBookingFilter.Completed) {
                     MaterialTheme.colorScheme.onPrimary
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -560,5 +533,22 @@ private fun BookingsButtonsRow(
                 fontWeight = FontWeight.SemiBold
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun HomeContentPreview() {
+    ClearawayTheme {
+        HomeContent(
+            state = HomeUiState(
+                isLoading = false,
+                bookings = listOf(
+                    HomeBookingUiModel("CC-10482", "Construction · Half van", "12 Elm Road, M1 4BT",
+                        "En route", "Thu 8 Oct · 9:00 AM", "£145", HomeBookingFilter.Upcoming),
+                ),
+            ),
+            onFilterSelected = {}, onStartBooking = {}, onOpenBooking = {},
+        )
     }
 }
