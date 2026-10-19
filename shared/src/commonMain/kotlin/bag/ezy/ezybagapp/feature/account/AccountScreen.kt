@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun AccountScreen(
-    onSignOut: () -> Unit = {},
+    onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -53,13 +53,13 @@ fun AccountScreen(
                 .padding(16.dp)
         ) {
             ProfileHeader(
-                name = "Sam Patel",
-                initial = "S",
-                email = "sampatel@example.com",
-                phone = "+46 73 499 9151"
+                name = "Sam Patel",             // TODO: from AuthRepository
+                initial = "S",                  // TODO: from AuthRepository
+                email = "sampatel@example.com", // TODO: from AuthRepository
+                phone = "+46 73 499 9151"       // TODO: from AuthRepository
             )
             Spacer(modifier = Modifier.height(24.dp))
-            Settings(modifier = modifier)
+            Settings(onSignOut = onSignOut)
         }
     }
 }
@@ -69,11 +69,10 @@ private fun ProfileHeader(
     name: String,
     email: String,
     phone: String,
-    initial: String,
-    modifier: Modifier = Modifier.Companion
+    initial: String
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -108,8 +107,8 @@ private fun ProfileHeader(
 }
 
 @Composable
-private fun Settings(modifier: Modifier) {
-    Column(modifier = modifier.fillMaxWidth()) {
+private fun Settings(onSignOut: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Manage Account",
             style = MaterialTheme.typography.titleMedium,
@@ -120,7 +119,7 @@ private fun Settings(modifier: Modifier) {
         SettingsCard()
         Spacer(modifier = Modifier.height(24.dp))
         Button(
-            onClick = {},
+            onClick = onSignOut,
             modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = RoundedCornerShape(9.dp)
         ) {
