@@ -8,6 +8,18 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 }
 
+tasks.configureEach {
+    if (name.contains("Ios", ignoreCase = true) || name.contains("Apple", ignoreCase = true)) {
+        onlyIf {
+            try {
+                ProcessBuilder("xcrun", "xcodebuild", "-version").start().waitFor() == 0
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+}
+
 kotlin {
     listOf(
         iosArm64(),
@@ -49,6 +61,7 @@ kotlin {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
+            implementation(libs.compose.material.icons.core)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
@@ -57,6 +70,8 @@ kotlin {
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.gitlive.firebase.auth)
             implementation(libs.kotlinx.serialization.json)
+            implementation("io.github.vinceglb:filekit-compose:0.8.8")
+            implementation(libs.kotlinx.datetime)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp.view
+package bag.ezy.ezybagapp.feature.dbdevpage
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,11 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import bag.ezy.ezybagapp.viewmodel.AuthViewModel
 
 @Composable
-fun AuthScreen() {
-    val viewModel = remember { AuthViewModel() }
+fun DbScreen() {
+    val viewModel = remember { DbTestViewModel() }
     val scrollState = rememberScrollState()
 
     Column(

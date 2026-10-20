@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp.viewmodel
+package bag.ezy.ezybagapp.feature.dbdevpage
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,7 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-class AuthViewModel {
+class DbTestViewModel {
     private val userRepository = UserRepository()
     private val reviewRepository = ReviewRepository()
     private val adminRepository = AdminRepository()
@@ -95,9 +95,9 @@ class AuthViewModel {
                 createdAt = "2025-02-25"
             )
             reviewRepository.leaveReview(review)
-                .onSuccess { 
+                .onSuccess {
                     val userEmail = Firebase.auth.currentUser?.email ?: "Unknown User"
-                    statusMessage = "✅ Review Posted Successfully!\nAuth User Email: $userEmail" 
+                    statusMessage = "✅ Review Posted Successfully!\nAuth User Email: $userEmail"
                 }
                 .onFailure { e -> statusMessage = "❌ Failed: ${e.message}" }
             isLoading = false
