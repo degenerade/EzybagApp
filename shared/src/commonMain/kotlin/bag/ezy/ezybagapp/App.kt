@@ -30,10 +30,12 @@ import bag.ezy.ezybagapp.feature.newbooking.NewBookingDetailsScreen
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingViewModel
 import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
 import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
+import bag.ezy.ezybagapp.feature.startPage.StartScreen
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 
 enum class Screen {
     DevMenu,
+    Start,
     SignIn,
     SignUp,
     ContractorSignup,
@@ -56,6 +58,7 @@ fun App() {
         var selectedBookingId by rememberSaveable { mutableStateOf<String?>(null) }
 
         val authVm = viewModel { AuthViewModel() }
+
         val newBookingVm = viewModel {
             NewBookingViewModel(AppContainer.bookingRepository)
         }
@@ -75,9 +78,23 @@ fun App() {
                     screen = target
                 })
 
+                Screen.Start -> StartScreen(
+                    onCustomerSignUp = {
+                        screen = Screen.SignUp
+                    },
+                    onContractorSignUp = {
+                        screen = Screen.ContractorSignup
+                    },
+                    onSignIn = {
+                        screen = Screen.SignIn
+                    }
+                )
+
                 Screen.SignIn -> SignInScreen(
                     vm = authVm,
-                    onSignedIn = { screen = Screen.Home },
+                    onSignedIn = {
+                        screen = Screen.Home
+                    },
                     onCreateAccount = {
                         authVm.clearMessage()
                         screen = Screen.SignUp
@@ -86,7 +103,9 @@ fun App() {
 
                 Screen.SignUp -> SignUpScreen(
                     vm = authVm,
-                    onSignedUp = { screen = Screen.Home },
+                    onSignedUp = {
+                        screen = Screen.Home
+                    },
                     onBackToSignIn = {
                         authVm.clearMessage()
                         screen = Screen.SignIn
@@ -140,7 +159,9 @@ fun App() {
 
             if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {
                 DevMenuButton(
-                    onClick = { screen = Screen.DevMenu },
+                    onClick = {
+                        screen = Screen.DevMenu
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .safeContentPadding()
