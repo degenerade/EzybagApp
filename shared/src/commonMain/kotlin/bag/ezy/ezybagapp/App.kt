@@ -1,14 +1,14 @@
 package bag.ezy.ezybagapp
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,9 +27,23 @@ import bag.ezy.ezybagapp.feature.newbooking.NewBookingDetailsScreen
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingViewModel
 import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
 import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
+import bag.ezy.ezybagapp.feature.startPage.StartScreen
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 
-enum class Screen { DevMenu, SignIn, SignUp, ContractorSignup, Home, Bookings, NewBookingDetails, NewBookingSchedule, Ratings, AdminDashboard, DbTest }
+enum class Screen {
+    DevMenu,
+    Start,
+    SignIn,
+    SignUp,
+    ContractorSignup,
+    Home,
+    Bookings,
+    NewBookingDetails,
+    NewBookingSchedule,
+    Ratings,
+    AdminDashboard,
+    DbTest,
+}
 
 @Composable
 fun App() {
@@ -41,6 +55,7 @@ fun App() {
         }
 
         val authVm = viewModel { AuthViewModel() }
+
         val newBookingVm = viewModel {
             NewBookingViewModel(AppContainer.bookingRepository)
         }
@@ -51,9 +66,23 @@ fun App() {
                     onOpen = { screen = it }
                 )
 
+                Screen.Start -> StartScreen(
+                    onCustomerSignUp = {
+                        screen = Screen.SignUp
+                    },
+                    onContractorSignUp = {
+                        screen = Screen.ContractorSignup
+                    },
+                    onSignIn = {
+                        screen = Screen.SignIn
+                    }
+                )
+
                 Screen.SignIn -> SignInScreen(
                     vm = authVm,
-                    onSignedIn = { screen = Screen.Home },
+                    onSignedIn = {
+                        screen = Screen.Home
+                    },
                     onCreateAccount = {
                         authVm.clearMessage()
                         screen = Screen.SignUp
@@ -62,7 +91,9 @@ fun App() {
 
                 Screen.SignUp -> SignUpScreen(
                     vm = authVm,
-                    onSignedUp = { screen = Screen.Home },
+                    onSignedUp = {
+                        screen = Screen.Home
+                    },
                     onBackToSignIn = {
                         authVm.clearMessage()
                         screen = Screen.SignIn
@@ -75,14 +106,6 @@ fun App() {
 
                 Screen.Home -> MainContainer()
 
-                Screen.Bookings -> BookingsScreen(
-                    onBookAnother = {
-                        newBookingVm.reset()
-                        screen = Screen.NewBookingDetails
-                    }
-                )
-
-                //
                 Screen.Bookings -> BookingsScreen(
                     onBookAnother = {
                         newBookingVm.reset()
@@ -118,7 +141,9 @@ fun App() {
 
             if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {
                 DevMenuButton(
-                    onClick = { screen = Screen.DevMenu },
+                    onClick = {
+                        screen = Screen.DevMenu
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .safeContentPadding()
