@@ -87,27 +87,27 @@ fun DbScreen() {
             Text("Leave Review")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "--- RBAC (Admin / Customer / Unauthorized) ---", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 5. Unauthorized Access Test
-        Button(onClick = { viewModel.testUnauthorizedAccess() }, modifier = Modifier.fillMaxWidth()) {
-            Text("5. RBAC: Unauthorized Access")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 6. Customer Access Test
-        Button(onClick = { viewModel.testCustomerAccess() }, modifier = Modifier.fillMaxWidth()) {
-            Text("6. RBAC: Customer Access")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 7. Admin Access Test
-        Button(onClick = { viewModel.testAdminAccess() }, modifier = Modifier.fillMaxWidth()) {
-            Text("7. RBAC: Admin Access")
-        }
+//        Spacer(modifier = Modifier.height(16.dp))
+//        Text(text = "--- RBAC (Admin / Customer / Unauthorized) ---", style = MaterialTheme.typography.titleMedium)
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        // 5. Unauthorized Access Test
+//        Button(onClick = { viewModel.testUnauthorizedAccess() }, modifier = Modifier.fillMaxWidth()) {
+//            Text("5. RBAC: Unauthorized Access")
+//        }
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        // 6. Customer Access Test
+//        Button(onClick = { viewModel.testCustomerAccess() }, modifier = Modifier.fillMaxWidth()) {
+//            Text("6. RBAC: Customer Access")
+//        }
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        // 7. Admin Access Test
+//        Button(onClick = { viewModel.testAdminAccess() }, modifier = Modifier.fillMaxWidth()) {
+//            Text("7. RBAC: Admin Access")
+//        }
     }
 }
