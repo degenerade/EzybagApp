@@ -20,12 +20,15 @@ import bag.ezy.ezybagapp.Screen
 
 const val DEV_MENU_ENABLED = true
 
-private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
+private val devGroups:
+        List<Pair<String, List<Pair<Screen, String>>>> = listOf(
+
     "Auth" to listOf(
         Screen.Start to "Start Page",
         Screen.SignIn to "Sign in",
         Screen.SignUp to "Sign up",
     ),
+
     "Customer" to listOf(
         Screen.Home to "Home (with bottom nav)",
         Screen.Bookings to "Bookings",
@@ -33,66 +36,123 @@ private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
         Screen.NewBookingSchedule to "New booking - 2 schedule",
         Screen.Ratings to "Ratings",
     ),
+
     "Contractor" to listOf(
         Screen.ContractorSignup to "Contractor signup",
+        Screen.ContractorJobs to "Jobs near you",
     ),
+
     "Admin" to listOf(
         Screen.AdminDashboard to "Admin Dashboard",
     )
 )
 
 @Composable
-fun DevMenu(onOpen: (Screen) -> Unit) {
-    val listed = devGroups.flatMap { (_, items) -> items.map { it.first } }.toSet()
-    val others = Screen.entries.filter { it != Screen.DevMenu && it !in listed }
+fun DevMenu(
+    onOpen: (Screen) -> Unit
+) {
+
+    val listed = devGroups
+        .flatMap { (_, items) ->
+            items.map { it.first }
+        }
+        .toSet()
+
+    val others = Screen.entries.filter {
+        it != Screen.DevMenu && it !in listed
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(
+                MaterialTheme.colorScheme.background
+            )
             .safeContentPadding()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(
+                rememberScrollState()
+            )
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Dev menu", style = MaterialTheme.typography.headlineSmall)
+
         Text(
-            "Jump to any screen. Tap DEV in the corner to come back.",
+            text = "Dev menu",
+            style = MaterialTheme.typography.headlineSmall
+        )
+
+        Text(
+            text = "Jump to any screen. Tap DEV in the corner to come back.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
         devGroups.forEach { (group, items) ->
-            DevGroup(group, items, onOpen)
+            DevGroup(
+                title = group,
+                items = items,
+                onOpen = onOpen
+            )
         }
+
         if (others.isNotEmpty()) {
-            DevGroup("Other", others.map { it to it.name }, onOpen)
+            DevGroup(
+                title = "Other",
+                items = others.map {
+                    it to it.name
+                },
+                onOpen = onOpen
+            )
         }
     }
 }
 
 @Composable
-private fun DevGroup(title: String, items: List<Pair<Screen, String>>, onOpen: (Screen) -> Unit) {
+private fun DevGroup(
+    title: String,
+    items: List<Pair<Screen, String>>,
+    onOpen: (Screen) -> Unit
+) {
+
     Text(
-        title,
+        text = title,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 12.dp)
+        modifier = Modifier.padding(
+            top = 12.dp
+        )
     )
+
     items.forEach { (screen, label) ->
-        OutlinedButton(onClick = { onOpen(screen) }, modifier = Modifier.fillMaxWidth()) {
+
+        OutlinedButton(
+            onClick = {
+                onOpen(screen)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(label)
         }
     }
 }
 
 @Composable
-fun DevMenuButton(onClick: () -> Unit, modifier: Modifier) {
+fun DevMenuButton(
+    onClick: () -> Unit,
+    modifier: Modifier
+) {
+
     SmallFloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.secondary,
-        contentColor = MaterialTheme.colorScheme.onSecondary
+        containerColor =
+            MaterialTheme.colorScheme.secondary,
+        contentColor =
+            MaterialTheme.colorScheme.onSecondary
     ) {
-        Text("DEV", style = MaterialTheme.typography.labelSmall)
+        Text(
+            text = "DEV",
+            style = MaterialTheme.typography.labelSmall
+        )
     }
 }

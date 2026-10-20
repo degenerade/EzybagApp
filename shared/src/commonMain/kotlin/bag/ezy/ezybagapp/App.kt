@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp
 
 import androidx.compose.foundation.layout.Box
@@ -23,6 +22,7 @@ import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
 import bag.ezy.ezybagapp.feature.bookings.BookingsScreen
+import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingDetailsScreen
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingViewModel
 import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
@@ -36,6 +36,7 @@ enum class Screen {
     SignIn,
     SignUp,
     ContractorSignup,
+    ContractorJobs,
     Home,
     Bookings,
     NewBookingDetails,
@@ -47,22 +48,31 @@ enum class Screen {
 @Composable
 fun App() {
     ClearawayTheme {
+
         var screen by rememberSaveable {
             mutableStateOf(
                 if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn
             )
         }
 
-        val authVm = viewModel { AuthViewModel() }
+        val authVm = viewModel {
+            AuthViewModel()
+        }
 
         val newBookingVm = viewModel {
             NewBookingViewModel(AppContainer.bookingRepository)
         }
 
-        Box(Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
             when (screen) {
+
                 Screen.DevMenu -> DevMenu(
-                    onOpen = { screen = it }
+                    onOpen = {
+                        screen = it
+                    }
                 )
 
                 Screen.Start -> StartScreen(
@@ -101,6 +111,12 @@ fun App() {
 
                 Screen.ContractorSignup -> ContractorSignupScreen()
 
+                Screen.ContractorJobs -> ContractorJobsScreen(
+                    onOpenJob = {
+                        // Job details page can be connected here later
+                    }
+                )
+
                 Screen.Home -> MainContainer()
 
                 Screen.Bookings -> BookingsScreen(
@@ -130,13 +146,18 @@ fun App() {
 
                 Screen.Ratings -> RatingsScreen(
                     bookingId = "demo",
-                    onReportIssue = { /* TODO */ }
+                    onReportIssue = {
+                        // TODO
+                    }
                 )
 
                 Screen.AdminDashboard -> AdminDashboardScreen()
             }
 
-            if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {
+            if (
+                DEV_MENU_ENABLED &&
+                screen != Screen.DevMenu
+            ) {
                 DevMenuButton(
                     onClick = {
                         screen = Screen.DevMenu

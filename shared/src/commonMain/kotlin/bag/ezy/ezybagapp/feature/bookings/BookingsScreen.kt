@@ -281,7 +281,7 @@ private fun CancelledCard(count: Int) {
 }
 
 private val previewBookings = listOf(
-    BookingUiModel("CC-10482", "Mixed waste", "En route", "Fri 2 Oct", BookingTab.Active),
+    BookingUiModel("CC-10482", "Mixed waste", "En route", "2 Oct", BookingTab.Active),
     BookingUiModel("CC-10511", "Garden waste", "Upcoming", "13 Oct", BookingTab.Upcoming),
     BookingUiModel("CC-10274", "Furniture", "Completed", "18 Sep", BookingTab.Completed),
     BookingUiModel("CC-10199", "Household", "Cancelled", "4 Sep", null),
