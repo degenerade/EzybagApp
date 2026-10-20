@@ -48,120 +48,74 @@ enum class Screen {
 @Composable
 fun App() {
     ClearawayTheme {
-
         var screen by rememberSaveable {
-            mutableStateOf(
-                if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn
-            )
+            mutableStateOf(if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn)
         }
 
-        val authVm = viewModel {
-            AuthViewModel()
-        }
+        val authVm = viewModel { AuthViewModel() }
 
         val newBookingVm = viewModel {
             NewBookingViewModel(AppContainer.bookingRepository)
         }
 
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-
+        Box(Modifier.fillMaxSize()) {
             when (screen) {
-
                 Screen.DevMenu -> DevMenu(
-                    onOpen = {
-                        screen = it
-                    }
+                    onOpen = { screen = it }
                 )
 
                 Screen.Start -> StartScreen(
-                    onCustomerSignUp = {
-                        screen = Screen.SignUp
-                    },
-                    onContractorSignUp = {
-                        screen = Screen.ContractorSignup
-                    },
-                    onSignIn = {
-                        screen = Screen.SignIn
-                    }
+                    onCustomerSignUp = { screen = Screen.SignUp },
+                    onContractorSignUp = { screen = Screen.ContractorSignup },
+                    onSignIn = { screen = Screen.SignIn }
                 )
 
                 Screen.SignIn -> SignInScreen(
                     vm = authVm,
-                    onSignedIn = {
-                        screen = Screen.Home
-                    },
-                    onCreateAccount = {
-                        authVm.clearMessage()
-                        screen = Screen.SignUp
-                    }
+                    onSignedIn = { screen = Screen.Home },
+                    onCreateAccount = { authVm.clearMessage(); screen = Screen.SignUp },
                 )
 
                 Screen.SignUp -> SignUpScreen(
                     vm = authVm,
-                    onSignedUp = {
-                        screen = Screen.Home
-                    },
-                    onBackToSignIn = {
-                        authVm.clearMessage()
-                        screen = Screen.SignIn
-                    }
+                    onSignedUp = { screen = Screen.Home },
+                    onBackToSignIn = { authVm.clearMessage(); screen = Screen.SignIn },
                 )
 
                 Screen.ContractorSignup -> ContractorSignupScreen()
 
                 Screen.ContractorJobs -> ContractorJobsScreen(
-                    onOpenJob = {
-                        // Job details page can be connected here later
-                    }
+                    onOpenJob = { }
                 )
 
                 Screen.Home -> MainContainer()
 
                 Screen.Bookings -> BookingsScreen(
-                    onBookAnother = {
-                        newBookingVm.reset()
-                        screen = Screen.NewBookingDetails
-                    }
+                    onBookAnother = { newBookingVm.reset(); screen = Screen.NewBookingDetails }
                 )
 
                 Screen.NewBookingDetails -> NewBookingDetailsScreen(
                     vm = newBookingVm,
-                    onContinue = {
-                        screen = Screen.NewBookingSchedule
-                    }
+                    onContinue = { screen = Screen.NewBookingSchedule }
                 )
 
                 Screen.NewBookingSchedule -> ScheduleBagQuoteScreen(
                     vm = newBookingVm,
-                    onBack = {
-                        screen = Screen.NewBookingDetails
-                    },
-                    onBooked = {
-                        newBookingVm.reset()
-                        screen = Screen.Bookings
-                    }
+                    onBack = { screen = Screen.NewBookingDetails },
+                    onBooked = { newBookingVm.reset(); screen = Screen.Bookings }
                 )
 
                 Screen.Ratings -> RatingsScreen(
                     bookingId = "demo",
-                    onReportIssue = {
-                        // TODO
-                    }
+                    onReportIssue = { /* TODO */ }
                 )
 
                 Screen.AdminDashboard -> AdminDashboardScreen()
             }
 
-            if (
-                DEV_MENU_ENABLED &&
-                screen != Screen.DevMenu
-            ) {
+            if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {
                 DevMenuButton(
-                    onClick = {
-                        screen = Screen.DevMenu
-                    },
+                    onClick = { screen = Screen.DevMenu },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .safeContentPadding()
