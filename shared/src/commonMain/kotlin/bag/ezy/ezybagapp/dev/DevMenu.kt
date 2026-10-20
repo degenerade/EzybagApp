@@ -35,6 +35,7 @@ private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
     ),
     "Contractor" to listOf(
         Screen.ContractorSignup to "Contractor signup",
+        Screen.ContractorJobs to "Jobs near you",
     ),
     "Admin" to listOf(
         Screen.AdminDashboard to "Admin Dashboard",
@@ -56,14 +57,17 @@ fun DevMenu(onOpen: (Screen) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text("Dev menu", style = MaterialTheme.typography.headlineSmall)
+
         Text(
             "Jump to any screen. Tap DEV in the corner to come back.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
         devGroups.forEach { (group, items) ->
             DevGroup(group, items, onOpen)
         }
+
         if (others.isNotEmpty()) {
             DevGroup("Other", others.map { it to it.name }, onOpen)
         }
@@ -78,6 +82,7 @@ private fun DevGroup(title: String, items: List<Pair<Screen, String>>, onOpen: (
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(top = 12.dp)
     )
+
     items.forEach { (screen, label) ->
         OutlinedButton(onClick = { onOpen(screen) }, modifier = Modifier.fillMaxWidth()) {
             Text(label)
