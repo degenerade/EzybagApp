@@ -25,6 +25,7 @@ private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
         Screen.Start to "Start Page",
         Screen.SignIn to "Sign in",
         Screen.SignUp to "Sign up",
+        Screen.DbTest to "DbTest",
     ),
     "Customer" to listOf(
         Screen.Home to "Home (with bottom nav)",
