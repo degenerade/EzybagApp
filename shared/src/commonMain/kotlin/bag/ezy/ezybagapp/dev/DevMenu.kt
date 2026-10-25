@@ -28,10 +28,10 @@ private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
         Screen.DbTest to "DbTest",
     ),
     "Customer" to listOf(
-        Screen.Home to "Home (with bottom nav)",
-        Screen.Bookings to "Bookings",
+        Screen.Home to "Customer app (Home)",
         Screen.NewBookingDetails to "New booking - 1 details",
         Screen.NewBookingSchedule to "New booking - 2 schedule",
+        Screen.BookingDetails to "Booking details",
         Screen.Ratings to "Ratings",
     ),
     "Contractor" to listOf(

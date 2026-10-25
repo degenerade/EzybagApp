@@ -23,6 +23,10 @@ import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
 import bag.ezy.ezybagapp.feature.bookings.BookingsScreen
 import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
+import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
+import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
+import bag.ezy.ezybagapp.feature.main.MainContainer
+import bag.ezy.ezybagapp.feature.main.MainTab
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingDetailsScreen
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingViewModel
 import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
@@ -37,9 +41,9 @@ enum class Screen {
     SignUp,
     ContractorSignup,
     Home,
-    Bookings,
     NewBookingDetails,
     NewBookingSchedule,
+    BookingDetails,
     Ratings,
     AdminDashboard,
     DbTest,
@@ -53,6 +57,8 @@ fun App() {
                 if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn
             )
         }
+        var customerTab by rememberSaveable { mutableStateOf(MainTab.Home) }
+        var selectedBookingId by rememberSaveable { mutableStateOf<String?>(null) }
 
         val authVm = viewModel { AuthViewModel() }
 
@@ -60,11 +66,20 @@ fun App() {
             NewBookingViewModel(AppContainer.bookingRepository)
         }
 
+        fun startBooking(wasteType: String?) {
+            newBookingVm.reset()
+            wasteType?.let { newBookingVm.onWasteTypeSelected(it) }
+            screen = Screen.NewBookingDetails
+        }
+
         Box(Modifier.fillMaxSize()) {
             when (screen) {
-                Screen.DevMenu -> DevMenu(
-                    onOpen = { screen = it }
-                )
+                Screen.DevMenu -> DevMenu(onOpen =  { target ->
+                    if (target == Screen.BookingDetails && selectedBookingId == null) {
+                        selectedBookingId = "CC-10482"
+                    }
+                    screen = target
+                })
 
                 Screen.Start -> StartScreen(
                     onCustomerSignUp = {
@@ -104,13 +119,15 @@ fun App() {
 
                 Screen.ContractorSignup -> ContractorSignupScreen()
 
-                Screen.Home -> MainContainer()
-
-                Screen.Bookings -> BookingsScreen(
-                    onBookAnother = {
-                        newBookingVm.reset()
-                        screen = Screen.NewBookingDetails
-                    }
+                Screen.Home -> MainContainer(
+                    selectedTab = customerTab,
+                    onTabSelected = { customerTab = it },
+                    onStartBooking = { startBooking(it) },
+                    onOpenBooking = { id ->
+                        selectedBookingId = id;
+                        screen = Screen.BookingDetails
+                                    },
+                    onSignOut = { screen = Screen.SignIn }
                 )
 
                 Screen.NewBookingDetails -> NewBookingDetailsScreen(
@@ -127,8 +144,14 @@ fun App() {
                     },
                     onBooked = {
                         newBookingVm.reset()
-                        screen = Screen.Bookings
+                        customerTab = MainTab.Bookings
+                        screen = Screen.Home
                     }
+                )
+
+                Screen.BookingDetails -> BookingDetailsScreen(
+                    bookingId = selectedBookingId ?: "",
+                    onBack = { screen = Screen.Home }
                 )
 
                 Screen.Ratings -> RatingsScreen(
