@@ -37,9 +37,10 @@ import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 @Composable
 fun BookingsScreen(
     onBookAnother: () -> Unit,
+    onBookingClick: (String) -> Unit,
     vm: BookingsViewModel = viewModel {
         BookingsViewModel("demo-customer", AppContainer.bookingRepository)
-    },
+    }
 ) {
     LaunchedEffect(Unit) { vm.load() }
 
@@ -48,6 +49,7 @@ fun BookingsScreen(
         onTabSelected = vm::selectTab,
         onRetry = vm::load,
         onBookAnother = onBookAnother,
+        onBookingClick = onBookingClick
     )
 }
 
@@ -57,6 +59,7 @@ fun BookingsContent(
     onTabSelected: (BookingTab) -> Unit,
     onRetry: () -> Unit,
     onBookAnother: () -> Unit,
+    onBookingClick: (String) -> Unit
 ) {
     val visible = state.visibleBookings
 
@@ -122,7 +125,10 @@ fun BookingsContent(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(visible, key = { it.reference }) { booking ->
-                        BookingCard(booking)
+                        BookingCard(
+                            booking = booking,
+                            onClick = { onBookingClick(booking.reference) }
+                        )
                     }
 
                     if (visible.isEmpty()) {
@@ -192,10 +198,12 @@ private fun BookingTabs(
 
 @Composable
 private fun BookingCard(
-    booking: BookingUiModel
+    booking: BookingUiModel,
+    onClick: () -> Unit
 ) {
 
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
@@ -291,7 +299,13 @@ private val previewBookings = listOf(
 @Composable
 private fun BookingsLoadedPreview() {
     ClearawayTheme {
-        BookingsContent(BookingsUiState(isLoading = false, bookings = previewBookings), {}, {}, {})
+        BookingsContent(
+            BookingsUiState(isLoading = false, bookings = previewBookings),
+            {},
+            {},
+            {},
+            {}
+        )
     }
 }
 
@@ -301,7 +315,10 @@ private fun BookingsCompletedTabPreview() {
     ClearawayTheme {
         BookingsContent(
             BookingsUiState(isLoading = false, bookings = previewBookings, selectedTab = BookingTab.Completed),
-            {}, {}, {}
+            {},
+            {},
+            {},
+            {}
         )
     }
 }
@@ -309,13 +326,24 @@ private fun BookingsCompletedTabPreview() {
 @Preview
 @Composable
 private fun BookingsLoadingPreview() {
-    ClearawayTheme { BookingsContent(BookingsUiState(isLoading = true), {}, {}, {}) }
+    ClearawayTheme {
+        BookingsContent(
+            BookingsUiState(isLoading = true),
+            {},
+            {},
+            {},
+            {}) }
 }
 
 @Preview
 @Composable
 private fun BookingsErrorPreview() {
     ClearawayTheme {
-        BookingsContent(BookingsUiState(isLoading = false, error = "Couldn't load bookings"), {}, {}, {})
+        BookingsContent(
+            BookingsUiState(isLoading = false, error = "Couldn't load bookings"),
+            {},
+            {},
+            {},
+            {})
     }
 }

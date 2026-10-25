@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.contractor
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -97,7 +96,7 @@ fun ContractorSignupScreen() {
                     )
                     .background(
                         ContractorCard,
-                        RoundedCornerShape(28.dp)
+                        androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
                     )
                     .verticalScroll(rememberScrollState())
                     .padding(18.dp),
@@ -268,7 +267,7 @@ fun ContractorSignupScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ContractorGreen,
                         contentColor = Color.White
@@ -296,12 +295,12 @@ private fun ContractorSection(
             .fillMaxWidth()
             .background(
                 ContractorField,
-                RoundedCornerShape(16.dp)
+                androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
             )
             .border(
                 1.dp,
                 ContractorBorder,
-                RoundedCornerShape(16.dp)
+                androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
             )
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -318,7 +317,7 @@ private fun ContractorSection(
                 modifier = Modifier
                     .background(
                         ContractorCard,
-                        RoundedCornerShape(8.dp)
+                        androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                     )
                     .padding(horizontal = 10.dp, vertical = 8.dp)
             )
@@ -371,12 +370,12 @@ private fun ContractorField(
                 .fillMaxWidth()
                 .background(
                     ContractorBackground,
-                    RoundedCornerShape(12.dp)
+                    androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
                 )
                 .border(
                     1.dp,
                     ContractorBorder,
-                    RoundedCornerShape(12.dp)
+                    androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
                 )
                 .padding(12.dp),
             singleLine = !multiline,
@@ -413,12 +412,12 @@ private fun ContractorDocument(
             .fillMaxWidth()
             .background(
                 if (selected) ContractorCard else ContractorBackground,
-                RoundedCornerShape(12.dp)
+                androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
             )
             .border(
                 1.dp,
                 if (selected) ContractorGreen else ContractorBorder,
-                RoundedCornerShape(12.dp)
+                androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
             )
             .clickable { onChange(!selected) }
             .padding(12.dp),

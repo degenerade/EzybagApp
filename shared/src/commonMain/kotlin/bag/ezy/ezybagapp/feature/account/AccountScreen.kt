@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.account
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -38,7 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun AccountScreen(modifier: Modifier = Modifier) {
+fun AccountScreen(
+    onSignOut: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         modifier = modifier
     ) { innerPadding ->
@@ -50,27 +53,26 @@ fun AccountScreen(modifier: Modifier = Modifier) {
                 .padding(16.dp)
         ) {
             ProfileHeader(
-                name = "Sam Patel",
-                initial = "S",
-                email = "sampatel@example.com",
-                phone = "+46 73 499 9151"
+                name = "Sam Patel",             // TODO: from AuthRepository
+                initial = "S",                  // TODO: from AuthRepository
+                email = "sampatel@example.com", // TODO: from AuthRepository
+                phone = "+46 73 499 9151"       // TODO: from AuthRepository
             )
             Spacer(modifier = Modifier.height(24.dp))
-            Settings(modifier = modifier)
+            Settings(onSignOut = onSignOut)
         }
     }
 }
 
 @Composable
-fun ProfileHeader(
+private fun ProfileHeader(
     name: String,
     email: String,
     phone: String,
-    initial: String,
-    modifier: Modifier = Modifier
+    initial: String
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -105,8 +107,8 @@ fun ProfileHeader(
 }
 
 @Composable
-fun Settings(modifier: Modifier) {
-    Column(modifier = modifier.fillMaxWidth()) {
+private fun Settings(onSignOut: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Manage Account",
             style = MaterialTheme.typography.titleMedium,
@@ -117,7 +119,7 @@ fun Settings(modifier: Modifier) {
         SettingsCard()
         Spacer(modifier = Modifier.height(24.dp))
         Button(
-            onClick = {},
+            onClick = onSignOut,
             modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = RoundedCornerShape(9.dp)
         ) {
@@ -127,7 +129,7 @@ fun Settings(modifier: Modifier) {
         OutlinedButton(
             onClick = {},
             modifier = Modifier.fillMaxWidth().height(48.dp),
-            shape = RoundedCornerShape(9.dp),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = MaterialTheme.colorScheme.error
@@ -139,7 +141,7 @@ fun Settings(modifier: Modifier) {
 }
 
 @Composable
-fun SettingsCard(modifier: Modifier = Modifier) {
+private fun SettingsCard(modifier: Modifier = Modifier.Companion) {
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
