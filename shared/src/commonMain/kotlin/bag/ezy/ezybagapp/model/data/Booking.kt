@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.model.data
 
 data class WasteDetails(
@@ -15,7 +16,8 @@ data class Schedule(
 
 data class Pricing(
     val estimatedQuote: Double = 0.0,
-    val currency: String = "EUR"
+    val currency: String = "GBP",
+    val finalQuoteRequested: Boolean = false
 )
 
 data class DisposalDetails(
@@ -29,6 +31,9 @@ data class Booking(
     val customerId: String = "",
     val contractorId: String? = null,
     val collectionAddress: Address = Address(),
+    val contactPhone: String = "",
+    val accessInfo: String = "",
+    val specialInstructions: String = "",
     val wasteDetails: WasteDetails = WasteDetails(),
     val media: Media = Media(),
     val schedule: Schedule = Schedule(),

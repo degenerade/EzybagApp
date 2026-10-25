@@ -80,9 +80,13 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation("io.github.vinceglb:filekit-compose:0.8.8")
             implementation(libs.kotlinx.datetime)
+            implementation(libs.firebase.auth)
+            implementation(libs.firebase.firestore)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+
         }
         jsMain.dependencies {
             implementation(libs.wrappers.browser)
