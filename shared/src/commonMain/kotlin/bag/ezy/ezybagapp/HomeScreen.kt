@@ -1,8 +1,7 @@
+
 package bag.ezy.ezybagapp
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,26 +11,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.Icon
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,66 +31,157 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import ezybagapp.shared.generated.resources.Res
-import ezybagapp.shared.generated.resources.ic_bungalow
-import ezybagapp.shared.generated.resources.ic_calendar_month
-import ezybagapp.shared.generated.resources.ic_construction
-import ezybagapp.shared.generated.resources.ic_grass
-import ezybagapp.shared.generated.resources.ic_weekend
-import ezybagapp.shared.generated.resources.no_completed_booking
-import ezybagapp.shared.generated.resources.no_upcoming_booking
-import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.resources.vectorResource
+import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.feature.bookings.BookingTab
+import bag.ezy.ezybagapp.model.data.Booking as FirebaseBooking
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 
-enum class BookingTab { Upcoming, Completed }
+private val HomeGreen = Color(0xFF1E6F5C)
+private val HomeBackground = Color(0xFFF5F7F6)
+private val HomeOrange = Color(0xFFFFB43B)
 
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onBookingClick: (Booking) -> Unit = {}
 ) {
-    var selectedTab by rememberSaveable { mutableStateOf(BookingTab.Upcoming) }
-    var upcomingBookings by remember {
-        mutableStateOf(
-            listOf(
-                Booking(
-                    id = "1",
-                    jobStatus = "On site",
-                    wasteType = "Construction waste",
-                    estimatedVolume = "Full van",
-                    address = "12 Elm Road, M1 4BT",
-                    date = "Thu 8 Oct",
-                    time = "9am-12pm",
-                    price = "£145"
-                )
-            )
-        )
+    var userName by rememberSaveable {
+        mutableStateOf("Customer")
     }
-    var completedBookings by remember { mutableStateOf(emptyList<Booking>()) }
 
-    Scaffold(modifier = modifier.safeDrawingPadding()) { innerPadding ->
+    var selectedTab by rememberSaveable {
+        mutableStateOf(BookingTab.Upcoming)
+    }
+
+    var upcomingBookings by remember {
+        mutableStateOf(emptyList<Booking>())
+    }
+
+    var completedBookings by remember {
+        mutableStateOf(emptyList<Booking>())
+    }
+
+    var loadingBookings by remember {
+        mutableStateOf(true)
+    }
+
+    var bookingError by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    LaunchedEffect(Unit) {
+        loadingBookings = true
+        bookingError = null
+
+        try {
+            val currentUser = Firebase.auth.currentUser
+
+            if (currentUser == null) {
+                bookingError = "You are not signed in. Please sign in again."
+                upcomingBookings = emptyList()
+                completedBookings = emptyList()
+            } else {
+                // Read the name from the profile stored in Firestore.
+                userName = runCatching {
+                    AppContainer.authRepository.getCurrentUserName()
+                }.getOrDefault(
+                    currentUser.displayName
+                        ?: currentUser.email
+                        ?: "Customer"
+                )
+
+                val result = AppContainer.bookingRepository
+                    .getBookings(currentUser.uid)
+
+                result.fold(
+                    onSuccess = { firebaseBookings ->
+                        upcomingBookings = firebaseBookings
+                            .filterNot { booking ->
+                                booking.status.equals(
+                                    "Completed",
+                                    ignoreCase = true
+                                ) || booking.status.equals(
+                                    "Cancelled",
+                                    ignoreCase = true
+                                )
+                            }
+                            .map { booking ->
+                                booking.toHomeBooking()
+                            }
+
+                        completedBookings = firebaseBookings
+                            .filter { booking ->
+                                booking.status.equals(
+                                    "Completed",
+                                    ignoreCase = true
+                                )
+                            }
+                            .map { booking ->
+                                booking.toHomeBooking()
+                            }
+                    },
+                    onFailure = { error ->
+                        bookingError = error.message
+                            ?: "Unable to load bookings."
+
+                        upcomingBookings = emptyList()
+                        completedBookings = emptyList()
+                    }
+                )
+            }
+        } catch (error: Exception) {
+            bookingError = error.message
+                ?: "Unable to load your account or bookings."
+        } finally {
+            loadingBookings = false
+        }
+    }
+
+    Scaffold(
+        modifier = modifier
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(HomeBackground)
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            WelcomeMessage(userName = "John")
-            DashBoard()
-            Spacer(modifier = Modifier.height(12.dp))
+            WelcomeMessage(userName = userName)
+
+            Dashboard()
+
             WasteTypeRow()
-            Spacer(modifier = Modifier.height(16.dp))
+
+            if (loadingBookings) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            bookingError?.let { error ->
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
 
             BookingsDisplayColumn(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                },
                 upcomingBookings = upcomingBookings,
                 completedBookings = completedBookings,
                 onBookingClick = onBookingClick
@@ -108,447 +190,213 @@ fun HomeScreen(
     }
 }
 
+private fun FirebaseBooking.toHomeBooking(): Booking {
+    val formattedAddress = listOf(
+        collectionAddress.street,
+        collectionAddress.city,
+        collectionAddress.postcode
+    )
+        .filter { it.isNotBlank() }
+        .joinToString(", ")
+
+    return Booking(
+        id = bookingId,
+        jobStatus = status,
+        wasteType = wasteDetails.type,
+        estimatedVolume = wasteDetails.estimatedVolume,
+        address = formattedAddress,
+        date = schedule.preferredDate,
+        time = schedule.preferredTime,
+        price = "£${pricing.estimatedQuote.toInt()}"
+    )
+}
+
 @Composable
-fun BookingsDisplayColumn(
+private fun WelcomeMessage(userName: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = "Good morning",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray
+        )
+        Text(
+            text = "Hi $userName",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun Dashboard() {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        color = HomeGreen,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Need something taken away?",
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Get an instant price in under a minute.",
+                color = Color.White
+            )
+            Button(
+                onClick = {},
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Book a pickup")
+            }
+        }
+    }
+}
+
+@Composable
+private fun WasteTypeRow() {
+    val wasteTypes = listOf(
+        "Household",
+        "Garden",
+        "Furniture",
+        "Building"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        wasteTypes.forEach { wasteType ->
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(72.dp)
+                        .padding(4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = wasteType,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BookingsDisplayColumn(
     selectedTab: BookingTab,
     onTabSelected: (BookingTab) -> Unit,
     upcomingBookings: List<Booking>,
     completedBookings: List<Booking>,
-    onBookingClick: (Booking) -> Unit = {},
-    modifier: Modifier = Modifier
+    onBookingClick: (Booking) -> Unit
 ) {
-    Column(modifier = modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
-        BookingsButtonsRow(
-            selectedTab = selectedTab,
-            onTabSelected = onTabSelected
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        when (selectedTab) {
-            BookingTab.Upcoming -> {
-                if (upcomingBookings.isEmpty()) {
-                    EmptyUpcomingBooking()
-                } else {
-                    upcomingBookings.forEach { booking ->
-                        BookingItem(
-                            booking = booking,
-                            onClick = { onBookingClick(booking) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-            }
-
-            BookingTab.Completed -> {
-                if (completedBookings.isEmpty()) {
-                    EmptyCompletedBooking()
-                } else {
-                    completedBookings.forEach { booking ->
-                        BookingItem(
-                            booking = booking,
-                            onClick = { onBookingClick(booking) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AccountAvatar(
-    initial: String = "J",
-    hasUnread: Boolean = true,
-    onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    BadgedBox(
-        badge = {
-            if (hasUnread) {
-                Badge(
-                    containerColor = Color.Yellow,
-                    modifier = Modifier
-                        .size(11.dp)
-                        .border(2.dp, MaterialTheme.colorScheme.background, CircleShape)
-                )
-            }
-        },
-        modifier = modifier
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Surface(
-            onClick = onClick,
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primary,
-            contentColor = White,
-            modifier = Modifier.size(40.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = initial,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun WelcomeMessage(
-    userName: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Good morning",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "Hi $userName",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-        AccountAvatar()
-    }
-}
-
-@Composable
-fun DashBoard(modifier: Modifier = Modifier) {
-    ElevatedCard(
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primary
-        ),
-        modifier = modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Need something taken away?",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Get an instant price in under a minute.",
-                fontSize = 15.sp,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = {},
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(9.dp)
+                onClick = { onTabSelected(BookingTab.Upcoming) },
+                modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = "Book a pickup",
-                    color = MaterialTheme.colorScheme.onSecondary,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text("Upcoming")
             }
-        }
-    }
-}
 
-@Composable
-fun WasteTypeRow(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        WasteTypeCard(
-            icon = vectorResource(Res.drawable.ic_bungalow),
-            heading = "Household",
-            modifier = Modifier.weight(1f)
-        )
-        WasteTypeCard(
-            icon = vectorResource(Res.drawable.ic_grass),
-            heading = "Garden",
-            modifier = Modifier.weight(1f)
-        )
-        WasteTypeCard(
-            icon = vectorResource(Res.drawable.ic_weekend),
-            heading = "Furniture",
-            modifier = Modifier.weight(1f)
-        )
-        WasteTypeCard(
-            icon = vectorResource(Res.drawable.ic_construction),
-            heading = "Building",
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-fun WasteTypeCard(
-    icon: ImageVector,
-    heading: String,
-    modifier: Modifier = Modifier
-) {
-    ElevatedCard(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        modifier = modifier
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(9.dp)),
-                contentAlignment = Alignment.Center
+            Button(
+                onClick = { onTabSelected(BookingTab.Completed) },
+                modifier = Modifier.weight(1f)
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = heading,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-        }
-    }
-}
-
-@Composable
-fun BookingItem(
-    booking: Booking,
-    onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    ElevatedCard(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "${booking.wasteType} · ${booking.estimatedVolume}",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = booking.address,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Text(
-                    text = booking.jobStatus,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "${booking.date} · ${booking.time}",
-                    modifier = Modifier.weight(1f),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = booking.price,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
+                Text("Completed")
             }
         }
-    }
-}
 
-@Composable
-fun EmptyUpcomingBooking(modifier: Modifier = Modifier) {
-    ElevatedCard(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = vectorResource(Res.drawable.ic_calendar_month),
-                    contentDescription = null,
-                    tint = White,
-                    modifier = Modifier.size(28.dp)
-                )
+        val visibleBookings = when (selectedTab) {
+            BookingTab.Completed -> completedBookings
+            BookingTab.Active -> upcomingBookings.filter {
+                it.jobStatus.equals("En route", true) ||
+                        it.jobStatus.equals("On site", true)
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = stringResource(Res.string.no_upcoming_booking),
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Book a pickup and you can track it here.",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-fun EmptyCompletedBooking(modifier: Modifier = Modifier) {
-    ElevatedCard(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    tint = White,
-                    modifier = Modifier.size(28.dp)
-                )
+            BookingTab.All -> upcomingBookings + completedBookings
+            BookingTab.Upcoming -> upcomingBookings.filterNot {
+                it.jobStatus.equals("En route", true) ||
+                        it.jobStatus.equals("On site", true)
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = stringResource(Res.string.no_completed_booking),
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Finished pickups, invoices and receipts will appear here.",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
         }
-    }
-}
 
-@Composable
-fun BookingsButtonsRow(
-    selectedTab: BookingTab,
-    onTabSelected: (BookingTab) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Button(
-            onClick = { onTabSelected(BookingTab.Upcoming) },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedTab == BookingTab.Upcoming) {
-                    MaterialTheme.colorScheme.primary
+        if (visibleBookings.isEmpty()) {
+            Text(
+                text = if (selectedTab == BookingTab.Completed) {
+                    "You have no completed bookings yet."
                 } else {
-                    MaterialTheme.colorScheme.surfaceVariant
+                    "You have no upcoming bookings yet."
                 },
-                contentColor = if (selectedTab == BookingTab.Upcoming) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .height(40.dp),
-            shape = RoundedCornerShape(9.dp)
-        ) {
-            Text(
-                text = "Upcoming",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color.Gray
             )
-        }
+        } else {
+            visibleBookings.forEach { booking ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    onClick = { onBookingClick(booking) }
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "${booking.wasteType} · ${booking.estimatedVolume}",
+                            fontWeight = FontWeight.Bold
+                        )
 
-        Button(
-            onClick = { onTabSelected(BookingTab.Completed) },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (selectedTab == BookingTab.Completed) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                },
-                contentColor = if (selectedTab == BookingTab.Completed) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                        if (booking.address.isNotBlank()) {
+                            Text(
+                                text = booking.address,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+                        Text(
+                            text = "${booking.date} · ${booking.time}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+
+                        Text(
+                            text = booking.jobStatus,
+                            color = HomeGreen
+                        )
+
+                        Text(
+                            text = booking.price,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .height(40.dp),
-            shape = RoundedCornerShape(9.dp)
-        ) {
-            Text(
-                text = "Completed",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            }
         }
     }
 }

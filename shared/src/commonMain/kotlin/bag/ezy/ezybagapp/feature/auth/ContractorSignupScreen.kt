@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.auth
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

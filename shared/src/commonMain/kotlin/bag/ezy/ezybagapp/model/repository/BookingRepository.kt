@@ -2,18 +2,17 @@
 package bag.ezy.ezybagapp.model.repository
 
 import bag.ezy.ezybagapp.model.data.Booking
-import bag.ezy.ezybagapp.model.data.Schedule
-import bag.ezy.ezybagapp.model.data.WasteDetails
-import kotlinx.coroutines.delay
-
-private const val DEMO_CUSTOMER_ID = "demo-customer"
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.firestore.firestore
+import kotlin.time.Clock
 
 interface BookingRepository {
+
     suspend fun getBookings(customerId: String): Result<List<Booking>>
 
     suspend fun getEstimate(
         wasteType: String,
-        volume: String,
+        volume: String
     ): Double
 
     suspend fun createBooking(booking: Booking): Result<String>
@@ -21,91 +20,95 @@ interface BookingRepository {
     suspend fun requestFinalQuote(booking: Booking): Result<Unit>
 }
 
-class FakeBookingRepository : BookingRepository {
+class FirebaseBookingRepository : BookingRepository {
 
-    private val bookings = mutableListOf(
-        Booking(
-            bookingId = "CC-10482",
-            customerId = DEMO_CUSTOMER_ID,
-            wasteDetails = WasteDetails(type = "Mixed waste"),
-            schedule = Schedule(preferredDate = "Fri 2 Oct"),
-            status = "En route",
-        ),
-        Booking(
-            bookingId = "CC-10511",
-            customerId = DEMO_CUSTOMER_ID,
-            wasteDetails = WasteDetails(type = "Garden waste"),
-            schedule = Schedule(preferredDate = "13 Oct"),
-            status = "Upcoming",
-        ),
-        Booking(
-            bookingId = "CC-10274",
-            customerId = DEMO_CUSTOMER_ID,
-            wasteDetails = WasteDetails(type = "Furniture"),
-            schedule = Schedule(preferredDate = "18 Sep"),
-            status = "Completed",
-        ),
-        Booking(
-            bookingId = "CC-10199",
-            customerId = DEMO_CUSTOMER_ID,
-            wasteDetails = WasteDetails(type = "Household"),
-            schedule = Schedule(preferredDate = "4 Sep"),
-            status = "Cancelled",
-        ),
-    )
+    private val firestore = Firebase.firestore
+    private val bookingsCollection = firestore.collection("bookings")
 
     override suspend fun getBookings(
-        customerId: String,
-    ): Result<List<Booking>> {
-        delay(500)
+        customerId: String
+    ): Result<List<Booking>> = runCatching {
+        require(customerId.isNotBlank()) {
+            "Customer ID is required to load bookings."
+        }
 
-        return Result.success(
-            bookings.filter { it.customerId == customerId }.toList(),
-        )
+        val snapshot = bookingsCollection
+            .where { "customerId" equalTo customerId }
+            .get()
+
+        snapshot.documents.mapNotNull { document ->
+            runCatching {
+                document.data<Booking>()
+            }.getOrNull()
+        }
     }
 
     override suspend fun getEstimate(
         wasteType: String,
-        volume: String,
-    ): Double = when (volume) {
-        "Small" -> 70.0
-        "Half van" -> 145.0
-        "Full van" -> 260.0
-        else -> 0.0
-    }
-
-    override suspend fun createBooking(
-        booking: Booking,
-    ): Result<String> {
-        delay(800)
-
-        return runCatching {
-            require(booking.customerId.isNotBlank()) {
-                "Customer ID is required to create a booking."
-            }
-
-            var id: String
-
-            do {
-                id = "CC-" + (10600..19999).random()
-            } while (bookings.any { it.bookingId == id })
-
-            bookings.add(
-                0,
-                booking.copy(
-                    bookingId = id,
-                    status = "Upcoming",
-                ),
-            )
-
-            id
+        volume: String
+    ): Double {
+        return when (volume) {
+            "Small" -> 70.0
+            "Half van" -> 145.0
+            "Full van" -> 260.0
+            else -> 0.0
         }
     }
 
+    override suspend fun createBooking(
+        booking: Booking
+    ): Result<String> = runCatching {
+
+        require(booking.customerId.isNotBlank()) {
+            "Customer ID is required to create a booking."
+        }
+
+        val document = bookingsCollection.document
+
+        val bookingToSave = booking.copy(
+            bookingId = document.id,
+
+            customerPhone = booking.customerPhone.ifBlank {
+                booking.contactPhone
+            },
+
+            contactPhone = booking.contactPhone.ifBlank {
+                booking.customerPhone
+            },
+
+            accessDescriptionInformation =
+                booking.accessDescriptionInformation.ifBlank {
+                    booking.accessInfo
+                },
+
+            accessInfo = booking.accessInfo.ifBlank {
+                booking.accessDescriptionInformation
+            },
+
+            status = "Upcoming",
+
+            createdAt = booking.createdAt.ifBlank {
+                Clock.System.now().toString()
+            }
+        )
+
+        document.set(bookingToSave)
+
+        document.id
+    }
+
+
     override suspend fun requestFinalQuote(
-        booking: Booking,
-    ): Result<Unit> {
-        delay(500)
-        return Result.success(Unit)
+        booking: Booking
+    ): Result<Unit> = runCatching {
+        require(booking.bookingId.isNotBlank()) {
+            "Booking ID is required to request a final quote."
+        }
+
+        bookingsCollection
+            .document(booking.bookingId)
+            .update(
+                "pricing.finalQuoteRequested" to true
+            )
     }
 }

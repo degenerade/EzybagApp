@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp
 
 import androidx.compose.foundation.layout.Box
@@ -41,32 +42,56 @@ enum class MainTab(
 @Composable
 fun MainContainer(
     modifier: Modifier = Modifier,
-    initialTab: MainTab = MainTab.Home
+    initialTab: MainTab = MainTab.Home,
+    onCreatePickup: () -> Unit = {},
+    onOpenBookings: () -> Unit = {}
 ) {
-    var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
+    var selectedTab by rememberSaveable {
+        mutableStateOf(initialTab)
+    }
 
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(
+        modifier = modifier.fillMaxSize()
+    ) {
         val isWideScreen = maxWidth >= 600.dp
 
         if (isWideScreen) {
-            Row(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
                 NavigationRail {
                     MainTab.entries.forEach { tab ->
                         NavigationRailItem(
                             selected = selectedTab == tab,
-                            onClick = { selectedTab = tab },
+                            onClick = {
+                                when (tab) {
+                                    MainTab.CreatePickup -> onCreatePickup()
+                                    else -> selectedTab = tab
+                                }
+                            },
                             icon = {
                                 Icon(
                                     imageVector = tab.icon(),
                                     contentDescription = tab.title
                                 )
                             },
-                            label = { Text(text = tab.title) }
+                            label = {
+                                Text(text = tab.title)
+                            }
                         )
                     }
                 }
-                Box(modifier = Modifier.weight(1f).fillMaxSize()) {
-                    ScreenContent(selectedTab)
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                ) {
+                    ScreenContent(
+                        selectedTab = selectedTab,
+                        onCreatePickup = onCreatePickup,
+                        onOpenBookings = onOpenBookings
+                    )
                 }
             }
         } else {
@@ -76,14 +101,21 @@ fun MainContainer(
                         MainTab.entries.forEach { tab ->
                             NavigationBarItem(
                                 selected = selectedTab == tab,
-                                onClick = { selectedTab = tab },
+                                onClick = {
+                                    when (tab) {
+                                        MainTab.CreatePickup -> onCreatePickup()
+                                        else -> selectedTab = tab
+                                    }
+                                },
                                 icon = {
                                     Icon(
                                         imageVector = tab.icon(),
                                         contentDescription = tab.title
                                     )
                                 },
-                                label = { Text(text = tab.title) }
+                                label = {
+                                    Text(text = tab.title)
+                                }
                             )
                         }
                     }
@@ -94,7 +126,11 @@ fun MainContainer(
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    ScreenContent(selectedTab)
+                    ScreenContent(
+                        selectedTab = selectedTab,
+                        onCreatePickup = onCreatePickup,
+                        onOpenBookings = onOpenBookings
+                    )
                 }
             }
         }
@@ -102,11 +138,20 @@ fun MainContainer(
 }
 
 @Composable
-private fun ScreenContent(selectedTab: MainTab) {
+private fun ScreenContent(
+    selectedTab: MainTab,
+    onCreatePickup: () -> Unit,
+    onOpenBookings: () -> Unit
+) {
     when (selectedTab) {
         MainTab.Home -> HomeScreen()
-        MainTab.CreatePickup -> CreatePickupScreen()
+
+        MainTab.CreatePickup -> CreatePickupScreen(
+            onCreatePickup = onCreatePickup
+        )
+
         MainTab.Support -> SupportScreen()
+
         MainTab.Account -> AccountScreen()
     }
 }

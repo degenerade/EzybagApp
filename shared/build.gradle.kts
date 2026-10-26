@@ -1,3 +1,4 @@
+
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -6,13 +7,18 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 tasks.configureEach {
-    if (name.contains("Ios", ignoreCase = true) || name.contains("Apple", ignoreCase = true)) {
+    if (name.contains("Ios", ignoreCase = true) ||
+        name.contains("Apple", ignoreCase = true)
+    ) {
         onlyIf {
             try {
-                ProcessBuilder("xcrun", "xcodebuild", "-version").start().waitFor() == 0
+                ProcessBuilder("xcrun", "xcodebuild", "-version")
+                    .start()
+                    .waitFor() == 0
             } catch (e: Exception) {
                 false
             }
@@ -30,44 +36,48 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     js {
         browser()
         binaries.executable()
     }
-    
+
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
         binaries.executable()
     }
-    
+
     android {
-       namespace = "bag.ezy.ezybagapp.shared"
-       compileSdk = libs.versions.android.compileSdk.get().toInt()
-       minSdk = libs.versions.android.minSdk.get().toInt()
-    
-       compilerOptions {
-           jvmTarget = JvmTarget.JVM_11
-       }
-       androidResources {
-           enable = true
-       }
-       withHostTest {
-           isIncludeAndroidResources = true
-       }
-       withDeviceTestBuilder {
-           sourceSetTreeName = "test"
-       }.configure {
-           instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-       }
+        namespace = "bag.ezy.ezybagapp.shared"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
+
+        androidResources {
+            enable = true
+        }
+
+        withHostTest {
+            isIncludeAndroidResources = true
+        }
+
+        withDeviceTestBuilder {
+            sourceSetTreeName = "test"
+        }.configure {
+            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
     }
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
         }
+
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
@@ -83,11 +93,15 @@ kotlin {
             implementation(libs.firebase.auth)
             implementation(libs.firebase.firestore)
 
+
+            implementation(libs.firebase.auth)
+            implementation(libs.firebase.firestore)
         }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-
         }
+
         jsMain.dependencies {
             implementation(libs.wrappers.browser)
         }

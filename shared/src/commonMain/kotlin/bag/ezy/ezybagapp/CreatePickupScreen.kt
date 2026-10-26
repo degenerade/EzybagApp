@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp
 
 import androidx.compose.foundation.background
@@ -37,7 +38,10 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreatePickupScreen(modifier: Modifier = Modifier) {
+fun CreatePickupScreen(
+    modifier: Modifier = Modifier,
+    onCreatePickup: () -> Unit = {}
+) {
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -58,17 +62,26 @@ fun CreatePickupScreen(modifier: Modifier = Modifier) {
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            CreatePickup()
+            CreatePickup(
+                onCreatePickup = onCreatePickup
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
+
             CreatePickupInfo()
         }
     }
 }
 
 @Composable
-fun CreatePickup(modifier: Modifier = Modifier) {
+fun CreatePickup(
+    modifier: Modifier = Modifier,
+    onCreatePickup: () -> Unit = {}
+) {
     ElevatedCard(
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 3.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -84,7 +97,10 @@ fun CreatePickup(modifier: Modifier = Modifier) {
             Box(
                 modifier = Modifier
                     .size(64.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -94,19 +110,23 @@ fun CreatePickup(modifier: Modifier = Modifier) {
                     modifier = Modifier.size(32.dp)
                 )
             }
+
             Text(
                 text = "Need something taken away?",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
+
             Text(
                 text = "Get an instant price and book a pickup in a few minutes.",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
             Spacer(modifier = Modifier.height(8.dp))
+
             Button(
-                onClick = {},
+                onClick = onCreatePickup,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary
                 ),
@@ -127,9 +147,13 @@ fun CreatePickup(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun CreatePickupInfo(modifier: Modifier = Modifier) {
+fun CreatePickupInfo(
+    modifier: Modifier = Modifier
+) {
     ElevatedCard(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -138,27 +162,59 @@ fun CreatePickupInfo(modifier: Modifier = Modifier) {
             .padding(bottom = 16.dp)
             .fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
             Text(
                 text = "HOW IT WORKS",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary
             )
+
             Spacer(modifier = Modifier.height(12.dp))
+
             Row(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "1. ", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                Text(text = "Describe your waste", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "1. ",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Describe your waste",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
+
             Spacer(modifier = Modifier.height(8.dp))
+
             Row(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "2. ", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                Text(text = "Choose a date and get a quote", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "2. ",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Choose a date and get a quote",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
+
             Spacer(modifier = Modifier.height(8.dp))
+
             Row(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "3. ", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                Text(text = "A vetted contractor collects it", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "3. ",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "A vetted contractor collects it",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }

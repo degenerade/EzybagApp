@@ -1,3 +1,4 @@
+
 [versions]
 agp = "9.1.1"
 android-compileSdk = "37"
@@ -39,7 +40,7 @@ compose-components-resources = { module = "org.jetbrains.compose.components:comp
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
 wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-compose-material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "material-icons"}
+compose-material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "material-icons" }
 firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "firebase-kotlin" }
 firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "firebase-kotlin" }
 firebase-storage = { module = "dev.gitlive:firebase-storage", version.ref = "firebase-kotlin" }
@@ -51,3 +52,4 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMul
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

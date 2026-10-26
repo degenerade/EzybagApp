@@ -13,12 +13,12 @@ import bag.ezy.ezybagapp.model.data.Pricing
 import bag.ezy.ezybagapp.model.data.Schedule
 import bag.ezy.ezybagapp.model.data.WasteDetails
 import bag.ezy.ezybagapp.model.repository.BookingRepository
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
-
-private const val DEMO_CUSTOMER_ID = "demo-customer"
 
 data class NewBookingState(
     // Collection details
@@ -43,17 +43,16 @@ data class NewBookingState(
     // UI state
     val isSubmitting: Boolean = false,
     val quoteRequested: Boolean = false,
-    val error: String? = null,
+    val error: String? = null
 )
 
 class NewBookingViewModel(
-    private val repo: BookingRepository,
+    private val repo: BookingRepository
 ) : ViewModel() {
 
     var state by mutableStateOf(NewBookingState())
         private set
 
-    // Collection details
     fun onAddressChange(value: String) {
         state = state.copy(address = value, error = null)
     }
@@ -81,17 +80,17 @@ class NewBookingViewModel(
     fun onFilesPicked(names: List<String>) {
         state = state.copy(
             mediaFileNames = (state.mediaFileNames + names).distinct(),
-            error = null,
+            error = null
         )
     }
 
     fun onFileRemoved(name: String) {
         state = state.copy(
             mediaFileNames = state.mediaFileNames - name,
+            error = null
         )
     }
 
-    // Validate details and calculate the estimate before continuing.
     fun continueFromDetails(onValid: () -> Unit) {
         val current = state
 
@@ -118,9 +117,10 @@ class NewBookingViewModel(
 
             try {
                 val currentState = state
+
                 val estimate = repo.getEstimate(
                     currentState.wasteType,
-                    currentState.volume,
+                    currentState.volume
                 )
 
                 state = state.copy(estimate = estimate)
@@ -128,7 +128,7 @@ class NewBookingViewModel(
             } catch (exception: Exception) {
                 state = state.copy(
                     error = exception.message
-                        ?: "Could not calculate the estimate.",
+                        ?: "Could not calculate the estimate."
                 )
             }
         }
@@ -143,7 +143,7 @@ class NewBookingViewModel(
         state = state.copy(
             hour = hour.coerceIn(0, 23),
             minute = minute.coerceIn(0, 59),
-            error = null,
+            error = null
         )
     }
 
@@ -152,7 +152,10 @@ class NewBookingViewModel(
     }
 
     fun onInstructionChange(value: String) {
-        state = state.copy(specialInstructions = value, error = null)
+        state = state.copy(
+            specialInstructions = value,
+            error = null
+        )
     }
 
     fun onNeedsBagChange(value: Boolean) {
@@ -163,39 +166,17 @@ class NewBookingViewModel(
         state = state.copy(bagSize = value, error = null)
     }
 
-    // Request a final quote.
+    // Test flow: record the quote request locally.
+    // No Firestore update is attempted until a booking exists.
     fun requestQuote() {
-        if (state.isSubmitting) return
-
-        viewModelScope.launch {
-            state = state.copy(
-                isSubmitting = true,
-                error = null,
-            )
-
-            try {
-                // Pass a booking with the quote-request flag enabled.
-                val bookingForQuote = toBooking(
-                    quoteRequested = true,
-                )
-
-                repo.requestFinalQuote(bookingForQuote)
-
-                state = state.copy(
-                    isSubmitting = false,
-                    quoteRequested = true,
-                )
-            } catch (exception: Exception) {
-                state = state.copy(
-                    isSubmitting = false,
-                    error = exception.message
-                        ?: "Could not request a final quote.",
-                )
-            }
-        }
+        state = state.copy(
+            quoteRequested = true,
+            error = null
+        )
     }
 
-    // Create the booking.
+    // TEST ONLY: simulate payment by saving a booking.
+    // No real payment is processed.
     fun pay(onBooked: (bookingId: String) -> Unit) {
         if (state.isSubmitting) return
 
@@ -210,6 +191,9 @@ class NewBookingViewModel(
             current.dateMillis == null ->
                 "Please choose a collection date."
 
+            current.estimate == null ->
+                "Please calculate the booking estimate first."
+
             else -> null
         }
 
@@ -221,52 +205,80 @@ class NewBookingViewModel(
         viewModelScope.launch {
             state = state.copy(
                 isSubmitting = true,
-                error = null,
+                error = null
             )
 
             try {
-                val result = repo.createBooking(toBooking())
+                val customerId = Firebase.auth.currentUser?.uid
 
-                result
-                    .onSuccess { bookingId ->
-                        state = state.copy(isSubmitting = false)
-                        onBooked(bookingId)
-                    }
-                    .onFailure { exception ->
+                if (customerId.isNullOrBlank()) {
+                    state = state.copy(
+                        isSubmitting = false,
+                        error = "Please sign in before creating a booking."
+                    )
+                    return@launch
+                }
+
+                val result = repo.createBooking(
+                    toBooking(customerId = customerId)
+                )
+
+                result.fold(
+                    onSuccess = { bookingId ->
                         state = state.copy(
                             isSubmitting = false,
-                            error = exception.message ?: "Booking failed.",
+                            error = null
+                        )
+
+                        // Continue only after the booking is saved.
+                        onBooked(bookingId)
+                    },
+                    onFailure = { exception ->
+                        state = state.copy(
+                            isSubmitting = false,
+                            error = exception.message
+                                ?: "Could not save the booking."
                         )
                     }
+                )
             } catch (exception: Exception) {
                 state = state.copy(
                     isSubmitting = false,
-                    error = exception.message ?: "Booking failed.",
+                    error = exception.message
+                        ?: "Could not save the booking."
                 )
             }
         }
     }
 
-    // Start a fresh booking.
     fun reset() {
         state = NewBookingState()
     }
 
-    // Convert the form state into the booking data model.
     private fun toBooking(
-        quoteRequested: Boolean = state.quoteRequested,
+        customerId: String,
+        quoteRequested: Boolean = state.quoteRequested
     ): Booking {
         val current = state
+        val phone = current.phone.trim()
+        val access = current.accessInfo.trim()
 
         return Booking(
-            customerId = DEMO_CUSTOMER_ID,
+            customerId = customerId,
+
             collectionAddress = Address(
                 street = current.address.trim(),
-                postcode = current.postcode.trim(),
+                postcode = current.postcode.trim()
             ),
-            contactPhone = current.phone.trim(),
-            accessInfo = current.accessInfo.trim(),
+
+            customerPhone = phone,
+            contactPhone = phone,
+
+            accessInfo = access,
+            accessDescriptionInformation = access,
+
             specialInstructions = current.specialInstructions.trim(),
+
             wasteDetails = WasteDetails(
                 type = current.wasteType,
                 description = current.description.trim(),
@@ -276,25 +288,28 @@ class NewBookingViewModel(
                     current.bagSize
                 } else {
                     null
-                },
+                }
             ),
+
             media = Media(
-                photos = current.mediaFileNames,
+                photos = current.mediaFileNames
             ),
+
             schedule = Schedule(
                 preferredDate = current.dateMillis?.let {
                     isoDate(it)
                 } ?: "",
                 preferredTime = formatTime(
                     current.hour,
-                    current.minute,
-                ),
+                    current.minute
+                )
             ),
+
             pricing = Pricing(
                 estimatedQuote = current.estimate ?: 0.0,
                 currency = "GBP",
-                finalQuoteRequested = quoteRequested,
-            ),
+                finalQuoteRequested = quoteRequested
+            )
         )
     }
 
