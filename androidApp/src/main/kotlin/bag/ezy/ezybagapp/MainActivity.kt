@@ -1,79 +1,80 @@
 package bag.ezy.ezybagapp
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import bag.ezy.ezybagapp.model.data.Customer
-import bag.ezy.ezybagapp.model.queries.CustomerRepository
-import kotlinx.coroutines.launch
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import bag.ezy.ezybagapp.model.queries.GoogleAuthHandler
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        setContent {
-            var firebaseStatus by remember { mutableStateOf("Firebase (GitLive KMP): Ready") }
-            var operationResult by remember { mutableStateOf("Tap a button below to test CRUD") }
-            val repository = remember { CustomerRepository() }
-            val coroutineScope = rememberCoroutineScope()
+        // Register the native Android Google Sign-In handler callback using Credential Manager
+        GoogleAuthHandler.onGoogleSignInRequested = {
+            withContext(Dispatchers.Main) {
+                try {
+                    // Read dynamically from google-services.json generated resources without hardcoding
+                    val webClientId = getString(R.string.default_web_client_id)
 
-            App(
-                firebaseStatus = firebaseStatus,
-                operationResult = operationResult,
-                onCreateCustomer = {
-                    coroutineScope.launch {
-                        operationResult = "Creating customer..."
-                        val newCustomer = Customer(
-                            customerId = "cust_001",
-                            fullName = "John Doe",
-                            email = "john.doe@example.com",
-                            phone = "+44123456789",
-                            createdAt = "2025-02-25"
-                        )
-                        repository.createCustomer(newCustomer)
-                            .onSuccess { operationResult = "Created customer: cust_001 in commonMain" }
-                            .onFailure { e -> operationResult = "Create failed: ${e.message}" }
+                    val googleIdOption = GetGoogleIdOption.Builder()
+                        .setServerClientId(webClientId)
+                        .setFilterByAuthorizedAccounts(false)
+                        .build()
+
+                    val request = GetCredentialRequest.Builder()
+                        .addCredentialOption(googleIdOption)
+                        .build()
+
+                    // Trigger native Android Google account selector pop-up on the phone
+                    val credentialManager = CredentialManager.create(this@MainActivity)
+                    val result = credentialManager.getCredential(this@MainActivity, request)
+                    val credential = result.credential
+
+                    if (credential is CustomCredential &&
+                        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                    ) {
+                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                        val googleIdToken = googleIdTokenCredential.idToken
+                        val email = googleIdTokenCredential.id
+                        val displayName = googleIdTokenCredential.displayName ?: "Google User"
+
+                        // Authenticate with Firebase Auth
+                        val firebaseCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
+                        val authResult = FirebaseAuth.getInstance().signInWithCredential(firebaseCredential).await()
+                        val firebaseUser = authResult.user
+
+                        if (firebaseUser != null) {
+                            Result.success(Pair(firebaseUser.email ?: email, firebaseUser.displayName ?: displayName))
+                        } else {
+                            Result.failure(Exception("Firebase user was null after Google sign-in"))
+                        }
+                    } else {
+                        Result.failure(Exception("Unexpected credential type received"))
                     }
-                },
-                onReadCustomer = {
-                    coroutineScope.launch {
-                        operationResult = "Reading customer..."
-                        repository.getCustomer("cust_001")
-                            .onSuccess { customer ->
-                                operationResult = if (customer != null) {
-                                    "Read success: ${customer.fullName} (${customer.email})"
-                                } else {
-                                    "Customer not found!"
-                                }
-                            }
-                            .onFailure { e -> operationResult = "Read failed: ${e.message}" }
-                    }
-                },
-                onUpdateCustomer = {
-                    coroutineScope.launch {
-                        operationResult = "Updating customer..."
-                        val updates = mapOf<String, Any>(
-                            "fullName" to "John Updated Doe",
-                            "phone" to "+44987654321"
-                        )
-                        repository.updateCustomer("cust_001", updates)
-                            .onSuccess { operationResult = "Updated customer cust_001 successfully" }
-                            .onFailure { e -> operationResult = "Update failed: ${e.message}" }
-                    }
-                },
-                onDeleteCustomer = {
-                    coroutineScope.launch {
-                        operationResult = "Deleting customer..."
-                        repository.deleteCustomer("cust_001")
-                            .onSuccess { operationResult = "Deleted customer cust_001 successfully" }
-                            .onFailure { e -> operationResult = "Delete failed: ${e.message}" }
-                    }
+                } catch (e: Exception) {
+                    Log.e("GoogleAuthError", "Google sign-in exception: ${e.javaClass.simpleName} - ${e.message}", e)
+                    Result.failure(e)
                 }
-            )
+            }
+        }
+
+        setContent {
+            App()
         }
     }
 }

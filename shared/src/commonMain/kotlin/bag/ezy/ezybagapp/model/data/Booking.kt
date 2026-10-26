@@ -1,39 +1,46 @@
 package bag.ezy.ezybagapp.model.data
-
+import kotlinx.serialization.Serializable
+@Serializable
 data class WasteDetails(
-    val type: String = "",
+    val type: String = "", // Household, Garden, Construction, Furniture, Electrical, Mixed, Other
     val description: String = "",
-    val estimatedVolume: String = "",
+    val estimatedVolume: String = "", // Small, Half van, Full van
     val bagRequired: Boolean = false,
-    val bagSize: String? = null
+    val bagSize: String? = null // Small, Medium, Large
 )
-
+@Serializable
 data class Schedule(
     val preferredDate: String = "",
     val preferredTime: String = ""
 )
-
+@Serializable
 data class Pricing(
     val estimatedQuote: Double = 0.0,
-    val currency: String = "EUR"
+    val currency: String = "GBP",
+    val finalQuoteRequested: Boolean = false
 )
-
+@Serializable
 data class DisposalDetails(
     val facilityName: String = "",
     val weightKg: Double = 0.0,
-    val referenceNumber: String = ""
+    val referenceNumber: String = "",
+    val completionPhotos: List<String> = emptyList()
 )
-
+@Serializable
 data class Booking(
     val bookingId: String = "",
     val customerId: String = "",
     val contractorId: String? = null,
+    val customerPhone: String = "", // Added from New Booking UI
     val collectionAddress: Address = Address(),
+    val accessDescriptionInformation: String = "", // Added from UI (e.g., side gate, code)
+    val specialInstructions: String = "", // Added from UI (e.g., call on arrival)
     val wasteDetails: WasteDetails = WasteDetails(),
     val media: Media = Media(),
     val schedule: Schedule = Schedule(),
     val pricing: Pricing = Pricing(),
-    val status: String = "Pending",
+    val status: String = "Pending", // Pending, Upcoming, En Route, On Site, Completed, Cancelled
     val contractorCurrentLocation: GeoLocation? = null,
-    val disposalDetails: DisposalDetails? = null
+    val disposalDetails: DisposalDetails? = null,
+    val createdAt: String = "" //having such info is useful :D
 )
