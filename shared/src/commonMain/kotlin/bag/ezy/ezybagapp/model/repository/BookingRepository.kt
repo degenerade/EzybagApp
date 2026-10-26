@@ -75,29 +75,8 @@ class FirebaseBookingRepository : BookingRepository {
 
         val bookingToSave = booking.copy(
             bookingId = document.id,
-
-            customerPhone = booking.customerPhone.ifBlank {
-                booking.contactPhone
-            },
-
-            contactPhone = booking.contactPhone.ifBlank {
-                booking.customerPhone
-            },
-
-            accessDescriptionInformation =
-                booking.accessDescriptionInformation.ifBlank {
-                    booking.accessInfo
-                },
-
-            accessInfo = booking.accessInfo.ifBlank {
-                booking.accessDescriptionInformation
-            },
-
             status = "Upcoming",
-
-            createdAt = booking.createdAt.ifBlank {
-                Clock.System.now().toString()
-            }
+            createdAt = booking.createdAt.ifBlank { Clock.System.now().toString() }
         )
 
         document.set(bookingToSave)

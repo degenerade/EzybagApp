@@ -39,9 +39,7 @@ data class Booking(
     val contractorId: String? = null,
     val customerPhone: String = "", // Added from New Booking UI
     val collectionAddress: Address = Address(),
-    val contactPhone: String = "",
     val accessInfo: String = "",
-    val accessDescriptionInformation: String = "",
     val specialInstructions: String = "",
     val wasteDetails: WasteDetails = WasteDetails(),
     val media: Media = Media(),

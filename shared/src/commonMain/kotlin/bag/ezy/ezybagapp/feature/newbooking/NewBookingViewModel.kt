@@ -272,10 +272,8 @@ class NewBookingViewModel(
             ),
 
             customerPhone = phone,
-            contactPhone = phone,
 
             accessInfo = access,
-            accessDescriptionInformation = access,
 
             specialInstructions = current.specialInstructions.trim(),
 
