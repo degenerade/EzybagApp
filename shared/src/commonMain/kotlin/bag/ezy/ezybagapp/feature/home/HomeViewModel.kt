@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bag.ezy.ezybagapp.model.data.Booking
+import bag.ezy.ezybagapp.model.repository.AuthRepository
 import bag.ezy.ezybagapp.model.repository.BookingRepository
 import bag.ezy.ezybagapp.ui.format.formatDisplayDate
 import bag.ezy.ezybagapp.ui.format.formatDisplayTime
@@ -25,7 +26,7 @@ data class HomeBookingUiModel(
 )
 
 data class HomeUiState(
-    val userName: String = "Sam",
+    val userName: String = "",
     val isLoading: Boolean = true,
     val bookings: List<HomeBookingUiModel> = emptyList(),
     val filter: HomeBookingFilter = HomeBookingFilter.Upcoming,
@@ -36,18 +37,26 @@ data class HomeUiState(
 }
 
 class HomeViewModel(
-    private val customerId: String,
+    private val auth: AuthRepository,
     private val repo: BookingRepository,
 ) : ViewModel() {
     var state by mutableStateOf(HomeUiState())
         private set
 
     fun load() {
+        val customerId = auth.currentUserId()
+        if (customerId.isNullOrBlank()) {
+            state = state.copy(isLoading = false, error = "Please sign in to see your bookings.")
+            return
+        }
         viewModelScope.launch {
             state = state.copy(isLoading = true, error = null)
+            val name = auth.getCurrentUserName()
             repo.getBookings(customerId)
-                .onSuccess { list -> state = state.copy(isLoading = false, bookings = list.map { it.toUi() }) }
-                .onFailure { state = state.copy(isLoading = false, error = it.message ?: "Couldn't load bookings") }
+                .onSuccess { list ->
+                    state = state.copy(isLoading = false, userName = name, bookings = list.map { it.toUi() })
+                }
+                .onFailure { state = state.copy(isLoading = false, userName = name, error = it.message ?: "Couldn't load bookings") }
         }
     }
 

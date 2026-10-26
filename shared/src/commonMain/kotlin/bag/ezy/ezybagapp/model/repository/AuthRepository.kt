@@ -22,6 +22,8 @@ interface AuthRepository {
     ): Result<Unit>
 
     suspend fun getCurrentUserName(): String
+    fun currentUserId(): String?
+    suspend fun signOut()
 }
 
 class FirebaseAuthRepository : AuthRepository {
@@ -108,5 +110,11 @@ class FirebaseAuthRepository : AuthRepository {
         } catch (e: Exception) {
             user.email?.substringBefore("@") ?: "Customer"
         }
+    }
+
+    override fun currentUserId(): String? = auth.currentUser?.uid
+
+    override suspend fun signOut() {
+        auth.signOut()
     }
 }

@@ -33,15 +33,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
-import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.auth.auth
 
 @Composable
 fun BookingsScreen(
     onBookAnother: () -> Unit,
     onBookingClick: (String) -> Unit,
     vm: BookingsViewModel = viewModel {
-        BookingsViewModel("demo-customer", AppContainer.bookingRepository)
+        BookingsViewModel(AppContainer.authRepository, AppContainer.bookingRepository)
     }
 ) {
     LaunchedEffect(Unit) { vm.load() }

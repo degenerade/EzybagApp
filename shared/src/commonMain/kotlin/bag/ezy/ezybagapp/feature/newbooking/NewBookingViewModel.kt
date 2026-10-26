@@ -12,9 +12,8 @@ import bag.ezy.ezybagapp.model.data.Media
 import bag.ezy.ezybagapp.model.data.Pricing
 import bag.ezy.ezybagapp.model.data.Schedule
 import bag.ezy.ezybagapp.model.data.WasteDetails
+import bag.ezy.ezybagapp.model.repository.AuthRepository
 import bag.ezy.ezybagapp.model.repository.BookingRepository
-import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -47,7 +46,8 @@ data class NewBookingState(
 )
 
 class NewBookingViewModel(
-    private val repo: BookingRepository
+    private val repo: BookingRepository,
+    private val auth: AuthRepository
 ) : ViewModel() {
 
     var state by mutableStateOf(NewBookingState())
@@ -209,7 +209,7 @@ class NewBookingViewModel(
             )
 
             try {
-                val customerId = Firebase.auth.currentUser?.uid
+                val customerId = auth.currentUserId()
 
                 if (customerId.isNullOrBlank()) {
                     state = state.copy(

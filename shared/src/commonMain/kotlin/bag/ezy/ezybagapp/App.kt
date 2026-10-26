@@ -63,7 +63,9 @@ fun App() {
         val authVm = viewModel { AuthViewModel() }
 
         val newBookingVm = viewModel {
-            NewBookingViewModel(AppContainer.bookingRepository)
+            NewBookingViewModel(
+                AppContainer.bookingRepository,
+                AppContainer.authRepository)
         }
 
         fun startBooking(wasteType: String?) {
@@ -131,7 +133,7 @@ fun App() {
                         selectedBookingId = id
                         screen = Screen.BookingDetails
                                     },
-                    onSignOut = { screen = Screen.SignIn }
+                    onSignOut = { authVm.signOut { screen = Screen.SignIn } }
                 )
 
                 Screen.NewBookingDetails -> NewBookingDetailsScreen(

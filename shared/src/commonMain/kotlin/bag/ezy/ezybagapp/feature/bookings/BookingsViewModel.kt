@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bag.ezy.ezybagapp.model.data.Booking
+import bag.ezy.ezybagapp.model.repository.AuthRepository
 import bag.ezy.ezybagapp.model.repository.BookingRepository
 import bag.ezy.ezybagapp.ui.format.formatDisplayDate
 import kotlinx.coroutines.launch
@@ -44,7 +45,7 @@ data class BookingsUiState(
 }
 
 class BookingsViewModel(
-    private val customerId: String,
+    private val auth: AuthRepository,
     private val repo: BookingRepository
 ) : ViewModel() {
 
@@ -52,7 +53,8 @@ class BookingsViewModel(
         private set
 
     fun load() {
-        if (customerId.isBlank()) {
+        val customerId = auth.currentUserId()
+        if (customerId.isNullOrBlank()) {
             state = state.copy(
                 isLoading = false,
                 error = "Please sign in to view your bookings."
