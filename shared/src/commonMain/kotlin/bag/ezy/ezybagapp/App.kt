@@ -23,6 +23,7 @@ import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
 import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
+import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
 import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
 import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
 import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
@@ -46,6 +47,7 @@ enum class Screen {
     NewBookingDetails,
     NewBookingSchedule,
     BookingDetails,
+    BookingConfirmation,
     Ratings,
     AdminDashboard,
     DbTest,
@@ -59,6 +61,7 @@ fun App() {
         }
         var customerTab by rememberSaveable { mutableStateOf(MainTab.Home) }
         var selectedBookingId by rememberSaveable { mutableStateOf<String?>(null) }
+        var confirmedBookingId by rememberSaveable { mutableStateOf("") }
 
         val authVm = viewModel { AuthViewModel() }
 
@@ -148,16 +151,23 @@ fun App() {
                     onBack = {
                         screen = Screen.NewBookingDetails
                     },
-                    onBooked = {
+                    onBooked = { bookingId ->
                         newBookingVm.reset()
-                        customerTab = MainTab.Bookings
-                        screen = Screen.Home
+                        confirmedBookingId = bookingId
+                        screen = Screen.BookingConfirmation
                     }
                 )
 
                 Screen.BookingDetails -> BookingDetailsScreen(
                     bookingId = selectedBookingId ?: "",
                     onBack = { screen = Screen.Home }
+                )
+
+                Screen.BookingConfirmation -> BookingConfirmationScreen(
+                    bookingId = confirmedBookingId,
+                    onViewBookings = { customerTab = MainTab.Bookings; screen = Screen.Home },
+                    onReturnHome = { customerTab = MainTab.Home; screen = Screen.Home },
+                    onBookAnother = { startBooking(null) },
                 )
 
                 Screen.Ratings -> RatingsScreen(
