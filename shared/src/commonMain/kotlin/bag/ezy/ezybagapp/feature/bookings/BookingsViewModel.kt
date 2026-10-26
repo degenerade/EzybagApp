@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.bookings
 
 import androidx.compose.runtime.getValue
@@ -10,50 +11,91 @@ import bag.ezy.ezybagapp.model.repository.BookingRepository
 import bag.ezy.ezybagapp.ui.format.formatDisplayDate
 import kotlinx.coroutines.launch
 
-enum class BookingTab { All, Upcoming, Active, Completed }
+enum class BookingTab {
+    All,
+    Upcoming,
+    Active,
+    Completed
+}
 
 data class BookingUiModel(
     val reference: String,
     val wasteType: String,
     val status: String,
     val date: String,
-    val tab: BookingTab?,
+    val tab: BookingTab?
 )
 
 data class BookingsUiState(
     val isLoading: Boolean = true,
     val bookings: List<BookingUiModel> = emptyList(),
     val selectedTab: BookingTab = BookingTab.All,
-    val error: String? = null,
+    val error: String? = null
 ) {
     val visibleBookings: List<BookingUiModel>
-        get() = if (selectedTab == BookingTab.All) bookings.filter { it.tab != null }
-                else bookings.filter { it.tab == selectedTab }
+        get() = if (selectedTab == BookingTab.All) {
+            bookings.filter { it.tab != null }
+        } else {
+            bookings.filter { it.tab == selectedTab }
+        }
+
     val cancelledCount: Int
         get() = bookings.count { it.tab == null }
 }
 
 class BookingsViewModel(
     private val customerId: String,
-    private val repo: BookingRepository,
+    private val repo: BookingRepository
 ) : ViewModel() {
+
     var state by mutableStateOf(BookingsUiState())
         private set
 
     fun load() {
+        if (customerId.isBlank()) {
+            state = state.copy(
+                isLoading = false,
+                error = "Please sign in to view your bookings."
+            )
+            return
+        }
+
         viewModelScope.launch {
-            state = state.copy(isLoading = true, error = null )
-            repo.getBookings(customerId)
-                .onSuccess { list ->
-                    state = state.copy(isLoading = false, bookings = list.map { it.toUiModel() })
-                }
-                .onFailure {
-                    state = state.copy(isLoading = false, error = it.message ?: "Couldn't load bookings")
-                }
+            state = state.copy(
+                isLoading = true,
+                error = null
+            )
+
+            try {
+                repo.getBookings(customerId).fold(
+                    onSuccess = { bookings ->
+                        state = state.copy(
+                            isLoading = false,
+                            bookings = bookings.map { it.toUiModel() },
+                            error = null
+                        )
+                    },
+                    onFailure = { exception ->
+                        state = state.copy(
+                            isLoading = false,
+                            error = exception.message
+                                ?: "Couldn't load bookings."
+                        )
+                    }
+                )
+            } catch (exception: Exception) {
+                state = state.copy(
+                    isLoading = false,
+                    error = exception.message
+                        ?: "Couldn't load bookings."
+                )
+            }
         }
     }
 
-    fun selectTab(tab: BookingTab) { state = state.copy(selectedTab = tab) }
+    fun selectTab(tab: BookingTab) {
+        state = state.copy(selectedTab = tab)
+    }
 
     private fun Booking.toUiModel() = BookingUiModel(
         reference = bookingId,

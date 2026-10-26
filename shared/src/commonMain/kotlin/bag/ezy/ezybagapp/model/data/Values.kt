@@ -1,4 +1,6 @@
+
 package bag.ezy.ezybagapp.model.data
+
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -8,6 +10,7 @@ data class GeoLocation(
     val heading: Double? = null,
     val timestamp: String? = null
 )
+
 @Serializable
 data class Address(
     val street: String = "",
@@ -15,6 +18,7 @@ data class Address(
     val postcode: String = "",
     val coordinates: GeoLocation = GeoLocation()
 )
+
 @Serializable
 data class Media(
     val photos: List<String> = emptyList(),
