@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp
 
 import androidx.compose.foundation.layout.Box
@@ -22,6 +21,8 @@ import bag.ezy.ezybagapp.feature.admin.AdminDashboardScreen
 import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
+import bag.ezy.ezybagapp.feature.bookings.BookingsScreen
+import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
 import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
 import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
 import bag.ezy.ezybagapp.feature.main.MainContainer
@@ -44,7 +45,9 @@ enum class Screen {
     NewBookingSchedule,
     BookingDetails,
     Ratings,
-    AdminDashboard }
+    AdminDashboard,
+    DbTest,
+}
 
 @Composable
 fun App() {
@@ -111,6 +114,8 @@ fun App() {
                         screen = Screen.SignIn
                     }
                 )
+
+                Screen.DbTest -> DbScreen()
 
                 Screen.ContractorSignup -> ContractorSignupScreen()
 
