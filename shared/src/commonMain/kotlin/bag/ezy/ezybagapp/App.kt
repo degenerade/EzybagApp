@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp
 
 import androidx.compose.foundation.layout.Box
@@ -21,10 +22,10 @@ import bag.ezy.ezybagapp.feature.admin.AdminDashboardScreen
 import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
-import bag.ezy.ezybagapp.feature.bookings.BookingsScreen
-import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
 import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
 import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
+import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
+import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
 import bag.ezy.ezybagapp.feature.main.MainContainer
 import bag.ezy.ezybagapp.feature.main.MainTab
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingDetailsScreen
@@ -40,6 +41,7 @@ enum class Screen {
     SignIn,
     SignUp,
     ContractorSignup,
+    ContractorJobs,
     Home,
     NewBookingDetails,
     NewBookingSchedule,
@@ -53,9 +55,7 @@ enum class Screen {
 fun App() {
     ClearawayTheme {
         var screen by rememberSaveable {
-            mutableStateOf(
-                if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn
-            )
+            mutableStateOf(if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn)
         }
         var customerTab by rememberSaveable { mutableStateOf(MainTab.Home) }
         var selectedBookingId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -119,12 +119,16 @@ fun App() {
 
                 Screen.ContractorSignup -> ContractorSignupScreen()
 
+                Screen.ContractorJobs -> ContractorJobsScreen(
+                    onOpenJob = { }
+                )
+
                 Screen.Home -> MainContainer(
                     selectedTab = customerTab,
                     onTabSelected = { customerTab = it },
                     onStartBooking = { startBooking(it) },
                     onOpenBooking = { id ->
-                        selectedBookingId = id;
+                        selectedBookingId = id
                         screen = Screen.BookingDetails
                                     },
                     onSignOut = { screen = Screen.SignIn }
