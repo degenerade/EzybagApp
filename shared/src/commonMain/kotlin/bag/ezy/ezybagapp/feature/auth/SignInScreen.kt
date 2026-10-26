@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SignInScreen(
     vm: AuthViewModel,
-    onSignedIn: () -> Unit,
+    onSignedIn: (role:String) -> Unit,
     onCreateAccount: () -> Unit,
 ) {
     val s = vm.state

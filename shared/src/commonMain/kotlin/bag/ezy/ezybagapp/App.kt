@@ -33,12 +33,15 @@ import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
 
 
+import bag.ezy.ezybagapp.feature.contractormockpage.MockContractorHomeScreen
+
 enum class Screen {
     DevMenu,
     Start,
     SignIn,
     SignUp,
     ContractorSignup,
+    ContractorHome,
     Home,
     Bookings,
     NewBookingDetails,
@@ -105,7 +108,11 @@ fun App() {
                     SignInScreen(
                         vm = authVm,
                         onSignedIn = {
-                            screen = Screen.Home
+                            role -> screen = when (role.lowercase()) {
+                                "admin" -> Screen.AdminDashboard
+                                "contractor" -> Screen.ContractorHome
+                                else -> Screen.Home
+                            }
                         },
                         onCreateAccount = {
                             authVm.clearMessage()
@@ -129,6 +136,10 @@ fun App() {
 
                 Screen.ContractorSignup -> {
                     ContractorSignupScreen()
+                }
+
+                Screen.ContractorHome -> {
+                    MockContractorHomeScreen()
                 }
 
                 Screen.Home -> {

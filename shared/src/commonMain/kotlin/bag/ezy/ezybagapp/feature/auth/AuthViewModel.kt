@@ -31,12 +31,25 @@ class AuthViewModel(
     fun onConfirmChange(v: String) { state = state.copy(confirmPassword = v, error = null) }
     fun clearMessage() { state = state.copy(error = null, info = null) }
 
-    fun signIn(onSuccess: () -> Unit) {
+    fun signIn(onSuccess: (role:String) -> Unit) {
         validate(isSignUp = false)?.let { state = state.copy(error = it); return }
-        run(onSuccess) { repo.signIn(state.email.trim(), state.password) }
+        //use viewModel in case screen closes, so everything closes as well
+        viewModelScope.launch {
+            state = state.copy(isLoading = true, error = null, info = null)
+            repo.signIn(state.email.trim(), state.password)
+                .onSuccess {
+                    val role = repo.getUserRole()
+                    state = state.copy(isLoading = false, password = "", confirmPassword = "")
+                    onSuccess(role)
+                }
+                .onFailure {
+                    state = state.copy(isLoading = false, error = it.message ?: "Something went wrong")
+                }
+        }
     }
 
     fun signUp(onSuccess: () -> Unit) {
+        //untouched since sign up is available only for customer
         validate(isSignUp = true)?.let { state = state.copy(error = it); return }
         run(onSuccess) { repo.signUp(state.name.trim(), state.email.trim(), state.password) }
     }

@@ -35,6 +35,7 @@ private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
     ),
     "Contractor" to listOf(
         Screen.ContractorSignup to "Contractor signup",
+        Screen.ContractorHome to "Contractor home (mock)",
     ),
     "Admin" to listOf(
         Screen.AdminDashboard to "Admin Dashboard",

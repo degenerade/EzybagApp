@@ -22,6 +22,8 @@ interface AuthRepository {
     ): Result<Unit>
 
     suspend fun getCurrentUserName(): String
+
+    suspend fun getUserRole(): String
 }
 
 class FirebaseAuthRepository : AuthRepository {
@@ -107,6 +109,19 @@ class FirebaseAuthRepository : AuthRepository {
                 ?: "Customer"
         } catch (e: Exception) {
             user.email?.substringBefore("@") ?: "Customer"
+        }
+    }
+
+    override suspend fun getUserRole(): String {
+        val user = auth.currentUser ?: return "customer"
+        return try {
+            val document = firestore.collection("users")
+                .document(user.uid)
+                .get()
+
+            document.get<String>("role") ?: "customer"
+        } catch (e: Exception) {
+            "customer" // fallback default
         }
     }
 }
