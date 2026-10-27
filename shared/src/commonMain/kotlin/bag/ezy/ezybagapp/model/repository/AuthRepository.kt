@@ -24,6 +24,8 @@ interface AuthRepository {
     suspend fun getCurrentUserName(): String
 
     suspend fun getUserRole(): String
+    fun currentUserId(): String?
+    suspend fun signOut()
 }
 
 class FirebaseAuthRepository : AuthRepository {
@@ -112,6 +114,12 @@ class FirebaseAuthRepository : AuthRepository {
         }
     }
 
+    override fun currentUserId(): String? = auth.currentUser?.uid
+
+    override suspend fun signOut() {
+        auth.signOut()
+    }
+
     override suspend fun getUserRole(): String {
         val user = auth.currentUser ?: return "customer"
         return try {
@@ -119,8 +127,8 @@ class FirebaseAuthRepository : AuthRepository {
                 .document(user.uid)
                 .get()
 
-            document.get<String>("role") ?: "customer"
-        } catch (e: Exception) {
+            document.get<String?>("role") ?: "customer"
+        } catch (_: Exception) {
             "customer" // fallback default
         }
     }

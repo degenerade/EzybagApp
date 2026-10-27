@@ -54,6 +54,14 @@ class AuthViewModel(
         run(onSuccess) { repo.signUp(state.name.trim(), state.email.trim(), state.password) }
     }
 
+    fun signOut(onSignedOut: () -> Unit) {
+        viewModelScope.launch {
+            repo.signOut()
+            state = AuthUiState()      // clear any typed email/password
+            onSignedOut()
+        }
+    }
+
     fun forgotPassword() {
         if (!state.email.isValidEmail()) {
             state = state.copy(error = "Enter your email first, then click Forgot password")

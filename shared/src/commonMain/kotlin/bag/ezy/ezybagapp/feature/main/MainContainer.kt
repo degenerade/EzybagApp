@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.main
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -7,8 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -25,72 +24,59 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import bag.ezy.ezybagapp.feature.account.AccountScreen
+import bag.ezy.ezybagapp.feature.bookings.BookingsScreen
+import bag.ezy.ezybagapp.feature.home.HomeScreen
+import bag.ezy.ezybagapp.feature.support.SupportScreen
 import ezybagapp.shared.generated.resources.Res
-import ezybagapp.shared.generated.resources.ic_support_agent
 import org.jetbrains.compose.resources.vectorResource
+import ezybagapp.shared.generated.resources.ic_support_agent
 
 enum class MainTab(
     val title: String,
     val icon: @Composable () -> ImageVector
 ) {
     Home("Home", { Icons.Default.Home }),
-    CreatePickup("Book", { Icons.Default.AddCircle }),
+    Bookings("Bookings", { Icons.AutoMirrored.Filled.List }),
     Support("Support", { vectorResource(Res.drawable.ic_support_agent) }),
     Account("Account", { Icons.Default.Person })
 }
 
 @Composable
 fun MainContainer(
-    modifier: Modifier = Modifier,
-    initialTab: MainTab = MainTab.Home,
-    onCreatePickup: () -> Unit = {},
-    onOpenBookings: () -> Unit = {}
+    selectedTab: MainTab,
+    onTabSelected: (MainTab) -> Unit,
+    onStartBooking: (wasteType: String?) -> Unit,
+    onOpenBooking: (bookingId: String) -> Unit,
+    onSignOut: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var selectedTab by rememberSaveable {
-        mutableStateOf(initialTab)
-    }
-
-    BoxWithConstraints(
-        modifier = modifier.fillMaxSize()
-    ) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val isWideScreen = maxWidth >= 600.dp
 
         if (isWideScreen) {
-            Row(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            Row(modifier = Modifier.fillMaxSize()) {
                 NavigationRail {
                     MainTab.entries.forEach { tab ->
                         NavigationRailItem(
                             selected = selectedTab == tab,
-                            onClick = {
-                                when (tab) {
-                                    MainTab.CreatePickup -> onCreatePickup()
-                                    else -> selectedTab = tab
-                                }
-                            },
+                            onClick = { onTabSelected(tab) },
                             icon = {
                                 Icon(
                                     imageVector = tab.icon(),
                                     contentDescription = tab.title
                                 )
                             },
-                            label = {
-                                Text(text = tab.title)
-                            }
+                            label = { Text(text = tab.title) }
                         )
                     }
                 }
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
-                ) {
+                Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                     ScreenContent(
                         selectedTab = selectedTab,
-                        onCreatePickup = onCreatePickup,
-                        onOpenBookings = onOpenBookings
+                        onStartBooking = onStartBooking,
+                        onOpenBooking = onOpenBooking,
+                        onSignOut = onSignOut
                     )
                 }
             }
@@ -101,21 +87,14 @@ fun MainContainer(
                         MainTab.entries.forEach { tab ->
                             NavigationBarItem(
                                 selected = selectedTab == tab,
-                                onClick = {
-                                    when (tab) {
-                                        MainTab.CreatePickup -> onCreatePickup()
-                                        else -> selectedTab = tab
-                                    }
-                                },
+                                onClick = { onTabSelected(tab) },
                                 icon = {
                                     Icon(
                                         imageVector = tab.icon(),
                                         contentDescription = tab.title
                                     )
                                 },
-                                label = {
-                                    Text(text = tab.title)
-                                }
+                                label = { Text(text = tab.title) }
                             )
                         }
                     }
@@ -128,8 +107,9 @@ fun MainContainer(
                 ) {
                     ScreenContent(
                         selectedTab = selectedTab,
-                        onCreatePickup = onCreatePickup,
-                        onOpenBookings = onOpenBookings
+                        onStartBooking = onStartBooking,
+                        onOpenBooking = onOpenBooking,
+                        onSignOut = onSignOut
                     )
                 }
             }
@@ -140,18 +120,16 @@ fun MainContainer(
 @Composable
 private fun ScreenContent(
     selectedTab: MainTab,
-    onCreatePickup: () -> Unit,
-    onOpenBookings: () -> Unit
+    onStartBooking: (String?) -> Unit,
+    onOpenBooking: (String) -> Unit,
+    onSignOut: () -> Unit,
 ) {
     when (selectedTab) {
-        MainTab.Home -> HomeScreen()
-
-        MainTab.CreatePickup -> CreatePickupScreen(
-            onCreatePickup = onCreatePickup
-        )
-
+        MainTab.Home -> HomeScreen(onStartBooking = onStartBooking, onOpenBooking = onOpenBooking)
+        MainTab.Bookings -> BookingsScreen(
+            onBookAnother = {onStartBooking(null) },
+            onBookingClick = onOpenBooking)
         MainTab.Support -> SupportScreen()
-
-        MainTab.Account -> AccountScreen()
+        MainTab.Account -> AccountScreen(onSignOut = onSignOut)
     }
 }

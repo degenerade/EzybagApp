@@ -1,22 +1,16 @@
-
 package bag.ezy.ezybagapp.model.repository
 
+import bag.ezy.ezybagapp.model.data.Address
 import bag.ezy.ezybagapp.model.data.Booking
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 import kotlin.time.Clock
 
 interface BookingRepository {
-
     suspend fun getBookings(customerId: String): Result<List<Booking>>
-
-    suspend fun getEstimate(
-        wasteType: String,
-        volume: String
-    ): Double
-
+    suspend fun getBooking(bookingId: String): Result<Booking?>
+    suspend fun getEstimate(wasteType: String, volume: String): Double
     suspend fun createBooking(booking: Booking): Result<String>
-
     suspend fun requestFinalQuote(booking: Booking): Result<Unit>
 }
 
@@ -43,6 +37,20 @@ class FirebaseBookingRepository : BookingRepository {
         }
     }
 
+    override suspend fun getBooking(
+        bookingId: String
+    ): Result<Booking?> = runCatching {
+        require(bookingId.isNotBlank()) {
+            "Booking ID is required to load a booking."
+        }
+
+        val document = bookingsCollection
+            .document(bookingId)
+            .get()
+
+        if (document.exists) document.data<Booking>() else null
+    }
+
     override suspend fun getEstimate(
         wasteType: String,
         volume: String
@@ -67,29 +75,8 @@ class FirebaseBookingRepository : BookingRepository {
 
         val bookingToSave = booking.copy(
             bookingId = document.id,
-
-            customerPhone = booking.customerPhone.ifBlank {
-                booking.contactPhone
-            },
-
-            contactPhone = booking.contactPhone.ifBlank {
-                booking.customerPhone
-            },
-
-            accessDescriptionInformation =
-                booking.accessDescriptionInformation.ifBlank {
-                    booking.accessInfo
-                },
-
-            accessInfo = booking.accessInfo.ifBlank {
-                booking.accessDescriptionInformation
-            },
-
             status = "Upcoming",
-
-            createdAt = booking.createdAt.ifBlank {
-                Clock.System.now().toString()
-            }
+            createdAt = booking.createdAt.ifBlank { Clock.System.now().toString() }
         )
 
         document.set(bookingToSave)

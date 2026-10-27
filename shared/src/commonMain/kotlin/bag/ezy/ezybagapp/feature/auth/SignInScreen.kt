@@ -36,6 +36,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+
 @Composable
 fun SignInScreen(
     vm: AuthViewModel,
@@ -123,11 +131,92 @@ fun SignInScreen(
                 shape = MaterialTheme.shapes.small,
                 modifier = Modifier.weight(1f)
             ) { Text("Google") }
-            OutlinedButton(
-                onClick = { /* TODO: Apple via Firebase*/ },
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier.weight(1f)
-            ) { Text("Apple") }
+
+            //we don't have apple!
+//            OutlinedButton(
+//                onClick = { /* TODO: Apple via Firebase*/ },
+//                shape = MaterialTheme.shapes.small,
+//                modifier = Modifier.weight(1f)
+//            ) { Text("Apple") }
         }
+
+//        OutlinedButton(
+//            onClick = { /* TODO: Google via Firebase */ },
+//            shape = MaterialTheme.shapes.small,
+//            modifier = Modifier.weight(1f),
+//            contentPadding = PaddingValues(vertical = 14.dp),
+//            colors = ButtonDefaults.outlinedButtonColors(
+//                contentColor = MaterialTheme.colorScheme.onSurface
+//            )
+//        ) {
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Canvas(
+//                    modifier = Modifier.size(22.dp)
+//                ) {
+//                    val strokeWidth = size.width * 0.19f
+//                    val arcSize = size.width * 0.76f
+//                    val topLeft = Offset(
+//                        (size.width - arcSize) / 2f,
+//                        (size.height - arcSize) / 2f
+//                    )
+//
+//                    drawArc(
+//                        color = Color(0xFF4285F4),
+//                        startAngle = -45f,
+//                        sweepAngle = 90f,
+//                        useCenter = false,
+//                        topLeft = topLeft,
+//                        size = androidx.compose.ui.geometry.Size(arcSize, arcSize),
+//                        style = Stroke(strokeWidth, cap = StrokeCap.Butt)
+//                    )
+//
+//                    drawArc(
+//                        color = Color(0xFF34A853),
+//                        startAngle = 45f,
+//                        sweepAngle = 90f,
+//                        useCenter = false,
+//                        topLeft = topLeft,
+//                        size = androidx.compose.ui.geometry.Size(arcSize, arcSize),
+//                        style = Stroke(strokeWidth, cap = StrokeCap.Butt)
+//                    )
+//
+//                    drawArc(
+//                        color = Color(0xFFFBBC05),
+//                        startAngle = 135f,
+//                        sweepAngle = 90f,
+//                        useCenter = false,
+//                        topLeft = topLeft,
+//                        size = androidx.compose.ui.geometry.Size(arcSize, arcSize),
+//                        style = Stroke(strokeWidth, cap = StrokeCap.Butt)
+//                    )
+//
+//                    drawArc(
+//                        color = Color(0xFFEA4335),
+//                        startAngle = 225f,
+//                        sweepAngle = 90f,
+//                        useCenter = false,
+//                        topLeft = topLeft,
+//                        size = androidx.compose.ui.geometry.Size(arcSize, arcSize),
+//                        style = Stroke(strokeWidth, cap = StrokeCap.Butt)
+//                    )
+//
+//                    drawLine(
+//                        color = Color(0xFF4285F4),
+//                        start = Offset(size.width * 0.52f, size.height * 0.5f),
+//                        end = Offset(size.width * 0.96f, size.height * 0.5f),
+//                        strokeWidth = strokeWidth,
+//                        cap = StrokeCap.Butt
+//                    )
+//                }
+//
+//                Spacer(modifier = Modifier.width(10.dp))
+//
+//                Text("Google")
+//            }
+  //      }
     }
 }

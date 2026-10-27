@@ -1,15 +1,14 @@
-
 package bag.ezy.ezybagapp.model.data
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class WasteDetails(
-    val type: String = "",
+    val type: String = "", // Household, Garden, Construction, Furniture, Electrical, Mixed, Other
     val description: String = "",
-    val estimatedVolume: String = "",
+    val estimatedVolume: String = "", // Small, Half van, Full van
     val bagRequired: Boolean = false,
-    val bagSize: String? = null
+    val bagSize: String? = null // Small, Medium, Large
 )
 
 @Serializable
@@ -38,18 +37,16 @@ data class Booking(
     val bookingId: String = "",
     val customerId: String = "",
     val contractorId: String? = null,
-    val customerPhone: String = "",
+    val customerPhone: String = "", // Added from New Booking UI
     val collectionAddress: Address = Address(),
-    val contactPhone: String = "",
     val accessInfo: String = "",
-    val accessDescriptionInformation: String = "",
     val specialInstructions: String = "",
     val wasteDetails: WasteDetails = WasteDetails(),
     val media: Media = Media(),
     val schedule: Schedule = Schedule(),
     val pricing: Pricing = Pricing(),
-    val status: String = "Pending",
+    val status: String = "Pending", // Pending, Upcoming, En Route, On Site, Completed, Cancelled
     val contractorCurrentLocation: GeoLocation? = null,
     val disposalDetails: DisposalDetails? = null,
-    val createdAt: String = ""
+    val createdAt: String = "" //having such info is useful :D
 )

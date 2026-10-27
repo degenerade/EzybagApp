@@ -25,16 +25,19 @@ private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
         Screen.Start to "Start Page",
         Screen.SignIn to "Sign in",
         Screen.SignUp to "Sign up",
+        Screen.DbTest to "DbTest",
     ),
     "Customer" to listOf(
-        Screen.Home to "Home (with bottom nav)",
-        Screen.Bookings to "Bookings",
+        Screen.Home to "Customer app (Home)",
         Screen.NewBookingDetails to "New booking - 1 details",
         Screen.NewBookingSchedule to "New booking - 2 schedule",
+        Screen.BookingDetails to "Booking details",
+        Screen.BookingConfirmation to "Booking confirmation",
         Screen.Ratings to "Ratings",
     ),
     "Contractor" to listOf(
         Screen.ContractorSignup to "Contractor signup",
+        Screen.ContractorJobs to "Jobs near you",
         Screen.ContractorHome to "Contractor home (mock)",
     ),
     "Admin" to listOf(
@@ -57,14 +60,17 @@ fun DevMenu(onOpen: (Screen) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text("Dev menu", style = MaterialTheme.typography.headlineSmall)
+
         Text(
             "Jump to any screen. Tap DEV in the corner to come back.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
         devGroups.forEach { (group, items) ->
             DevGroup(group, items, onOpen)
         }
+
         if (others.isNotEmpty()) {
             DevGroup("Other", others.map { it to it.name }, onOpen)
         }
@@ -79,6 +85,7 @@ private fun DevGroup(title: String, items: List<Pair<Screen, String>>, onOpen: (
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(top = 12.dp)
     )
+
     items.forEach { (screen, label) ->
         OutlinedButton(onClick = { onOpen(screen) }, modifier = Modifier.fillMaxWidth()) {
             Text(label)
