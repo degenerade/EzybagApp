@@ -58,7 +58,9 @@ import org.jetbrains.compose.resources.vectorResource
 fun HomeScreen(
     onStartBooking: (wasteType: String?) -> Unit = {},
     onOpenBooking: (bookingId: String) -> Unit = {},
-    vm: HomeViewModel = viewModel { HomeViewModel("demo-customer", AppContainer.bookingRepository) },
+    vm: HomeViewModel = viewModel { HomeViewModel(
+        AppContainer.authRepository,
+        AppContainer.bookingRepository) },
 ) {
     LaunchedEffect(Unit) { vm.load() }
     HomeContent(
@@ -178,7 +180,7 @@ private fun WelcomeMessage(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "Hi $userName",
+                text = "Hi ${userName.ifBlank { "there" }}",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold
             )

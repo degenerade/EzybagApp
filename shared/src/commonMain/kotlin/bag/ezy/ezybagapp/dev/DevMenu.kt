@@ -32,6 +32,7 @@ private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
         Screen.NewBookingDetails to "New booking - 1 details",
         Screen.NewBookingSchedule to "New booking - 2 schedule",
         Screen.BookingDetails to "Booking details",
+        Screen.BookingConfirmation to "Booking confirmation",
         Screen.Ratings to "Ratings",
     ),
     "Contractor" to listOf(
