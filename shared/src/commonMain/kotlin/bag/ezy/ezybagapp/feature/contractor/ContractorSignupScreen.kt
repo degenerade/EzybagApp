@@ -22,13 +22,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -36,15 +36,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-
-private val ContractorBackground = Color(0xFF0D1718)
-private val ContractorCard = Color(0xFF192A2D)
-private val ContractorField = Color(0xFF101A1C)
-private val ContractorGreen = Color(0xFF39B596)
-private val ContractorText = Color(0xFFE8F0EF)
-private val ContractorMuted = Color(0xFF94A8AC)
-private val ContractorBorder = Color(0xFF2B4145)
-private val ContractorError = Color(0xFFE58A79)
 
 @Composable
 fun ContractorSignupScreen(
@@ -59,7 +50,7 @@ fun ContractorSignupScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = ContractorBackground
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -69,7 +60,7 @@ fun ContractorSignupScreen(
         ) {
             Text(
                 text = "EZYBAG",
-                color = ContractorGreen,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 3.sp
@@ -82,11 +73,14 @@ fun ContractorSignupScreen(
                     .fillMaxWidth()
                     .weight(1f)
                     .border(
-                        BorderStroke(1.dp, ContractorBorder),
+                        BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline
+                        ),
                         RoundedCornerShape(28.dp)
                     )
                     .background(
-                        ContractorCard,
+                        MaterialTheme.colorScheme.surface,
                         RoundedCornerShape(28.dp)
                     )
                     .verticalScroll(rememberScrollState())
@@ -95,14 +89,14 @@ fun ContractorSignupScreen(
             ) {
                 Text(
                     text = "Contractor registration",
-                    color = ContractorText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
 
                 Text(
                     text = "Register your business to join the Ezybag network!",
-                    color = ContractorMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp
                 )
 
@@ -227,16 +221,16 @@ fun ContractorSignupScreen(
                             checked = state.declaration,
                             onCheckedChange = { vm.onDeclarationChange(it) },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = ContractorGreen,
-                                uncheckedColor = ContractorMuted,
-                                checkmarkColor = ContractorBackground
+                                checkedColor = MaterialTheme.colorScheme.primary,
+                                uncheckedColor = MaterialTheme.colorScheme.outline,
+                                checkmarkColor = MaterialTheme.colorScheme.onPrimary
                             )
                         )
 
                         Text(
                             text = "I confirm that the information provided is accurate.",
                             modifier = Modifier.weight(1f),
-                            color = ContractorText,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 14.sp
                         )
                     }
@@ -245,7 +239,7 @@ fun ContractorSignupScreen(
                 if (state.error != null) {
                     Text(
                         text = state.error,
-                        color = ContractorError,
+                        color = MaterialTheme.colorScheme.error,
                         fontSize = 13.sp
                     )
                 }
@@ -258,8 +252,8 @@ fun ContractorSignupScreen(
                         .height(52.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ContractorGreen,
-                        contentColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text(
@@ -283,12 +277,12 @@ private fun ContractorSection(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                ContractorField,
+                MaterialTheme.colorScheme.primaryContainer,
                 RoundedCornerShape(16.dp)
             )
             .border(
                 1.dp,
-                ContractorBorder,
+                MaterialTheme.colorScheme.outline,
                 RoundedCornerShape(16.dp)
             )
             .padding(14.dp),
@@ -300,12 +294,12 @@ private fun ContractorSection(
         ) {
             Text(
                 text = number.padStart(2, '0'),
-                color = ContractorGreen,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .background(
-                        ContractorCard,
+                        MaterialTheme.colorScheme.surface,
                         RoundedCornerShape(8.dp)
                     )
                     .padding(horizontal = 10.dp, vertical = 8.dp)
@@ -314,14 +308,14 @@ private fun ContractorSection(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    color = ContractorText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
 
                 Text(
                     text = subtitle,
-                    color = ContractorMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp
                 )
             }
@@ -331,7 +325,7 @@ private fun ContractorSection(
             Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(ContractorBorder)
+                .background(MaterialTheme.colorScheme.outline)
         )
 
         content()
@@ -350,7 +344,7 @@ private fun ContractorField(
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = label,
-            color = ContractorMuted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 13.sp
         )
 
@@ -360,12 +354,12 @@ private fun ContractorField(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    ContractorBackground,
+                    MaterialTheme.colorScheme.surface,
                     RoundedCornerShape(12.dp)
                 )
                 .border(
                     1.dp,
-                    ContractorBorder,
+                    MaterialTheme.colorScheme.outline,
                     RoundedCornerShape(12.dp)
                 )
                 .padding(12.dp),
@@ -378,7 +372,7 @@ private fun ContractorField(
                 VisualTransformation.None
             },
             textStyle = TextStyle(
-                color = ContractorText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp
             ),
             decorationBox = { innerTextField ->
@@ -386,7 +380,7 @@ private fun ContractorField(
                     if (value.isEmpty()) {
                         Text(
                             text = hint,
-                            color = ContractorMuted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp
                         )
                     }
@@ -408,12 +402,20 @@ private fun ContractorDocument(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (selected) ContractorCard else ContractorBackground,
+                if (selected) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surface
+                },
                 RoundedCornerShape(12.dp)
             )
             .border(
                 1.dp,
-                if (selected) ContractorGreen else ContractorBorder,
+                if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.outline
+                },
                 RoundedCornerShape(12.dp)
             )
             .clickable { onChange(!selected) }
@@ -423,14 +425,14 @@ private fun ContractorDocument(
     ) {
         Text(
             text = if (selected) "✓" else "+",
-            color = ContractorGreen,
+            color = MaterialTheme.colorScheme.primary,
             fontSize = 22.sp
         )
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = ContractorText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -438,7 +440,7 @@ private fun ContractorDocument(
             Text(
                 text = if (selected) "Marked as selected"
                 else "Tap to mark the document as selected",
-                color = ContractorMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }
