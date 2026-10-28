@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
 import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
 import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
 import bag.ezy.ezybagapp.feature.contractorapproval.ContractorApprovalPendingScreen
+import bag.ezy.ezybagapp.feature.contractorhome.ContractorHomeScreen
 import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
 import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
 import bag.ezy.ezybagapp.feature.main.MainContainer
@@ -34,7 +36,9 @@ import bag.ezy.ezybagapp.feature.newbooking.NewBookingViewModel
 import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
 import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.feature.startPage.StartScreen
+import bag.ezy.ezybagapp.model.repository.FirebaseContractorRepository
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import kotlinx.coroutines.launch
 
 enum class Screen {
     DevMenu,
@@ -43,6 +47,7 @@ enum class Screen {
     SignUp,
     ContractorSignup,
     ContractorApprovalPending,
+    ContractorHome,
     ContractorJobs,
     Home,
     NewBookingDetails,
@@ -65,6 +70,7 @@ fun App() {
         var confirmedBookingId by rememberSaveable { mutableStateOf("") }
 
         val authVm = viewModel { AuthViewModel() }
+        val scope = rememberCoroutineScope()
 
         val newBookingVm = viewModel {
             NewBookingViewModel(
@@ -80,7 +86,7 @@ fun App() {
 
         Box(Modifier.fillMaxSize()) {
             when (screen) {
-                Screen.DevMenu -> DevMenu(onOpen =  { target ->
+                Screen.DevMenu -> DevMenu(onOpen = { target ->
                     if (target == Screen.BookingDetails && selectedBookingId == null) {
                         selectedBookingId = "CC-10482"
                     }
@@ -102,7 +108,17 @@ fun App() {
                 Screen.SignIn -> SignInScreen(
                     vm = authVm,
                     onSignedIn = {
-                        screen = Screen.Home
+                        scope.launch {
+                            val contractor = FirebaseContractorRepository()
+                                .getCurrentContractor()
+                                .getOrNull()
+
+                            screen = if (contractor != null) {
+                                Screen.ContractorHome
+                            } else {
+                                Screen.Home
+                            }
+                        }
                     },
                     onCreateAccount = {
                         authVm.clearMessage()
@@ -133,6 +149,12 @@ fun App() {
                 Screen.ContractorApprovalPending -> ContractorApprovalPendingScreen(
                     onBackToSignIn = {
                         screen = Screen.SignIn
+                    }
+                )
+
+                Screen.ContractorHome -> ContractorHomeScreen(
+                    onViewJobs = {
+                        screen = Screen.ContractorJobs
                     }
                 )
 
@@ -177,9 +199,17 @@ fun App() {
 
                 Screen.BookingConfirmation -> BookingConfirmationScreen(
                     bookingId = confirmedBookingId,
-                    onViewBookings = { customerTab = MainTab.Bookings; screen = Screen.Home },
-                    onReturnHome = { customerTab = MainTab.Home; screen = Screen.Home },
-                    onBookAnother = { startBooking(null) },
+                    onViewBookings = {
+                        customerTab = MainTab.Bookings
+                        screen = Screen.Home
+                    },
+                    onReturnHome = {
+                        customerTab = MainTab.Home
+                        screen = Screen.Home
+                    },
+                    onBookAnother = {
+                        startBooking(null)
+                    },
                 )
 
                 Screen.Ratings -> RatingsScreen(

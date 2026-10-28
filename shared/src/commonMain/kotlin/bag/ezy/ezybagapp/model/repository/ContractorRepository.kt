@@ -11,6 +11,8 @@ interface ContractorRepository {
         contractor: Contractor,
         password: String
     ): Result<Unit>
+
+    suspend fun getCurrentContractor(): Result<Contractor?>
 }
 
 class FirebaseContractorRepository : ContractorRepository {
@@ -57,4 +59,20 @@ class FirebaseContractorRepository : ContractorRepository {
             throw e
         }
     }
+
+    override suspend fun getCurrentContractor(): Result<Contractor?> =
+        runCatching {
+            val user = auth.currentUser
+                ?: return@runCatching null
+
+            val document = contractors
+                .document(user.uid)
+                .get()
+
+            if (!document.exists) {
+                null
+            } else {
+                document.data<Contractor>()
+            }
+        }
 }
