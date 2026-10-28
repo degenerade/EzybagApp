@@ -112,7 +112,8 @@ fun App() {
                 Screen.SignUp -> SignUpScreen(
                     vm = authVm,
                     onSignedUp = {
-                        screen = Screen.Home
+                        authVm.clearMessage()
+                        screen = Screen.SignIn
                     },
                     onBackToSignIn = {
                         authVm.clearMessage()
