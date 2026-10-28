@@ -22,53 +22,35 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val ContractorBackground = Color(0xFF0D1718)
-private val ContractorCard = Color(0xFF192A2D)
-private val ContractorField = Color(0xFF101A1C)
-private val ContractorGreen = Color(0xFF39B596)
-private val ContractorText = Color(0xFFE8F0EF)
-private val ContractorMuted = Color(0xFF94A8AC)
-private val ContractorBorder = Color(0xFF2B4145)
-private val ContractorError = Color(0xFFE58A79)
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun ContractorSignupScreen() {
-    var company by remember { mutableStateOf("") }
-    var contact by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var areas by remember { mutableStateOf("") }
-    var licence by remember { mutableStateOf("") }
-    var insurer by remember { mutableStateOf("") }
-    var policy by remember { mutableStateOf("") }
-    var vehicle by remember { mutableStateOf("") }
-    var registration by remember { mutableStateOf("") }
+fun ContractorSignupScreen(
+    onSubmitted: () -> Unit = {},
+    vm: ContractorSignupViewModel = viewModel { ContractorSignupViewModel() }
+) {
+    val state = vm.state
 
-    var licenceDoc by remember { mutableStateOf(false) }
-    var insuranceDoc by remember { mutableStateOf(false) }
-    var identityDoc by remember { mutableStateOf(false) }
-    var declaration by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf("") }
-    var success by remember { mutableStateOf(false) }
+    LaunchedEffect(vm.submitted) {
+        if (vm.submitted) onSubmitted()
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = ContractorBackground
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -78,7 +60,7 @@ fun ContractorSignupScreen() {
         ) {
             Text(
                 text = "EZYBAG",
-                color = ContractorGreen,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 3.sp
@@ -91,12 +73,15 @@ fun ContractorSignupScreen() {
                     .fillMaxWidth()
                     .weight(1f)
                     .border(
-                        BorderStroke(1.dp, ContractorBorder),
+                        BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline
+                        ),
                         RoundedCornerShape(28.dp)
                     )
                     .background(
-                        ContractorCard,
-                        androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+                        MaterialTheme.colorScheme.surface,
+                        RoundedCornerShape(28.dp)
                     )
                     .verticalScroll(rememberScrollState())
                     .padding(18.dp),
@@ -104,14 +89,14 @@ fun ContractorSignupScreen() {
             ) {
                 Text(
                     text = "Contractor registration",
-                    color = ContractorText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
 
                 Text(
                     text = "Register your business to join the Ezybag network!",
-                    color = ContractorMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp
                 )
 
@@ -119,18 +104,39 @@ fun ContractorSignupScreen() {
                     "1", "Business details",
                     "How can we contact you?"
                 ) {
-                    ContractorField("Company name", company, "Enter company name") {
-                        company = it
-                    }
                     ContractorField(
-                        "Contact person's name", contact, "Enter full name"
-                    ) { contact = it }
+                        "Company name", state.company, "Enter company name"
+                    ) { vm.onCompanyChange(it) }
+
                     ContractorField(
-                        "Email address", email, "name@company.com"
-                    ) { email = it }
+                        "First name", state.firstName, "Enter first name"
+                    ) { vm.onFirstNameChange(it) }
+
                     ContractorField(
-                        "Phone number", phone, "Enter phone number"
-                    ) { phone = it }
+                        "Last name", state.lastName, "Enter last name"
+                    ) { vm.onLastNameChange(it) }
+
+                    ContractorField(
+                        "Email address", state.email, "name@company.com"
+                    ) { vm.onEmailChange(it) }
+
+                    ContractorField(
+                        "Phone number", state.phone, "Enter phone number"
+                    ) { vm.onPhoneChange(it) }
+
+                    ContractorField(
+                        "Password",
+                        state.password,
+                        "Minimum 8 characters",
+                        isPassword = true
+                    ) { vm.onPasswordChange(it) }
+
+                    ContractorField(
+                        "Confirm password",
+                        state.confirmPassword,
+                        "Enter password again",
+                        isPassword = true
+                    ) { vm.onConfirmPasswordChange(it) }
                 }
 
                 ContractorSection(
@@ -139,10 +145,10 @@ fun ContractorSignupScreen() {
                 ) {
                     ContractorField(
                         "Towns or postcodes covered",
-                        areas,
+                        state.areas,
                         "e.g. Newquay, BS1, BS2",
                         multiline = true
-                    ) { areas = it }
+                    ) { vm.onAreasChange(it) }
                 }
 
                 ContractorSection(
@@ -151,13 +157,14 @@ fun ContractorSignupScreen() {
                 ) {
                     ContractorField(
                         "Licence / registration number",
-                        licence,
+                        state.licence,
                         "Enter registration number"
-                    ) { licence = it }
+                    ) { vm.onLicenceChange(it) }
 
                     ContractorDocument(
-                        "Waste carrier licence document", licenceDoc
-                    ) { licenceDoc = it }
+                        "Waste carrier licence document",
+                        state.licenceDoc
+                    ) { vm.onLicenceDocChange(it) }
                 }
 
                 ContractorSection(
@@ -165,15 +172,17 @@ fun ContractorSignupScreen() {
                     "Provide your insurance information."
                 ) {
                     ContractorField(
-                        "Insurance provider", insurer, "Enter provider name"
-                    ) { insurer = it }
+                        "Insurance provider", state.insurer, "Enter provider name"
+                    ) { vm.onInsurerChange(it) }
+
                     ContractorField(
-                        "Policy number", policy, "Enter policy number"
-                    ) { policy = it }
+                        "Policy number", state.policy, "Enter policy number"
+                    ) { vm.onPolicyChange(it) }
 
                     ContractorDocument(
-                        "Proof of insurance", insuranceDoc
-                    ) { insuranceDoc = it }
+                        "Proof of insurance",
+                        state.insuranceDoc
+                    ) { vm.onInsuranceDocChange(it) }
                 }
 
                 ContractorSection(
@@ -181,13 +190,14 @@ fun ContractorSignupScreen() {
                     "Tell us which vehicle you use."
                 ) {
                     ContractorField(
-                        "Vehicle type", vehicle, "e.g. Van, truck"
-                    ) { vehicle = it }
+                        "Vehicle type", state.vehicle, "e.g. Van, truck"
+                    ) { vm.onVehicleChange(it) }
+
                     ContractorField(
                         "Vehicle registration number",
-                        registration,
+                        state.registration,
                         "Enter registration number"
-                    ) { registration = it }
+                    ) { vm.onRegistrationChange(it) }
                 }
 
                 ContractorSection(
@@ -195,8 +205,9 @@ fun ContractorSignupScreen() {
                     "Provide proof of identity."
                 ) {
                     ContractorDocument(
-                        "Proof of identity", identityDoc
-                    ) { identityDoc = it }
+                        "Proof of identity",
+                        state.identityDoc
+                    ) { vm.onIdentityDocChange(it) }
                 }
 
                 ContractorSection(
@@ -207,74 +218,46 @@ fun ContractorSignupScreen() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = declaration,
-                            onCheckedChange = { declaration = it },
+                            checked = state.declaration,
+                            onCheckedChange = { vm.onDeclarationChange(it) },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = ContractorGreen,
-                                uncheckedColor = ContractorMuted,
-                                checkmarkColor = ContractorBackground
+                                checkedColor = MaterialTheme.colorScheme.primary,
+                                uncheckedColor = MaterialTheme.colorScheme.outline,
+                                checkmarkColor = MaterialTheme.colorScheme.onPrimary
                             )
                         )
 
                         Text(
                             text = "I confirm that the information provided is accurate.",
                             modifier = Modifier.weight(1f),
-                            color = ContractorText,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 14.sp
                         )
                     }
                 }
 
-                if (message.isNotBlank()) {
+                if (state.error != null) {
                     Text(
-                        text = message,
-                        color = if (success) ContractorGreen
-                        else ContractorError,
+                        text = state.error,
+                        color = MaterialTheme.colorScheme.error,
                         fontSize = 13.sp
                     )
                 }
 
                 Button(
-                    onClick = {
-                        val missing = buildList {
-                            if (company.isBlank()) add("company name")
-                            if (contact.isBlank()) add("contact name")
-                            if (email.isBlank() || !email.contains("@")) {
-                                add("valid email")
-                            }
-                            if (phone.isBlank()) add("phone number")
-                            if (areas.isBlank()) add("service areas")
-                            if (licence.isBlank()) add("licence number")
-                            if (!licenceDoc) add("licence document")
-                            if (insurer.isBlank()) add("insurance provider")
-                            if (policy.isBlank()) add("policy number")
-                            if (!insuranceDoc) add("proof of insurance")
-                            if (vehicle.isBlank()) add("vehicle type")
-                            if (registration.isBlank()) {
-                                add("vehicle registration")
-                            }
-                            if (!identityDoc) add("proof of identity")
-                            if (!declaration) add("declaration")
-                        }
-
-                        success = missing.isEmpty()
-                        message = if (success) {
-                            "Submission complete!"
-                        } else {
-                            "Please complete: ${missing.joinToString(", ")}."
-                        }
-                    },
+                    onClick = { vm.submit() },
+                    enabled = !state.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ContractorGreen,
-                        contentColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text(
-                        "Submit application",
+                        text = if (state.isLoading) "Submitting..." else "Submit application",
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -294,13 +277,13 @@ private fun ContractorSection(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                ContractorField,
-                androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                MaterialTheme.colorScheme.primaryContainer,
+                RoundedCornerShape(16.dp)
             )
             .border(
                 1.dp,
-                ContractorBorder,
-                androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                MaterialTheme.colorScheme.outline,
+                RoundedCornerShape(16.dp)
             )
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -311,13 +294,13 @@ private fun ContractorSection(
         ) {
             Text(
                 text = number.padStart(2, '0'),
-                color = ContractorGreen,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .background(
-                        ContractorCard,
-                        androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                        MaterialTheme.colorScheme.surface,
+                        RoundedCornerShape(8.dp)
                     )
                     .padding(horizontal = 10.dp, vertical = 8.dp)
             )
@@ -325,13 +308,14 @@ private fun ContractorSection(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    color = ContractorText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
+
                 Text(
                     text = subtitle,
-                    color = ContractorMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp
                 )
             }
@@ -341,7 +325,7 @@ private fun ContractorSection(
             Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(ContractorBorder)
+                .background(MaterialTheme.colorScheme.outline)
         )
 
         content()
@@ -354,12 +338,13 @@ private fun ContractorField(
     value: String,
     hint: String,
     multiline: Boolean = false,
+    isPassword: Boolean = false,
     onChange: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = label,
-            color = ContractorMuted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 13.sp
         )
 
@@ -369,20 +354,25 @@ private fun ContractorField(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    ContractorBackground,
-                    androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    MaterialTheme.colorScheme.surface,
+                    RoundedCornerShape(12.dp)
                 )
                 .border(
                     1.dp,
-                    ContractorBorder,
-                    androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    MaterialTheme.colorScheme.outline,
+                    RoundedCornerShape(12.dp)
                 )
                 .padding(12.dp),
             singleLine = !multiline,
             minLines = if (multiline) 2 else 1,
             maxLines = if (multiline) 4 else 1,
+            visualTransformation = if (isPassword) {
+                PasswordVisualTransformation()
+            } else {
+                VisualTransformation.None
+            },
             textStyle = TextStyle(
-                color = ContractorText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp
             ),
             decorationBox = { innerTextField ->
@@ -390,10 +380,11 @@ private fun ContractorField(
                     if (value.isEmpty()) {
                         Text(
                             text = hint,
-                            color = ContractorMuted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp
                         )
                     }
+
                     innerTextField()
                 }
             }
@@ -411,13 +402,21 @@ private fun ContractorDocument(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (selected) ContractorCard else ContractorBackground,
-                androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                if (selected) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surface
+                },
+                RoundedCornerShape(12.dp)
             )
             .border(
                 1.dp,
-                if (selected) ContractorGreen else ContractorBorder,
-                androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.outline
+                },
+                RoundedCornerShape(12.dp)
             )
             .clickable { onChange(!selected) }
             .padding(12.dp),
@@ -426,21 +425,22 @@ private fun ContractorDocument(
     ) {
         Text(
             text = if (selected) "✓" else "+",
-            color = ContractorGreen,
+            color = MaterialTheme.colorScheme.primary,
             fontSize = 22.sp
         )
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = ContractorText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
+
             Text(
                 text = if (selected) "Marked as selected"
                 else "Tap to mark the document as selected",
-                color = ContractorMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }
