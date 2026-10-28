@@ -175,11 +175,6 @@ private fun WelcomeMessage(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Good morning",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
                 text = "Hi ${userName.ifBlank { "there" }}",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold

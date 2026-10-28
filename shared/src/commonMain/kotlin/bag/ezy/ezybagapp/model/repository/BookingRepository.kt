@@ -1,8 +1,9 @@
+
 package bag.ezy.ezybagapp.model.repository
 
-import bag.ezy.ezybagapp.model.data.Address
 import bag.ezy.ezybagapp.model.data.Booking
 import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
 import kotlin.time.Clock
 
@@ -16,39 +17,56 @@ interface BookingRepository {
 
 class FirebaseBookingRepository : BookingRepository {
 
+    private val auth = Firebase.auth
     private val firestore = Firebase.firestore
     private val bookingsCollection = firestore.collection("bookings")
+
+    private fun requireCurrentUserId(): String {
+        return auth.currentUser?.uid
+            ?.takeIf { it.isNotBlank() }
+            ?: error("Please sign in to access bookings.")
+    }
 
     override suspend fun getBookings(
         customerId: String
     ): Result<List<Booking>> = runCatching {
-        require(customerId.isNotBlank()) {
-            "Customer ID is required to load bookings."
+        val uid = requireCurrentUserId()
+
+        require(customerId == uid) {
+            "You can only load your own bookings."
         }
 
         val snapshot = bookingsCollection
-            .where { "customerId" equalTo customerId }
+            .where { "customerId" equalTo uid }
             .get()
 
         snapshot.documents.mapNotNull { document ->
-            runCatching {
-                document.data<Booking>()
-            }.getOrNull()
+            runCatching { document.data<Booking>() }.getOrNull()
         }
     }
 
     override suspend fun getBooking(
         bookingId: String
     ): Result<Booking?> = runCatching {
+        val uid = requireCurrentUserId()
+
         require(bookingId.isNotBlank()) {
-            "Booking ID is required to load a booking."
+            "Booking ID is required."
         }
 
-        val document = bookingsCollection
-            .document(bookingId)
-            .get()
+        val document = bookingsCollection.document(bookingId).get()
 
-        if (document.exists) document.data<Booking>() else null
+        if (!document.exists) {
+            null
+        } else {
+            val booking = document.data<Booking>()
+
+            require(booking.customerId == uid) {
+                "You are not authorized to access this booking."
+            }
+
+            booking
+        }
     }
 
     override suspend fun getEstimate(
@@ -66,36 +84,74 @@ class FirebaseBookingRepository : BookingRepository {
     override suspend fun createBooking(
         booking: Booking
     ): Result<String> = runCatching {
+        val uid = requireCurrentUserId()
 
-        require(booking.customerId.isNotBlank()) {
-            "Customer ID is required to create a booking."
+        require(booking.customerId == uid) {
+            "The booking customer does not match the signed-in user."
+        }
+
+        require(booking.collectionAddress.street.isNotBlank()) {
+            "Collection address is required."
+        }
+
+        require(booking.collectionAddress.postcode.isNotBlank()) {
+            "Collection postcode is required."
+        }
+
+        require(booking.customerPhone.isNotBlank()) {
+            "Customer phone number is required."
+        }
+
+        require(booking.schedule.preferredDate.isNotBlank()) {
+            "Collection date is required."
+        }
+
+        require(booking.schedule.preferredTime.isNotBlank()) {
+            "Collection time is required."
+        }
+
+        require(booking.pricing.estimatedQuote > 0.0) {
+            "A valid estimate is required before booking."
         }
 
         val document = bookingsCollection.document
+        val now = Clock.System.now().toString()
 
         val bookingToSave = booking.copy(
             bookingId = document.id,
+            customerId = uid,
+            contractorId = null,
             status = "Upcoming",
-            createdAt = booking.createdAt.ifBlank { Clock.System.now().toString() }
+            createdAt = now
         )
 
         document.set(bookingToSave)
-
         document.id
     }
-
 
     override suspend fun requestFinalQuote(
         booking: Booking
     ): Result<Unit> = runCatching {
+        val uid = requireCurrentUserId()
+
         require(booking.bookingId.isNotBlank()) {
-            "Booking ID is required to request a final quote."
+            "Booking ID is required."
         }
 
-        bookingsCollection
-            .document(booking.bookingId)
-            .update(
-                "pricing.finalQuoteRequested" to true
-            )
+        val document = bookingsCollection.document(booking.bookingId).get()
+
+        require(document.exists) {
+            "Booking not found."
+        }
+
+        val existingBooking = document.data<Booking>()
+
+        require(existingBooking.customerId == uid) {
+            "You are not authorized to change this booking."
+        }
+
+        bookingsCollection.document(booking.bookingId).update(
+            "pricing.finalQuoteRequested" to true
+        )
     }
 }

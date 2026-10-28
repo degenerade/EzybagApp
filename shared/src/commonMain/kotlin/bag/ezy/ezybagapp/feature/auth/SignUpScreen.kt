@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.auth
 
 import androidx.compose.foundation.background
@@ -44,44 +45,80 @@ fun SignUpScreen(
             .safeContentPadding()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         TextButton(
             onClick = onBackToSignIn,
             contentPadding = PaddingValues(0.dp)
-        ) { Text("← Back") }
-        Text("Create your account", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
+        ) {
+            Text("← Back")
+        }
+
+        Text(
+            "Create your account",
+            fontSize = 26.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+
         Text(
             "Book and track pickups in one place",
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         OutlinedTextField(
-            s.name,
-            vm::onNameChange,
-            label = { Text("Full name") },
+            value = s.firstName,
+            onValueChange = vm::onFirstNameChange,
+            label = { Text("First name") },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next
+            ),
+            enabled = !s.isLoading,
             modifier = Modifier.fillMaxWidth()
         )
+
         OutlinedTextField(
-            s.email, vm::onEmailChange, label = { Text("Email") }, singleLine = true,
+            value = s.lastName,
+            onValueChange = vm::onLastNameChange,
+            label = { Text("Last name") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next
+            ),
+            enabled = !s.isLoading,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = s.email,
+            onValueChange = vm::onEmailChange,
+            label = { Text("Email") },
+            singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
-            ), modifier = Modifier.fillMaxWidth()
+            ),
+            enabled = !s.isLoading,
+            modifier = Modifier.fillMaxWidth()
         )
+
         OutlinedTextField(
-            s.password, vm::onPasswordChange, label = { Text("Password") }, singleLine = true,
+            value = s.password,
+            onValueChange = vm::onPasswordChange,
+            label = { Text("Password") },
+            singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Next
-            ), modifier = Modifier.fillMaxWidth()
+            ),
+            enabled = !s.isLoading,
+            modifier = Modifier.fillMaxWidth()
         )
+
         OutlinedTextField(
-            s.confirmPassword,
-            vm::onConfirmChange,
+            value = s.confirmPassword,
+            onValueChange = vm::onConfirmChange,
             label = { Text("Confirm password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
@@ -89,26 +126,40 @@ fun SignUpScreen(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
             ),
+            enabled = !s.isLoading,
             modifier = Modifier.fillMaxWidth()
         )
 
-        s.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        s.error?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
 
         Button(
             onClick = { vm.signUp(onSignedUp) },
             enabled = !s.isLoading,
             shape = MaterialTheme.shapes.small,
-            modifier = Modifier.fillMaxWidth().height(48.dp).padding(top = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .padding(top = 4.dp)
         ) {
-            if (s.isLoading) CircularProgressIndicator(
-                Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-            else Text("Create account")
+            if (s.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text("Create account")
+            }
         }
+
         TextButton(
             onClick = onBackToSignIn,
+            enabled = !s.isLoading,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text("Already have an account? Sign in")

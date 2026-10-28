@@ -91,6 +91,19 @@ class NewBookingViewModel(
         )
     }
 
+    // Classify video filenames by their file extension.
+    // Files with other extensions are treated as photos.
+    private fun isVideoFile(name: String): Boolean {
+        return name.substringAfterLast('.', "")
+            .lowercase() in setOf(
+            "mp4",
+            "mov",
+            "m4v",
+            "webm",
+            "avi"
+        )
+    }
+
     fun continueFromDetails(onValid: () -> Unit) {
         val current = state
 
@@ -289,8 +302,14 @@ class NewBookingViewModel(
                 }
             ),
 
+            // Store filenames separately; no file upload occurs.
             media = Media(
-                photos = current.mediaFileNames
+                photos = current.mediaFileNames.filterNot {
+                    isVideoFile(it)
+                },
+                videos = current.mediaFileNames.filter {
+                    isVideoFile(it)
+                }
             ),
 
             schedule = Schedule(

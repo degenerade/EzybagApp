@@ -1,14 +1,22 @@
+
 package bag.ezy.ezybagapp.feature.dbdevpage
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -16,98 +24,86 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun DbScreen() {
     val viewModel = remember { DbTestViewModel() }
-    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.primaryContainer)
             .safeContentPadding()
             .fillMaxSize()
-            .verticalScroll(scrollState)
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Firebase Auth, Reviews & RBAC Demo",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp)
+            text = "Firebase Development Tests",
+            style = MaterialTheme.typography.titleLarge
         )
 
         Text(
-            text = "Status / Output:",
+            text = "Status / Output",
             style = MaterialTheme.typography.titleMedium
         )
+
         Text(
             text = viewModel.statusMessage,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
 
         if (viewModel.isLoading) {
-            Spacer(modifier = Modifier.height(8.dp))
             CircularProgressIndicator()
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 1. Sign up with mock data
-        Button(onClick = { viewModel.signUpWithMockData() }, modifier = Modifier.fillMaxWidth()) {
-            Text("1. Sign Up (Mock Data)")
-        }
-
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 2. Log in by mail/password
-        Button(onClick = { viewModel.loginWithEmail("mock_user_4015@example.com", "password123") }, modifier = Modifier.fillMaxWidth()) {
-            Text("2. Log In (Mail / Password)")
+        Button(
+            onClick = { viewModel.signOut() },
+            enabled = !viewModel.isLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Sign out")
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Review Tests",
+            style = MaterialTheme.typography.titleMedium
+        )
 
-        // 3. Log in by Google
-        Button(onClick = { viewModel.loginWithGoogle() }, modifier = Modifier.fillMaxWidth()) {
-            Text("3. Google Authorization")
+        Button(
+            onClick = { viewModel.leaveReview() },
+            enabled = !viewModel.isLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Test Review Submission")
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Access Control Tests",
+            style = MaterialTheme.typography.titleMedium
+        )
 
-        // Sign Out button
-        Button(onClick = { viewModel.signOut() }, modifier = Modifier.fillMaxWidth()) {
-            Text("🔒 Sign Out")
+        Button(
+            onClick = { viewModel.testUnauthorizedAccess() },
+            enabled = !viewModel.isLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Test Unauthenticated Access")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "--- Review Action ---", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 4. Leave Review (Single button checking auth state)
-        Button(onClick = { viewModel.leaveReview() }, modifier = Modifier.fillMaxWidth()) {
-            Text("Leave Review")
+        Button(
+            onClick = { viewModel.testCustomerAccess() },
+            enabled = !viewModel.isLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Test Customer Access")
         }
 
-//        Spacer(modifier = Modifier.height(16.dp))
-//        Text(text = "--- RBAC (Admin / Customer / Unauthorized) ---", style = MaterialTheme.typography.titleMedium)
-//        Spacer(modifier = Modifier.height(8.dp))
-//
-//        // 5. Unauthorized Access Test
-//        Button(onClick = { viewModel.testUnauthorizedAccess() }, modifier = Modifier.fillMaxWidth()) {
-//            Text("5. RBAC: Unauthorized Access")
-//        }
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//
-//        // 6. Customer Access Test
-//        Button(onClick = { viewModel.testCustomerAccess() }, modifier = Modifier.fillMaxWidth()) {
-//            Text("6. RBAC: Customer Access")
-//        }
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//
-//        // 7. Admin Access Test
-//        Button(onClick = { viewModel.testAdminAccess() }, modifier = Modifier.fillMaxWidth()) {
-//            Text("7. RBAC: Admin Access")
-//        }
+        Button(
+            onClick = { viewModel.testAdminAccess() },
+            enabled = !viewModel.isLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Test Admin Access")
+        }
     }
 }
