@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp
 
 import androidx.compose.foundation.layout.Box
@@ -25,6 +24,7 @@ import bag.ezy.ezybagapp.feature.auth.SignUpScreen
 import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
 import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
 import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
+import bag.ezy.ezybagapp.feature.contractorapproval.ContractorApprovalPendingScreen
 import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
 import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
 import bag.ezy.ezybagapp.feature.main.MainContainer
@@ -42,6 +42,7 @@ enum class Screen {
     SignIn,
     SignUp,
     ContractorSignup,
+    ContractorApprovalPending,
     ContractorJobs,
     Home,
     NewBookingDetails,
@@ -123,7 +124,17 @@ fun App() {
 
                 Screen.DbTest -> DbScreen()
 
-                Screen.ContractorSignup -> ContractorSignupScreen()
+                Screen.ContractorSignup -> ContractorSignupScreen(
+                    onSubmitted = {
+                        screen = Screen.ContractorApprovalPending
+                    }
+                )
+
+                Screen.ContractorApprovalPending -> ContractorApprovalPendingScreen(
+                    onBackToSignIn = {
+                        screen = Screen.SignIn
+                    }
+                )
 
                 Screen.ContractorJobs -> ContractorJobsScreen(
                     onOpenJob = { }
@@ -136,7 +147,7 @@ fun App() {
                     onOpenBooking = { id ->
                         selectedBookingId = id
                         screen = Screen.BookingDetails
-                                    },
+                    },
                     onSignOut = { authVm.signOut { screen = Screen.SignIn } }
                 )
 
