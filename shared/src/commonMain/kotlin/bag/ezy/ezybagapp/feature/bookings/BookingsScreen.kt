@@ -134,7 +134,7 @@ fun BookingsContent(
                         )
                     }
 
-                    if (visible.isEmpty()) {
+                    if (visible.isEmpty() && state.selectedTab.name != "All") {
                         item {
                             Text(
                                 text = "No ${state.selectedTab.name.lowercase()} bookings",
@@ -142,8 +142,16 @@ fun BookingsContent(
                             )
                         }
                     }
+                    if (visible.isEmpty() && state.selectedTab.name == "All") {
+                        item {
+                            Text(
+                                text = "Your bookings will appear here when you make them!",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
 
-                    if (state.selectedTab == BookingTab.All) {
+                    if (state.selectedTab == BookingTab.All && !visible.isEmpty()) {
                         item { CancelledCard(count = state.cancelledCount) }
                     }
                 }
@@ -321,7 +329,7 @@ private fun BookingsCompletedTabPreview() {
 private fun BookingsLoadingPreview() {
     ClearawayTheme {
         BookingsContent(
-            BookingsUiState(isLoading = true),
+            BookingsUiState(isLoading = false),
             {}, {}, {}, {}
         )
     }
