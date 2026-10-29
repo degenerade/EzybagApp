@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp.feature.admin
+package bag.ezy.ezybagapp.feature.admin.dashboard
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,18 +8,22 @@ import androidx.lifecycle.viewModelScope
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.model.repository.AuthRepository
 import bag.ezy.ezybagapp.model.repository.BookingRepository
+import bag.ezy.ezybagapp.model.repository.ContractorRepository
 import kotlinx.coroutines.launch
 
 data class AdminDashboardUiState(
     val userName: String = "",
     val totalBookings: Int? = null,
     val isLoading: Boolean = true,
-    val bookingError: String? = null
+    val bookingError: String? = null,
+    val totalContractors: Int? = null,
+    val contractorError: String? = null,
 )
 
 class AdminDashboardViewModel(
     private val auth: AuthRepository = AppContainer.authRepository,
-    private val bookings: BookingRepository = AppContainer.bookingRepository
+    private val bookings: BookingRepository = AppContainer.bookingRepository,
+    private val contractors: ContractorRepository = AppContainer.contractorRepository,
 ) : ViewModel() {
 
     var state by mutableStateOf(AdminDashboardUiState())
@@ -35,18 +38,23 @@ class AdminDashboardViewModel(
                 isLoading = false
             )
 
-            val result = bookings.countAllBookings()
+            val bookingCountResult = bookings.countAllBookings()
+            val contractorCountResult = contractors.countAllContractors()
 
-            state = if (result.isSuccess) {
+            state = if (bookingCountResult.isSuccess && contractorCountResult.isSuccess) {
                 state.copy(
-                    totalBookings = result.getOrNull(),
-                    bookingError = null
+                    totalBookings = bookingCountResult.getOrNull(),
+                    totalContractors = contractorCountResult.getOrNull(),
+                )
+            } else if (bookingCountResult.isFailure) {
+                state.copy(
+                    bookingError = bookingCountResult.exceptionOrNull()?.message
+                        ?: "Could not load bookings"
                 )
             } else {
                 state.copy(
-                    totalBookings = null,
-                    bookingError = result.exceptionOrNull()?.message
-                        ?: "Could not load bookings"
+                    contractorError = contractorCountResult.exceptionOrNull()?.message
+                        ?: "Could not load contractors"
                 )
             }
         }

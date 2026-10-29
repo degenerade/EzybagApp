@@ -19,7 +19,7 @@ import bag.ezy.ezybagapp.dev.DEV_MENU_ENABLED
 import bag.ezy.ezybagapp.dev.DevMenu
 import bag.ezy.ezybagapp.dev.DevMenuButton
 import bag.ezy.ezybagapp.di.AppContainer
-import bag.ezy.ezybagapp.feature.admin.AdminDashboardScreen
+import bag.ezy.ezybagapp.feature.admin.dashboard.AdminDashboardScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen

@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp.feature.admin
+package bag.ezy.ezybagapp.feature.admin.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.feature.admin.BookingsScreen
+import bag.ezy.ezybagapp.feature.admin.CustomersScreen
+import bag.ezy.ezybagapp.feature.admin.IssuesScreen
+import bag.ezy.ezybagapp.feature.admin.ReportsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 
 private enum class AdminSubScreen {
@@ -50,7 +54,7 @@ private enum class AdminSubScreen {
 @Composable
 private fun AccountAvatar(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Surface(
         onClick = onClick,
@@ -143,14 +147,14 @@ fun AdminDashboardScreen(
                 ) {
                     MetricCard(
                         title = "Bookings",
-                        value = state.totalBookings?.toString() ?:"—",
+                        value = state.totalBookings?.toString() ?: "—",
                         onClick = { subScreen = AdminSubScreen.Bookings },
                         modifier = Modifier.weight(1f)
                     )
 
                     MetricCard(
                         title = "Customers",
-                        value = "—",
+                        value = state.totalContractors?.toString() ?: "—",
                         onClick = { subScreen = AdminSubScreen.Customers },
                         modifier = Modifier.weight(1f)
                     )
@@ -231,12 +235,12 @@ fun AdminDashboardScreen(
 private fun PendingActionCard(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -266,12 +270,12 @@ private fun MetricCard(
     title: String,
     value: String,
     onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Card(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -303,12 +307,12 @@ private fun MetricCard(
 private fun NavigationCard(
     title: String,
     onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Card(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
