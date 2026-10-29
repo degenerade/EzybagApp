@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp.feature.startPage
+package bag.ezy.ezybagapp.feature.startpage
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import bag.ezy.ezybagapp.feature.startpage.StartUiState
+import bag.ezy.ezybagapp.feature.startpage.StartViewModel
 import bag.ezy.ezybagapp.model.data.UserRole
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 
