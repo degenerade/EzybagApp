@@ -12,6 +12,8 @@ interface ContractorRepository {
         password: String
     ): Result<Unit>
 
+    suspend fun getCurrentContractor(): Result<Contractor?>
+
     suspend fun getAllContractors(): Result<List<Contractor>>
     suspend fun getVerifiedContractors(): Result<List<Contractor>>
     suspend fun countAllContractors(): Result<Int>
@@ -99,4 +101,20 @@ class FirebaseContractorRepository : ContractorRepository {
     override suspend fun changeContractorStatus(contractorId: String, isApproved: Boolean): Result<Unit> = runCatching {
         // TODO: Update contractor approval status in Firestore
     }
+
+    override suspend fun getCurrentContractor(): Result<Contractor?> =
+        runCatching {
+            val user = auth.currentUser
+                ?: return@runCatching null
+
+            val document = contractors
+                .document(user.uid)
+                .get()
+
+            if (!document.exists) {
+                null
+            } else {
+                document.data<Contractor>()
+            }
+        }
 }
