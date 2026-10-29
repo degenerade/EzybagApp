@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +36,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import bag.ezy.ezybagapp.di.AppContainer
 
 private val AdminGreen = Color(0xFF1E6F5C)
 private val AdminBackground = Color(0xFFF5F7F6)
@@ -48,29 +51,6 @@ private enum class AdminSubScreen {
 }
 
 @Composable
-private fun WelcomeMessage(
-    userName: String,
-    onOpenAccount: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 20.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Hi ${userName.ifBlank { "there" }}",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-        AccountAvatar(onClick = onOpenAccount)
-    }
-}
-
-@Composable
 private fun AccountAvatar(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -78,15 +58,15 @@ private fun AccountAvatar(
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = AdminGreen,
-        contentColor = Color.White,
-        modifier = modifier.size(40.dp)
+        color = Color.White,
+        contentColor = AdminGreen,
+        modifier = modifier.size(42.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = "Account",
-                tint = Color.White
+                tint = AdminGreen
             )
         }
     }
@@ -94,9 +74,14 @@ private fun AccountAvatar(
 
 @Composable
 fun AdminDashboardScreen(
-    userName: String = "Admin",
-    onOpenAccount: () -> Unit = {}
+    onOpenAccount: () -> Unit = {},
+    vm: AdminDashboardViewModel = viewModel {
+        AdminDashboardViewModel(AppContainer.authRepository)
+    }
 ) {
+    val state = vm.state
+    LaunchedEffect(Unit) { vm.load() }
+
     var subScreen by remember { mutableStateOf<AdminSubScreen?>(null) }
 
     when (subScreen) {
@@ -117,32 +102,38 @@ fun AdminDashboardScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                WelcomeMessage(
-                    userName = userName,
-                    onOpenAccount = onOpenAccount
-                )
-
-                // Dashboard header
+                // Dashboard header with user avatar in top-right corner
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = AdminGreen,
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Administrator",
-                            color = Color.White,
-                            fontSize = 25.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = state.userName.ifBlank { "Admin" },
+                                color = Color.White,
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.Bold
+                            )
 
-                        Text(
-                            text = "Overview",
-                            color = Color.White.copy(alpha = 0.85f),
-                            fontSize = 15.sp
+                            Text(
+                                text = "Admin Page",
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 15.sp
+                            )
+                        }
+
+                        AccountAvatar(
+                            onClick = onOpenAccount
                         )
                     }
                 }
