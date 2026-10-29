@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp
 
 import androidx.compose.foundation.layout.Box
@@ -7,31 +8,40 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-
 import bag.ezy.ezybagapp.dev.DEV_MENU_ENABLED
 import bag.ezy.ezybagapp.dev.DevMenu
 import bag.ezy.ezybagapp.dev.DevMenuButton
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.feature.admin.AdminDashboardScreen
 import bag.ezy.ezybagapp.feature.auth.AuthViewModel
-import bag.ezy.ezybagapp.feature.auth.ContractorSignupScreen
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
-import bag.ezy.ezybagapp.feature.bookings.BookingsScreen
+import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
+import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
+import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
+import bag.ezy.ezybagapp.feature.contractorapproval.ContractorApprovalPendingScreen
+import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
+import bag.ezy.ezybagapp.feature.contractormain.ContractorMainContainer
+import bag.ezy.ezybagapp.feature.contractormain.ContractorTab
+import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
+import bag.ezy.ezybagapp.feature.main.MainContainer
+import bag.ezy.ezybagapp.feature.main.MainTab
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingDetailsScreen
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingViewModel
 import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
 import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.feature.startPage.StartScreen
+import bag.ezy.ezybagapp.model.queries.AdminRepository
+import bag.ezy.ezybagapp.model.repository.FirebaseContractorRepository
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
-import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
-
+import kotlinx.coroutines.launch
 
 enum class Screen {
     DevMenu,
@@ -39,13 +49,17 @@ enum class Screen {
     SignIn,
     SignUp,
     ContractorSignup,
+    ContractorApprovalPending,
+    ContractorHome,
+    ContractorJobs,
     Home,
-    Bookings,
     NewBookingDetails,
     NewBookingSchedule,
+    BookingDetails,
     BookingConfirmation,
     Ratings,
-    AdminDashboard
+    AdminDashboard,
+    DbTest,
 }
 
 @Composable
@@ -53,165 +67,244 @@ fun App() {
     ClearawayTheme {
         var screen by rememberSaveable {
             mutableStateOf(
-                if (DEV_MENU_ENABLED) {
-                    Screen.DevMenu
-                } else {
-                    Screen.SignIn
-                }
+                if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn
             )
         }
 
-        // Keep the booking ID available when navigating to confirmation.
+        var customerTab by rememberSaveable {
+            mutableStateOf(MainTab.Home)
+        }
+
+        var contractorTab by rememberSaveable {
+            mutableStateOf(ContractorTab.Home)
+        }
+
+        var contractorApproved by rememberSaveable {
+            mutableStateOf(false)
+        }
+
+        var selectedBookingId by rememberSaveable {
+            mutableStateOf<String?>(null)
+        }
+
         var confirmedBookingId by rememberSaveable {
             mutableStateOf("")
         }
 
-        val authVm = viewModel {
-            AuthViewModel()
-        }
+        val authVm = viewModel { AuthViewModel() }
+        val scope = rememberCoroutineScope()
 
         val newBookingVm = viewModel {
-            NewBookingViewModel(AppContainer.bookingRepository)
+            NewBookingViewModel(
+                AppContainer.bookingRepository,
+                AppContainer.authRepository
+            )
         }
 
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        fun startBooking(wasteType: String?) {
+            newBookingVm.reset()
+            wasteType?.let {
+                newBookingVm.onWasteTypeSelected(it)
+            }
+            screen = Screen.NewBookingDetails
+        }
+
+        Box(Modifier.fillMaxSize()) {
             when (screen) {
-
-                Screen.DevMenu -> {
-                    DevMenu(
-                        onOpen = { destination ->
-                            screen = destination
+                Screen.DevMenu -> DevMenu(
+                    onOpen = { target ->
+                        if (
+                            target == Screen.BookingDetails &&
+                            selectedBookingId == null
+                        ) {
+                            selectedBookingId = "CC-10482"
                         }
-                    )
-                }
+                        screen = target
+                    }
+                )
 
-                Screen.Start -> {
-                    StartScreen(
-                        onCustomerSignUp = {
-                            screen = Screen.SignUp
-                        },
-                        onContractorSignUp = {
-                            screen = Screen.ContractorSignup
-                        },
-                        onSignIn = {
-                            screen = Screen.SignIn
+                Screen.Start -> StartScreen(
+                    onCustomerSignUp = {
+                        screen = Screen.SignUp
+                    },
+                    onContractorSignUp = {
+                        screen = Screen.ContractorSignup
+                    },
+                    onSignIn = {
+                        screen = Screen.SignIn
+                    }
+                )
+
+                Screen.SignIn -> SignInScreen(
+                    vm = authVm,
+                    onSignedIn = {
+                        scope.launch {
+                            // 1. Check for an active administrator.
+                            val adminResult =
+                                AdminRepository().isCurrentUserAdmin()
+
+                            if (adminResult.isFailure) {
+                                // Do not silently route to customer screens
+                                // if admin verification fails.
+                                authVm.signOut {
+                                    screen = Screen.SignIn
+                                }
+                                return@launch
+                            }
+
+                            if (adminResult.getOrDefault(false)) {
+                                screen = Screen.AdminDashboard
+                                return@launch
+                            }
+
+                            // 2. If not an admin, check for a contractor.
+                            val contractorResult =
+                                FirebaseContractorRepository()
+                                    .getCurrentContractor()
+
+                            if (contractorResult.isFailure) {
+                                authVm.signOut {
+                                    screen = Screen.SignIn
+                                }
+                                return@launch
+                            }
+
+                            val contractor =
+                                contractorResult.getOrNull()
+
+                            if (contractor != null) {
+                                contractorApproved = contractor.isApproved
+                                contractorTab = ContractorTab.Home
+                                screen = Screen.ContractorHome
+                            } else {
+                                // 3. Otherwise, open the customer home.
+                                contractorApproved = false
+                                customerTab = MainTab.Home
+                                screen = Screen.Home
+                            }
                         }
-                    )
-                }
+                    },
+                    onCreateAccount = {
+                        authVm.clearMessage()
+                        screen = Screen.SignUp
+                    }
+                )
 
-                Screen.SignIn -> {
-                    SignInScreen(
-                        vm = authVm,
-                        onSignedIn = {
-                            screen = Screen.Home
-                        },
-                        onCreateAccount = {
-                            authVm.clearMessage()
-                            screen = Screen.SignUp
-                        }
-                    )
-                }
+                Screen.SignUp -> SignUpScreen(
+                    vm = authVm,
+                    onSignedUp = {
+                        authVm.clearMessage()
+                        screen = Screen.SignIn
+                    },
+                    onBackToSignIn = {
+                        authVm.clearMessage()
+                        screen = Screen.SignIn
+                    }
+                )
 
-                Screen.SignUp -> {
-                    SignUpScreen(
-                        vm = authVm,
-                        onSignedUp = {
-                            screen = Screen.Home
-                        },
+                Screen.DbTest -> DbScreen()
+
+                Screen.ContractorSignup -> ContractorSignupScreen(
+                    onSubmitted = {
+                        screen = Screen.ContractorApprovalPending
+                    }
+                )
+
+                Screen.ContractorApprovalPending ->
+                    ContractorApprovalPendingScreen(
                         onBackToSignIn = {
-                            authVm.clearMessage()
                             screen = Screen.SignIn
                         }
                     )
-                }
 
-                Screen.ContractorSignup -> {
-                    ContractorSignupScreen()
-                }
-
-                Screen.Home -> {
-                    MainContainer(
-                        onCreatePickup = {
-                            newBookingVm.reset()
-                            confirmedBookingId = ""
-                            screen = Screen.NewBookingDetails
-                        },
-                        onOpenBookings = {
-                            screen = Screen.Bookings
+                Screen.ContractorHome -> ContractorMainContainer(
+                    selectedTab = contractorTab,
+                    isApproved = contractorApproved,
+                    onTabSelected = {
+                        contractorTab = it
+                    },
+                    onSignOut = {
+                        authVm.signOut {
+                            contractorTab = ContractorTab.Home
+                            contractorApproved = false
+                            screen = Screen.SignIn
                         }
-                    )
-                }
+                    }
+                )
 
-                Screen.Bookings -> {
-                    BookingsScreen(
-                        onBookAnother = {
-                            newBookingVm.reset()
-                            confirmedBookingId = ""
-                            screen = Screen.NewBookingDetails
+                Screen.ContractorJobs -> ContractorJobsScreen(
+                    onOpenJob = { }
+                )
+
+                Screen.Home -> MainContainer(
+                    selectedTab = customerTab,
+                    onTabSelected = {
+                        customerTab = it
+                    },
+                    onStartBooking = {
+                        startBooking(it)
+                    },
+                    onOpenBooking = { id ->
+                        selectedBookingId = id
+                        screen = Screen.BookingDetails
+                    },
+                    onSignOut = {
+                        authVm.signOut {
+                            customerTab = MainTab.Home
+                            screen = Screen.SignIn
                         }
-                    )
-                }
+                    }
+                )
 
-                Screen.NewBookingDetails -> {
-                    NewBookingDetailsScreen(
-                        vm = newBookingVm,
-                        onContinue = {
-                            screen = Screen.NewBookingSchedule
-                        }
-                    )
-                }
+                Screen.NewBookingDetails -> NewBookingDetailsScreen(
+                    vm = newBookingVm,
+                    onContinue = {
+                        screen = Screen.NewBookingSchedule
+                    }
+                )
 
-                Screen.NewBookingSchedule -> {
-                    ScheduleBagQuoteScreen(
-                        vm = newBookingVm,
-                        onBack = {
-                            screen = Screen.NewBookingDetails
-                        },
-                        onBooked = { bookingId ->
-                            // The booking has been saved successfully.
-                            // Preserve its ID for the confirmation screen.
-                            confirmedBookingId = bookingId
-                            screen = Screen.BookingConfirmation
-                        }
-                    )
-                }
+                Screen.NewBookingSchedule -> ScheduleBagQuoteScreen(
+                    vm = newBookingVm,
+                    onBack = {
+                        screen = Screen.NewBookingDetails
+                    },
+                    onBooked = { bookingId ->
+                        newBookingVm.reset()
+                        confirmedBookingId = bookingId
+                        screen = Screen.BookingConfirmation
+                    }
+                )
 
-                Screen.BookingConfirmation -> {
-                    BookingConfirmationScreen(
-                        bookingId = confirmedBookingId,
-                        onViewBookings = {
-                            screen = Screen.Bookings
-                        },
-                        onReturnHome = {
-                            newBookingVm.reset()
-                            confirmedBookingId = ""
-                            screen = Screen.Home
-                        },
-                        onBookAnother = {
-                            newBookingVm.reset()
-                            confirmedBookingId = ""
-                            screen = Screen.NewBookingDetails
-                        }
-                    )
-                }
+                Screen.BookingDetails -> BookingDetailsScreen(
+                    bookingId = selectedBookingId ?: "",
+                    onBack = {
+                        screen = Screen.Home
+                    }
+                )
 
-                Screen.Ratings -> {
-                    RatingsScreen(
-                        bookingId = "demo",
-                        onReportIssue = {
-                            // TODO: Connect issue reporting.
-                        }
-                    )
-                }
+                Screen.BookingConfirmation -> BookingConfirmationScreen(
+                    bookingId = confirmedBookingId,
+                    onViewBookings = {
+                        customerTab = MainTab.Bookings
+                        screen = Screen.Home
+                    },
+                    onReturnHome = {
+                        customerTab = MainTab.Home
+                        screen = Screen.Home
+                    },
+                    onBookAnother = {
+                        startBooking(null)
+                    }
+                )
 
-                Screen.AdminDashboard -> {
-                    AdminDashboardScreen()
-                }
+                Screen.Ratings -> RatingsScreen(
+                    bookingId = "demo",
+                    onReportIssue = { /* TODO */ }
+                )
+
+                Screen.AdminDashboard -> AdminDashboardScreen()
             }
 
-            // Development navigation button.
             if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {
                 DevMenuButton(
                     onClick = {

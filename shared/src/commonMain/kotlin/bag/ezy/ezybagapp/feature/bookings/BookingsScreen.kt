@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp.feature.bookings
 
 import androidx.compose.foundation.background
@@ -28,48 +27,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
-import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.auth.auth
 
 @Composable
 fun BookingsScreen(
-    onBookAnother: () -> Unit
+    onBookAnother: () -> Unit,
+    onBookingClick: (String) -> Unit,
+    vm: BookingsViewModel = viewModel {
+        BookingsViewModel(AppContainer.authRepository, AppContainer.bookingRepository)
+    }
 ) {
-    val customerId = Firebase.auth.currentUser?.uid
-
-    if (customerId.isNullOrBlank()) {
-        BookingsContent(
-            state = BookingsUiState(
-                isLoading = false,
-                error = "Please sign in to view your bookings."
-            ),
-            onTabSelected = {},
-            onRetry = {},
-            onBookAnother = onBookAnother
-        )
-        return
-    }
-
-    val vm: BookingsViewModel = viewModel(
-        key = "bookings_$customerId"
-    ) {
-        BookingsViewModel(customerId, AppContainer.bookingRepository)
-    }
-
-    LaunchedEffect(customerId) {
-        vm.load()
-    }
+    LaunchedEffect(Unit) { vm.load() }
 
     BookingsContent(
         state = vm.state,
         onTabSelected = vm::selectTab,
         onRetry = vm::load,
-        onBookAnother = onBookAnother
+        onBookAnother = onBookAnother,
+        onBookingClick = onBookingClick
     )
 }
 
@@ -78,7 +58,8 @@ fun BookingsContent(
     state: BookingsUiState,
     onTabSelected: (BookingTab) -> Unit,
     onRetry: () -> Unit,
-    onBookAnother: () -> Unit
+    onBookAnother: () -> Unit,
+    onBookingClick: (String) -> Unit
 ) {
     val visible = state.visibleBookings
     val bookingCountText =
@@ -109,9 +90,7 @@ fun BookingsContent(
         when {
             state.isLoading && state.bookings.isEmpty() -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier = Modifier.fillMaxWidth().weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
@@ -120,9 +99,7 @@ fun BookingsContent(
 
             state.error != null -> {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier = Modifier.fillMaxWidth().weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -147,13 +124,14 @@ fun BookingsContent(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier = Modifier.fillMaxWidth().weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(visible, key = { it.reference }) { booking ->
-                        BookingCard(booking)
+                        BookingCard(
+                            booking = booking,
+                            onClick = { onBookingClick(booking.reference) }
+                        )
                     }
 
                     if (visible.isEmpty()) {
@@ -166,9 +144,7 @@ fun BookingsContent(
                     }
 
                     if (state.selectedTab == BookingTab.All) {
-                        item {
-                            CancelledCard(count = state.cancelledCount)
-                        }
+                        item { CancelledCard(count = state.cancelledCount) }
                     }
                 }
             }
@@ -204,23 +180,13 @@ private fun BookingTabs(
             Text(
                 text = tab.name,
                 fontSize = 13.sp,
-                fontWeight = if (isSelected) {
-                    FontWeight.SemiBold
-                } else {
-                    FontWeight.Normal
-                },
-                color = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .background(
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            Color.Transparent
-                        },
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                else Color.Transparent,
                         shape = MaterialTheme.shapes.small
                     )
                     .clickable { onTabSelected(tab) }
@@ -231,8 +197,13 @@ private fun BookingTabs(
 }
 
 @Composable
-private fun BookingCard(booking: BookingUiModel) {
+private fun BookingCard(
+    booking: BookingUiModel,
+    onClick: () -> Unit
+) {
+
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
@@ -313,24 +284,24 @@ private fun CancelledCard(count: Int) {
 }
 
 private val previewBookings = listOf(
-    BookingUiModel("CC-10482", "Mixed waste", "En route", "Fri 2 Oct", BookingTab.Active),
+    BookingUiModel("CC-10482", "Mixed waste", "En route", "2 Oct", BookingTab.Active),
     BookingUiModel("CC-10511", "Garden waste", "Upcoming", "13 Oct", BookingTab.Upcoming),
     BookingUiModel("CC-10274", "Furniture", "Completed", "18 Sep", BookingTab.Completed),
     BookingUiModel("CC-10199", "Household", "Cancelled", "4 Sep", null)
 )
 
-@androidx.compose.ui.tooling.preview.Preview
+@Preview
 @Composable
 private fun BookingsLoadedPreview() {
     ClearawayTheme {
         BookingsContent(
             BookingsUiState(isLoading = false, bookings = previewBookings),
-            {}, {}, {}
+            {}, {}, {}, {}
         )
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview
+@Preview
 @Composable
 private fun BookingsCompletedTabPreview() {
     ClearawayTheme {
@@ -340,23 +311,23 @@ private fun BookingsCompletedTabPreview() {
                 bookings = previewBookings,
                 selectedTab = BookingTab.Completed
             ),
-            {}, {}, {}
+            {}, {}, {}, {}
         )
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview
+@Preview
 @Composable
 private fun BookingsLoadingPreview() {
     ClearawayTheme {
         BookingsContent(
             BookingsUiState(isLoading = true),
-            {}, {}, {}
+            {}, {}, {}, {}
         )
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview
+@Preview
 @Composable
 private fun BookingsErrorPreview() {
     ClearawayTheme {
@@ -365,7 +336,7 @@ private fun BookingsErrorPreview() {
                 isLoading = false,
                 error = "Couldn't load bookings"
             ),
-            {}, {}, {}
+            {}, {}, {}, {}
         )
     }
 }

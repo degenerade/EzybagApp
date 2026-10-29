@@ -1,5 +1,4 @@
-
-package bag.ezy.ezybagapp
+package bag.ezy.ezybagapp.feature.contractormain
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -7,7 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
@@ -18,38 +17,35 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import bag.ezy.ezybagapp.feature.contractoraccount.ContractorAccountScreen
+import bag.ezy.ezybagapp.feature.contractorhome.ContractorHomeScreen
+import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
+import bag.ezy.ezybagapp.feature.support.SupportScreen
 import ezybagapp.shared.generated.resources.Res
 import ezybagapp.shared.generated.resources.ic_support_agent
 import org.jetbrains.compose.resources.vectorResource
 
-enum class MainTab(
+enum class ContractorTab(
     val title: String,
     val icon: @Composable () -> ImageVector
 ) {
     Home("Home", { Icons.Default.Home }),
-    CreatePickup("Book", { Icons.Default.AddCircle }),
+    Jobs("Jobs", { Icons.AutoMirrored.Filled.List }),
     Support("Support", { vectorResource(Res.drawable.ic_support_agent) }),
     Account("Account", { Icons.Default.Person })
 }
 
 @Composable
-fun MainContainer(
-    modifier: Modifier = Modifier,
-    initialTab: MainTab = MainTab.Home,
-    onCreatePickup: () -> Unit = {},
-    onOpenBookings: () -> Unit = {}
+fun ContractorMainContainer(
+    selectedTab: ContractorTab,
+    isApproved: Boolean,
+    onTabSelected: (ContractorTab) -> Unit,
+    onSignOut: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var selectedTab by rememberSaveable {
-        mutableStateOf(initialTab)
-    }
-
     BoxWithConstraints(
         modifier = modifier.fillMaxSize()
     ) {
@@ -60,13 +56,16 @@ fun MainContainer(
                 modifier = Modifier.fillMaxSize()
             ) {
                 NavigationRail {
-                    MainTab.entries.forEach { tab ->
+                    ContractorTab.entries.forEach { tab ->
+                        val enabled =
+                            tab != ContractorTab.Jobs || isApproved
+
                         NavigationRailItem(
                             selected = selectedTab == tab,
+                            enabled = enabled,
                             onClick = {
-                                when (tab) {
-                                    MainTab.CreatePickup -> onCreatePickup()
-                                    else -> selectedTab = tab
+                                if (enabled) {
+                                    onTabSelected(tab)
                                 }
                             },
                             icon = {
@@ -76,7 +75,7 @@ fun MainContainer(
                                 )
                             },
                             label = {
-                                Text(text = tab.title)
+                                Text(tab.title)
                             }
                         )
                     }
@@ -87,10 +86,11 @@ fun MainContainer(
                         .weight(1f)
                         .fillMaxSize()
                 ) {
-                    ScreenContent(
+                    ContractorScreenContent(
                         selectedTab = selectedTab,
-                        onCreatePickup = onCreatePickup,
-                        onOpenBookings = onOpenBookings
+                        isApproved = isApproved,
+                        onTabSelected = onTabSelected,
+                        onSignOut = onSignOut
                     )
                 }
             }
@@ -98,13 +98,16 @@ fun MainContainer(
             Scaffold(
                 bottomBar = {
                     NavigationBar {
-                        MainTab.entries.forEach { tab ->
+                        ContractorTab.entries.forEach { tab ->
+                            val enabled =
+                                tab != ContractorTab.Jobs || isApproved
+
                             NavigationBarItem(
                                 selected = selectedTab == tab,
+                                enabled = enabled,
                                 onClick = {
-                                    when (tab) {
-                                        MainTab.CreatePickup -> onCreatePickup()
-                                        else -> selectedTab = tab
+                                    if (enabled) {
+                                        onTabSelected(tab)
                                     }
                                 },
                                 icon = {
@@ -114,7 +117,7 @@ fun MainContainer(
                                     )
                                 },
                                 label = {
-                                    Text(text = tab.title)
+                                    Text(tab.title)
                                 }
                             )
                         }
@@ -126,10 +129,11 @@ fun MainContainer(
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    ScreenContent(
+                    ContractorScreenContent(
                         selectedTab = selectedTab,
-                        onCreatePickup = onCreatePickup,
-                        onOpenBookings = onOpenBookings
+                        isApproved = isApproved,
+                        onTabSelected = onTabSelected,
+                        onSignOut = onSignOut
                     )
                 }
             }
@@ -138,20 +142,41 @@ fun MainContainer(
 }
 
 @Composable
-private fun ScreenContent(
-    selectedTab: MainTab,
-    onCreatePickup: () -> Unit,
-    onOpenBookings: () -> Unit
+private fun ContractorScreenContent(
+    selectedTab: ContractorTab,
+    isApproved: Boolean,
+    onTabSelected: (ContractorTab) -> Unit,
+    onSignOut: () -> Unit
 ) {
     when (selectedTab) {
-        MainTab.Home -> HomeScreen()
-
-        MainTab.CreatePickup -> CreatePickupScreen(
-            onCreatePickup = onCreatePickup
+        ContractorTab.Home -> ContractorHomeScreen(
+            onViewJobs = {
+                if (isApproved) {
+                    onTabSelected(
+                        ContractorTab.Jobs
+                    )
+                }
+            }
         )
 
-        MainTab.Support -> SupportScreen()
+        ContractorTab.Jobs -> {
+            if (isApproved) {
+                ContractorJobsScreen(
+                    onOpenJob = { }
+                )
+            } else {
+                ContractorHomeScreen(
+                    onViewJobs = { }
+                )
+            }
+        }
 
-        MainTab.Account -> AccountScreen()
+        ContractorTab.Support ->
+            SupportScreen()
+
+        ContractorTab.Account ->
+            ContractorAccountScreen(
+                onSignOut = onSignOut
+            )
     }
 }

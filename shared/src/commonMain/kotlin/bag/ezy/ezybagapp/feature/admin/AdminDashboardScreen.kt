@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp.feature.admin
 
 import androidx.compose.foundation.background
@@ -99,15 +98,11 @@ fun AdminDashboardScreen() {
             )
         }
 
+        // Reports navigation card
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            NavigationCard(
-                title = "Allocation",
-                modifier = Modifier.weight(1f)
-            )
-
             NavigationCard(
                 title = "Reports",
                 modifier = Modifier.weight(1f)
@@ -116,9 +111,9 @@ fun AdminDashboardScreen() {
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Customer complaints and reported issues
+        // Customer complaints and applications that need approval
         Text(
-            text = "Pending issues",
+            text = "Pending actions",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -131,7 +126,7 @@ fun AdminDashboardScreen() {
             )
         ) {
             Text(
-                text = "Reported issues will appear here.",
+                text = "Reported issues and pending applications will appear here.",
                 modifier = Modifier.padding(16.dp),
                 color = Color.Gray,
                 style = MaterialTheme.typography.bodyMedium

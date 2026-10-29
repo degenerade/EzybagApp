@@ -12,9 +12,8 @@ import bag.ezy.ezybagapp.model.data.Media
 import bag.ezy.ezybagapp.model.data.Pricing
 import bag.ezy.ezybagapp.model.data.Schedule
 import bag.ezy.ezybagapp.model.data.WasteDetails
+import bag.ezy.ezybagapp.model.repository.AuthRepository
 import bag.ezy.ezybagapp.model.repository.BookingRepository
-import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -47,7 +46,8 @@ data class NewBookingState(
 )
 
 class NewBookingViewModel(
-    private val repo: BookingRepository
+    private val repo: BookingRepository,
+    private val auth: AuthRepository
 ) : ViewModel() {
 
     var state by mutableStateOf(NewBookingState())
@@ -88,6 +88,19 @@ class NewBookingViewModel(
         state = state.copy(
             mediaFileNames = state.mediaFileNames - name,
             error = null
+        )
+    }
+
+    // Classify video filenames by their file extension.
+    // Files with other extensions are treated as photos.
+    private fun isVideoFile(name: String): Boolean {
+        return name.substringAfterLast('.', "")
+            .lowercase() in setOf(
+            "mp4",
+            "mov",
+            "m4v",
+            "webm",
+            "avi"
         )
     }
 
@@ -209,7 +222,7 @@ class NewBookingViewModel(
             )
 
             try {
-                val customerId = Firebase.auth.currentUser?.uid
+                val customerId = auth.currentUserId()
 
                 if (customerId.isNullOrBlank()) {
                     state = state.copy(
@@ -272,10 +285,8 @@ class NewBookingViewModel(
             ),
 
             customerPhone = phone,
-            contactPhone = phone,
 
             accessInfo = access,
-            accessDescriptionInformation = access,
 
             specialInstructions = current.specialInstructions.trim(),
 
@@ -291,8 +302,14 @@ class NewBookingViewModel(
                 }
             ),
 
+            // Store filenames separately; no file upload occurs.
             media = Media(
-                photos = current.mediaFileNames
+                photos = current.mediaFileNames.filterNot {
+                    isVideoFile(it)
+                },
+                videos = current.mediaFileNames.filter {
+                    isVideoFile(it)
+                }
             ),
 
             schedule = Schedule(
