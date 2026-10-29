@@ -198,13 +198,18 @@ class FirebaseBookingRepository : BookingRepository {
     }
 
     override suspend fun getAllBookings(): Result<List<Booking>> = runCatching {
-        // TODO: Query all bookings from Firestore
-        emptyList()
+        val snapshot = bookingsCollection.get()
+
+        snapshot.documents.mapNotNull { document ->
+            runCatching {
+                document.data<Booking>()
+            }.getOrNull()
+        }
     }
 
     override suspend fun countAllBookings(): Result<Int> = runCatching {
-        // TODO: Count total number of bookings in Firestore
-        0
+        val snapshot = bookingsCollection.get()
+        snapshot.documents.size
     }
 
     override suspend fun deleteBooking(bookingId: String): Result<Unit> = runCatching {
