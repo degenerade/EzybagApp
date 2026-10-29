@@ -20,6 +20,7 @@ import bag.ezy.ezybagapp.dev.DevMenu
 import bag.ezy.ezybagapp.dev.DevMenuButton
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.feature.admin.AdminDashboardScreen
+import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
@@ -59,6 +60,7 @@ enum class Screen {
     BookingConfirmation,
     Ratings,
     AdminDashboard,
+    ContractorsAdmin,
     DbTest,
 }
 
@@ -306,6 +308,12 @@ fun App() {
                     onOpenAccount = {
                         customerTab = MainTab.Account
                         screen = Screen.Home
+                    }
+                )
+
+                Screen.ContractorsAdmin -> ContractorsAdminScreen(
+                    onBack = {
+                        screen = Screen.AdminDashboard
                     }
                 )
             }

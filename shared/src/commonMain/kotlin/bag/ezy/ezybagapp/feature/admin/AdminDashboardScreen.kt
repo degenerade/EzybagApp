@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 
 private enum class AdminSubScreen {
     Bookings,
@@ -83,7 +84,7 @@ fun AdminDashboardScreen(
     when (subScreen) {
         AdminSubScreen.Bookings -> BookingsScreen(onBack = { subScreen = null })
         AdminSubScreen.Customers -> CustomersScreen(onBack = { subScreen = null })
-        AdminSubScreen.Contractors -> ContractorsScreen(onBack = { subScreen = null })
+        AdminSubScreen.Contractors -> ContractorsAdminScreen(onBack = { subScreen = null })
         AdminSubScreen.Issues -> IssuesScreen(onBack = { subScreen = null })
         AdminSubScreen.Reports -> ReportsScreen(onBack = { subScreen = null })
         null -> {
