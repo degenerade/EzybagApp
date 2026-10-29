@@ -16,10 +16,11 @@ interface ContractorRepository {
 
     suspend fun getAllContractors(): Result<List<Contractor>>
     suspend fun getVerifiedContractors(): Result<List<Contractor>>
-    suspend fun countAllContractors(): Result<Int>
     suspend fun getUnverifiedContractors(): Result<List<Contractor>>
+    suspend fun countAllContractors(): Result<Int>
     suspend fun countUnverifiedContractors(): Result<Int>
-    suspend fun changeContractorStatus(contractorId: String = "", isApproved: Boolean = true): Result<Unit>
+    suspend fun changeContractorStatus(contractorId: String, isApproved: Boolean): Result<Unit>
+    suspend fun deleteContractor(contractorId: String): Result<Unit>
 }
 
 class FirebaseContractorRepository : ContractorRepository {
@@ -67,54 +68,50 @@ class FirebaseContractorRepository : ContractorRepository {
         }
     }
 
-    // Show each contractor on page where viewing all contractors
+    override suspend fun getCurrentContractor(): Result<Contractor?> = runCatching {
+        val user = auth.currentUser ?: return@runCatching null
+        val document = contractors.document(user.uid).get()
+        if (!document.exists) null else document.data<Contractor>()
+    }
+
     override suspend fun getAllContractors(): Result<List<Contractor>> = runCatching {
-        // TODO: Query all contractors from Firestore
-        emptyList()
-    }
-
-    // Show verified contractors
-    override suspend fun getVerifiedContractors(): Result<List<Contractor>> = runCatching {
-        // TODO: Query verified contractors from Firestore
-        emptyList()
-    }
-
-    // Count total contractors
-    override suspend fun countAllContractors(): Result<Int> = runCatching {
-        // TODO: Count total number of contractors from Firestore
-        0
-    }
-
-    // Show unverified contractors
-    override suspend fun getUnverifiedContractors(): Result<List<Contractor>> = runCatching {
-        // TODO: Query unverified contractors from Firestore
-        emptyList()
-    }
-
-    // Count unverified contractors
-    override suspend fun countUnverifiedContractors(): Result<Int> = runCatching {
-        // TODO: Count total unverified contractors from Firestore
-        0
-    }
-
-    // Change contractor approval status
-    override suspend fun changeContractorStatus(contractorId: String, isApproved: Boolean): Result<Unit> = runCatching {
-        // TODO: Update contractor approval status in Firestore
-    }
-
-    override suspend fun getCurrentContractor(): Result<Contractor?> =
-        runCatching {
-            val user = auth.currentUser
-                ?: return@runCatching null
-
-            val document = contractors
-                .document(user.uid)
-                .get()
-
-            if (!document.exists) {
-                null
-            } else {
-                document.data<Contractor>()
-            }
+        val snapshot = contractors.get()
+        snapshot.documents.mapNotNull { document ->
+            runCatching { document.data<Contractor>() }.getOrNull()
         }
+    }
+
+    override suspend fun getVerifiedContractors(): Result<List<Contractor>> = runCatching {
+        val snapshot = contractors.where { "isApproved" equalTo true }.get()
+        snapshot.documents.mapNotNull { document ->
+            runCatching { document.data<Contractor>() }.getOrNull()
+        }
+    }
+
+    override suspend fun getUnverifiedContractors(): Result<List<Contractor>> = runCatching {
+        val snapshot = contractors.where { "isApproved" equalTo false }.get()
+        snapshot.documents.mapNotNull { document ->
+            runCatching { document.data<Contractor>() }.getOrNull()
+        }
+    }
+
+    override suspend fun countAllContractors(): Result<Int> = runCatching {
+        val snapshot = contractors.get()
+        snapshot.documents.size
+    }
+
+    override suspend fun countUnverifiedContractors(): Result<Int> = runCatching {
+        val snapshot = contractors.where { "isApproved" equalTo false }.get()
+        snapshot.documents.size
+    }
+
+    override suspend fun changeContractorStatus(contractorId: String, isApproved: Boolean): Result<Unit> = runCatching {
+        require(contractorId.isNotBlank()) { "Contractor ID is required." }
+        contractors.document(contractorId).update("isApproved" to isApproved)
+    }
+
+    override suspend fun deleteContractor(contractorId: String): Result<Unit> = runCatching {
+        require(contractorId.isNotBlank()) { "Contractor ID is required." }
+        contractors.document(contractorId).delete()
+    }
 }
