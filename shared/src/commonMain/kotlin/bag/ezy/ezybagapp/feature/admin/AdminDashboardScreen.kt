@@ -142,7 +142,7 @@ fun AdminDashboardScreen(
                 ) {
                     MetricCard(
                         title = "Bookings",
-                        value = "—",
+                        value = state.totalBookings?.toString() ?:"—",
                         onClick = { subScreen = AdminSubScreen.Bookings },
                         modifier = Modifier.weight(1f)
                     )
