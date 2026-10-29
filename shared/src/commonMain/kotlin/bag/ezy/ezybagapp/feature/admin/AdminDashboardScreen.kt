@@ -32,15 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
-
-private val AdminGreen = Color(0xFF1E6F5C)
-private val AdminBackground = Color(0xFFF5F7F6)
 
 private enum class AdminSubScreen {
     Bookings,
@@ -58,15 +54,15 @@ private fun AccountAvatar(
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = Color.White,
-        contentColor = AdminGreen,
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.primary,
         modifier = modifier.size(42.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = "Account",
-                tint = AdminGreen
+                tint = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -94,18 +90,19 @@ fun AdminDashboardScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(AdminBackground)
+                    .background(MaterialTheme.colorScheme.background)
                     .safeContentPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Dashboard header with user avatar in top-right corner
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = AdminGreen,
+                    color = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Row(
@@ -120,14 +117,14 @@ fun AdminDashboardScreen(
                         ) {
                             Text(
                                 text = state.userName.ifBlank { "Admin" },
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 fontSize = 25.sp,
                                 fontWeight = FontWeight.Bold
                             )
 
                             Text(
                                 text = "Admin Page",
-                                color = Color.White.copy(alpha = 0.85f),
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
                                 fontSize = 15.sp
                             )
                         }
@@ -205,28 +202,60 @@ fun AdminDashboardScreen(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Customer complaints and applications that need approval
+                // Pending actions
                 Text(
                     text = "Pending actions",
                     style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold
                 )
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    )
-                ) {
-                    Text(
-                        text = "Reported issues and pending applications will appear here.",
-                        modifier = Modifier.padding(16.dp),
-                        color = Color.Gray,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+                //should appear if there are > 0 unresoled issues
+                PendingActionCard(
+                    text = "55 unresolved issues",
+                    onClick = { subScreen = AdminSubScreen.Issues }
+                )
+
+                //should appear if there are > 0 unverified contractor
+                PendingActionCard(
+                    text = "5 contractors are waiting for approval",
+                    onClick = { subScreen = AdminSubScreen.Contractors }
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun PendingActionCard(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
@@ -243,7 +272,7 @@ private fun MetricCard(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
@@ -255,13 +284,13 @@ private fun MetricCard(
         ) {
             Text(
                 text = title,
-                color = Color.DarkGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Text(
                 text = value,
-                color = AdminGreen,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -280,7 +309,7 @@ private fun NavigationCard(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
@@ -292,7 +321,7 @@ private fun NavigationCard(
         ) {
             Text(
                 text = title,
-                color = AdminGreen,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
