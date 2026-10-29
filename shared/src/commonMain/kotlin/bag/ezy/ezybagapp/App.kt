@@ -26,8 +26,9 @@ import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
 import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
 import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
 import bag.ezy.ezybagapp.feature.contractorapproval.ContractorApprovalPendingScreen
-import bag.ezy.ezybagapp.feature.contractorhome.ContractorHomeScreen
 import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
+import bag.ezy.ezybagapp.feature.contractormain.ContractorMainContainer
+import bag.ezy.ezybagapp.feature.contractormain.ContractorTab
 import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
 import bag.ezy.ezybagapp.feature.main.MainContainer
 import bag.ezy.ezybagapp.feature.main.MainTab
@@ -66,6 +67,8 @@ fun App() {
             mutableStateOf(if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn)
         }
         var customerTab by rememberSaveable { mutableStateOf(MainTab.Home) }
+        var contractorTab by rememberSaveable { mutableStateOf(ContractorTab.Home) }
+        var contractorApproved by rememberSaveable { mutableStateOf(false) }
         var selectedBookingId by rememberSaveable { mutableStateOf<String?>(null) }
         var confirmedBookingId by rememberSaveable { mutableStateOf("") }
 
@@ -113,10 +116,14 @@ fun App() {
                                 .getCurrentContractor()
                                 .getOrNull()
 
-                            screen = if (contractor != null) {
-                                Screen.ContractorHome
+                            if (contractor != null) {
+                                contractorApproved = contractor.isApproved
+                                contractorTab = ContractorTab.Home
+                                screen = Screen.ContractorHome
                             } else {
-                                Screen.Home
+                                contractorApproved = false
+                                customerTab = MainTab.Home
+                                screen = Screen.Home
                             }
                         }
                     },
@@ -152,9 +159,16 @@ fun App() {
                     }
                 )
 
-                Screen.ContractorHome -> ContractorHomeScreen(
-                    onViewJobs = {
-                        screen = Screen.ContractorJobs
+                Screen.ContractorHome -> ContractorMainContainer(
+                    selectedTab = contractorTab,
+                    isApproved = contractorApproved,
+                    onTabSelected = { contractorTab = it },
+                    onSignOut = {
+                        authVm.signOut {
+                            contractorTab = ContractorTab.Home
+                            contractorApproved = false
+                            screen = Screen.SignIn
+                        }
                     }
                 )
 
