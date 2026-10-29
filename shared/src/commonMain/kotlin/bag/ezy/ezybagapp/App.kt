@@ -187,7 +187,12 @@ fun App() {
                     onReportIssue = { /* TODO */ }
                 )
 
-                Screen.AdminDashboard -> AdminDashboardScreen()
+                Screen.AdminDashboard -> AdminDashboardScreen(
+                    onOpenAccount = {
+                        customerTab = MainTab.Account
+                        screen = Screen.Home
+                    }
+                )
             }
 
             if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {
