@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp.model.repository
 
 import bag.ezy.ezybagapp.model.data.Booking
@@ -13,6 +12,9 @@ interface BookingRepository {
     suspend fun getEstimate(wasteType: String, volume: String): Double
     suspend fun createBooking(booking: Booking): Result<String>
     suspend fun requestFinalQuote(booking: Booking): Result<Unit>
+    suspend fun getAllBookings(): Result<List<Booking>>
+    suspend fun countAllBookings(): Result<Int>
+    suspend fun deleteBooking(bookingId: String = ""): Result<Unit>
 }
 
 class FirebaseBookingRepository : BookingRepository {
@@ -153,5 +155,19 @@ class FirebaseBookingRepository : BookingRepository {
         bookingsCollection.document(booking.bookingId).update(
             "pricing.finalQuoteRequested" to true
         )
+    }
+
+    override suspend fun getAllBookings(): Result<List<Booking>> = runCatching {
+        // TODO: Query all bookings from Firestore
+        emptyList()
+    }
+
+    override suspend fun countAllBookings(): Result<Int> = runCatching {
+        // TODO: Count total number of bookings in Firestore
+        0
+    }
+
+    override suspend fun deleteBooking(bookingId: String): Result<Unit> = runCatching {
+        // TODO: Delete booking document from Firestore
     }
 }

@@ -11,6 +11,13 @@ interface ContractorRepository {
         contractor: Contractor,
         password: String
     ): Result<Unit>
+
+    suspend fun getAllContractors(): Result<List<Contractor>>
+    suspend fun getVerifiedContractors(): Result<List<Contractor>>
+    suspend fun countAllContractors(): Result<Int>
+    suspend fun getUnverifiedContractors(): Result<List<Contractor>>
+    suspend fun countUnverifiedContractors(): Result<Int>
+    suspend fun changeContractorStatus(contractorId: String = "", isApproved: Boolean = true): Result<Unit>
 }
 
 class FirebaseContractorRepository : ContractorRepository {
@@ -56,5 +63,40 @@ class FirebaseContractorRepository : ContractorRepository {
 
             throw e
         }
+    }
+
+    // Show each contractor on page where viewing all contractors
+    override suspend fun getAllContractors(): Result<List<Contractor>> = runCatching {
+        // TODO: Query all contractors from Firestore
+        emptyList()
+    }
+
+    // Show verified contractors
+    override suspend fun getVerifiedContractors(): Result<List<Contractor>> = runCatching {
+        // TODO: Query verified contractors from Firestore
+        emptyList()
+    }
+
+    // Count total contractors
+    override suspend fun countAllContractors(): Result<Int> = runCatching {
+        // TODO: Count total number of contractors from Firestore
+        0
+    }
+
+    // Show unverified contractors
+    override suspend fun getUnverifiedContractors(): Result<List<Contractor>> = runCatching {
+        // TODO: Query unverified contractors from Firestore
+        emptyList()
+    }
+
+    // Count unverified contractors
+    override suspend fun countUnverifiedContractors(): Result<Int> = runCatching {
+        // TODO: Count total unverified contractors from Firestore
+        0
+    }
+
+    // Change contractor approval status
+    override suspend fun changeContractorStatus(contractorId: String, isApproved: Boolean): Result<Unit> = runCatching {
+        // TODO: Update contractor approval status in Firestore
     }
 }
