@@ -47,14 +47,9 @@ data class ContractorHomeUiState(
                     )
 
                 ContractorHomeJobFilter.Active ->
-                    job.status.equals(
-                        "En Route",
-                        ignoreCase = true
-                    ) ||
-                            job.status.equals(
-                                "On Site",
-                                ignoreCase = true
-                            )
+                    job.status.equals("Active", ignoreCase = true) ||
+                            job.status.equals("En Route", ignoreCase = true) ||
+                            job.status.equals("On Site", ignoreCase = true)
 
                 ContractorHomeJobFilter.Completed ->
                     job.status.equals(

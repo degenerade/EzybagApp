@@ -1,25 +1,53 @@
+
 package bag.ezy.ezybagapp.model.repository
 
 import bag.ezy.ezybagapp.model.data.Booking
+import bag.ezy.ezybagapp.model.data.Contractor
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
 import kotlin.time.Clock
 
 interface BookingRepository {
-    suspend fun getBookings(customerId: String): Result<List<Booking>>
-    suspend fun getBooking(bookingId: String): Result<Booking?>
-    suspend fun getEstimate(wasteType: String, volume: String): Double
-    suspend fun createBooking(booking: Booking): Result<String>
-    suspend fun requestFinalQuote(booking: Booking): Result<Unit>
+    suspend fun getBookings(
+        customerId: String
+    ): Result<List<Booking>>
+
+    suspend fun getBooking(
+        bookingId: String
+    ): Result<Booking?>
+
+    suspend fun getEstimate(
+        wasteType: String,
+        volume: String
+    ): Double
+
+    suspend fun createBooking(
+        booking: Booking
+    ): Result<String>
+
+    suspend fun requestFinalQuote(
+        booking: Booking
+    ): Result<Unit>
+
     suspend fun getCurrentContractorBookings(): Result<List<Booking>>
+
+    suspend fun selectContractor(
+        bookingId: String,
+        contractorId: String
+    ): Result<Unit>
 }
 
 class FirebaseBookingRepository : BookingRepository {
 
     private val auth = Firebase.auth
     private val firestore = Firebase.firestore
-    private val bookingsCollection = firestore.collection("bookings")
+
+    private val bookingsCollection =
+        firestore.collection("bookings")
+
+    private val contractorsCollection =
+        firestore.collection("contractors")
 
     private fun requireCurrentUserId(): String {
         return auth.currentUser?.uid
@@ -41,7 +69,9 @@ class FirebaseBookingRepository : BookingRepository {
             .get()
 
         snapshot.documents.mapNotNull { document ->
-            runCatching { document.data<Booking>() }.getOrNull()
+            runCatching {
+                document.data<Booking>()
+            }.getOrNull()
         }
     }
 
@@ -54,7 +84,8 @@ class FirebaseBookingRepository : BookingRepository {
             "Booking ID is required."
         }
 
-        val document = bookingsCollection.document(bookingId).get()
+        val document =
+            bookingsCollection.document(bookingId).get()
 
         if (!document.exists) {
             null
@@ -138,7 +169,8 @@ class FirebaseBookingRepository : BookingRepository {
             "Booking ID is required."
         }
 
-        val document = bookingsCollection.document(booking.bookingId).get()
+        val document =
+            bookingsCollection.document(booking.bookingId).get()
 
         require(document.exists) {
             "Booking not found."
@@ -150,20 +182,98 @@ class FirebaseBookingRepository : BookingRepository {
             "You are not authorized to change this booking."
         }
 
+        require(existingBooking.status == "Upcoming") {
+            "A final quote can only be requested for an upcoming booking."
+        }
+
         bookingsCollection.document(booking.bookingId).update(
             "pricing.finalQuoteRequested" to true
         )
     }
 
-    override suspend fun getCurrentContractorBookings(): Result<List<Booking>> = runCatching {
+    override suspend fun selectContractor(
+        bookingId: String,
+        contractorId: String
+    ): Result<Unit> = runCatching {
+        val customerUid = requireCurrentUserId()
+
+        require(bookingId.isNotBlank()) {
+            "Booking ID is required."
+        }
+
+        require(contractorId.isNotBlank()) {
+            "Please select a contractor."
+        }
+
+        require(contractorId != customerUid) {
+            "You cannot assign yourself as the contractor."
+        }
+
+        // Check that the contractor exists and is approved.
+        // Firestore Rules independently repeat this check
+        // when the booking update is attempted.
+        val contractorDocument =
+            contractorsCollection.document(contractorId).get()
+
+        require(contractorDocument.exists) {
+            "Contractor not found."
+        }
+
+        val contractor =
+            contractorDocument.data<Contractor>()
+
+        require(
+            contractor.uid == contractorId &&
+                    contractor.isApproved
+        ) {
+            "This contractor is not approved to receive jobs."
+        }
+
+        // Verify that the customer owns an unassigned booking.
+        val bookingDocument =
+            bookingsCollection.document(bookingId).get()
+
+        require(bookingDocument.exists) {
+            "Booking not found."
+        }
+
+        val booking = bookingDocument.data<Booking>()
+
+        require(booking.customerId == customerUid) {
+            "You can only select a contractor for your own booking."
+        }
+
+        require(booking.contractorId == null) {
+            "A contractor has already been assigned to this booking."
+        }
+
+        require(booking.status == "Upcoming") {
+            "This booking is not available for contractor selection."
+        }
+
+        // The Firestore rules must validate ownership,
+        // assignment, status, and contractor approval again.
+        bookingsCollection.document(bookingId).update(
+            "contractorId" to contractorId,
+            "status" to "Active"
+        )
+    }
+
+    override suspend fun getCurrentContractorBookings():
+            Result<List<Booking>> = runCatching {
+
         val uid = requireCurrentUserId()
 
+        // This query returns only bookings assigned to this UID.
+        // Firestore Rules also require the contractor to be approved.
         val snapshot = bookingsCollection
             .where { "contractorId" equalTo uid }
             .get()
 
         snapshot.documents.mapNotNull { document ->
-            runCatching { document.data<Booking>() }.getOrNull()
+            runCatching {
+                document.data<Booking>()
+            }.getOrNull()
         }
     }
 }
