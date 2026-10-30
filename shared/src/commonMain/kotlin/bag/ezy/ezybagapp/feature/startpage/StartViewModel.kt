@@ -1,5 +1,5 @@
 
-package bag.ezy.ezybagapp.feature.startPage
+package bag.ezy.ezybagapp.feature.startpage
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
