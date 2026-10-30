@@ -20,6 +20,7 @@ data class RatingsUiState(
 class RatingsViewModel(
     private val bookingId: String,
     private val repo: ReviewRepository,
+    private val contractorId: String = "",
 ) : ViewModel() {
     var state by mutableStateOf(RatingsUiState())
         private set
@@ -39,7 +40,12 @@ class RatingsViewModel(
         }
         viewModelScope.launch {
             state = state.copy(isSubmitting = true, message = null)
-            repo.submitReview(bookingId, state.rating, state.comment.trim())
+            repo.submitReview(
+                bookingId = bookingId,
+                rating = state.rating,
+                comment = state.comment.trim(),
+                contractorId = contractorId
+            )
                 .onSuccess {
                     state = state.copy(isSubmitting = false, submitted = true,
                         message = "thanks for your review!", isError = false)
