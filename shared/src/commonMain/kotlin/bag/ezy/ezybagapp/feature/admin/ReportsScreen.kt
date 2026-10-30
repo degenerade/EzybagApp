@@ -63,7 +63,6 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
     }
 
     fun generateBookingReport() {
-
         report = AppContainer.reportRepository
             .generateBookingReport(bookings)
 
@@ -202,34 +201,119 @@ private fun ReportCard(
 @Composable
 private fun BookingStatistics(report: BookingReport) {
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        StatisticCard("Total bookings", report.totalBookings)
-        StatisticCard("Completed", report.completedBookings)
-        StatisticCard("Active / Upcoming", report.activeBookings)
-        StatisticCard("Cancelled", report.cancelledBookings)
-        StatisticCard("Unassigned", report.unassignedBookings)
-    }
-}
+    val maxValue = maxOf(
+        report.completedBookings,
+        report.activeBookings,
+        report.cancelledBookings,
+        report.unassignedBookings,
+        1
+    )
 
-@Composable
-private fun StatisticCard(title: String, value: Int) {
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             Text(
-                title,
+                "Total Bookings",
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
-                value.toString(),
-                style = MaterialTheme.typography.headlineMedium,
+                report.totalBookings.toString(),
+                style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
+            )
+
+            HorizontalDivider()
+
+            Text(
+                "Booking Overview",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                "Number of bookings by status and assignment.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            BookingBar(
+                title = "Completed",
+                value = report.completedBookings,
+                maxValue = maxValue
+            )
+
+            BookingBar(
+                title = "Active / Upcoming",
+                value = report.activeBookings,
+                maxValue = maxValue
+            )
+
+            BookingBar(
+                title = "Cancelled",
+                value = report.cancelledBookings,
+                maxValue = maxValue
+            )
+
+            BookingBar(
+                title = "Unassigned",
+                value = report.unassignedBookings,
+                maxValue = maxValue
+            )
+        }
+    }
+}
+
+@Composable
+private fun BookingBar(
+    title: String,
+    value: Int,
+    maxValue: Int
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                value.toString(),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(14.dp)
+                .background(
+                    MaterialTheme.colorScheme.surfaceVariant,
+                    shape = MaterialTheme.shapes.small
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(
+                        value.toFloat() / maxValue.toFloat()
+                    )
+                    .fillMaxHeight()
+                    .background(
+                        MaterialTheme.colorScheme.primary,
+                        shape = MaterialTheme.shapes.small
+                    )
             )
         }
     }
