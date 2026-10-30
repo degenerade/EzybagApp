@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,6 +21,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,18 +43,29 @@ private val RatingIssueColor = Color(0xFFC4472F)
 @Composable
 fun RatingsScreen(
     bookingId: String,
+    contractorId: String = "",
     onReportIssue: () -> Unit,
     vm: RatingsViewModel = viewModel(key = "ratings-$bookingId") {
-        RatingsViewModel(bookingId, AppContainer.reviewRepository)
+        RatingsViewModel(
+            bookingId = bookingId,
+            repo = AppContainer.reviewRepository,
+            contractorId = contractorId
+        )
     }
 ) {
-    RatingsContent(
-        state = vm.state,
-        onRatingSelected = vm::onRatingSelected,
-        onCommentChange = vm::onCommentChange,
-        onSubmit = vm::submit,
-        onReportIssue = onReportIssue
-    )
+    Scaffold { innerPadding ->
+        Column(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            RatingsContent(
+                state = vm.state,
+                onRatingSelected = vm::onRatingSelected,
+                onCommentChange = vm::onCommentChange,
+                onSubmit = vm::submit,
+                onReportIssue = onReportIssue
+            )
+        }
+    }
 }
 
 @Composable
@@ -70,12 +81,10 @@ fun RatingsContent(
     val fieldShape = RoundedCornerShape(12.dp)
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
         color = colors.background
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -83,7 +92,6 @@ fun RatingsContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
                     .background(colors.surface, cardShape)
                     .border(
                         BorderStroke(1.dp, colors.outline),
@@ -279,24 +287,6 @@ fun RatingsContent(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                }
-
-                // Report issue button.
-                OutlinedButton(
-                    onClick = onReportIssue,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, RatingIssueColor),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = RatingIssueColor
-                    )
-                ) {
-                    Text(
-                        text = "Report an issue",
-                        fontWeight = FontWeight.Bold
-                    )
                 }
             }
         }
