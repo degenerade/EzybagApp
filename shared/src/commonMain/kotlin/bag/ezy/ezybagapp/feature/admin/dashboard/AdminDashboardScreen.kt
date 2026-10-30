@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.feature.admin.BookingsScreen
-import bag.ezy.ezybagapp.feature.admin.customers.CustomersScreen
+import bag.ezy.ezybagapp.feature.admin.customers.CustomersAdminScreen
 import bag.ezy.ezybagapp.feature.admin.IssuesScreen
 import bag.ezy.ezybagapp.feature.admin.ReportsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
@@ -87,7 +87,7 @@ fun AdminDashboardScreen(
 
     when (subScreen) {
         AdminSubScreen.Bookings -> BookingsScreen(onBack = { subScreen = null })
-        AdminSubScreen.Customers -> CustomersScreen(onBack = { subScreen = null })
+        AdminSubScreen.Customers -> CustomersAdminScreen(onBack = { subScreen = null })
         AdminSubScreen.Contractors -> ContractorsAdminScreen(onBack = { subScreen = null})
         AdminSubScreen.Issues -> IssuesScreen(onBack = { subScreen = null
             vm.load()})

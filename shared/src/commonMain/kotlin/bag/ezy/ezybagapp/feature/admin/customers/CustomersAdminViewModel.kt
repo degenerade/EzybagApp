@@ -5,104 +5,92 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import bag.ezy.ezybagapp.model.data.Contractor
-import bag.ezy.ezybagapp.model.repository.FirebaseContractorRepository
+import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.model.data.Customer
 import bag.ezy.ezybagapp.model.queries.AdminRepository
+import bag.ezy.ezybagapp.model.repository.CustomerRepository
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
-data class ContractorsAdminUiModel(
+data class CustomersAdminUiModel(
     val customerId: String = "",
     val firstName: String = "",
     val lastName: String = "",
     val email: String = "",
     val phone: String = "",
     val createdAt: String = ""
-)
+) {
+    val fullName: String get() = listOf(firstName, lastName).filter { it.isNotBlank() }.joinToString(" ")
+}
 
-
-//data class ContractorsAdminUiState(
-//    val isLoading: Boolean = true,
-//    val contractors: List<ContractorsAdminUiModel> = emptyList(),
-//    val selectedTab: ContractorsTab = ContractorsTab.All,
-//    val error: String? = null
-//) {
-//    val visibleContractors: List<ContractorsAdminUiModel>
-//        get() = if (selectedTab == ContractorsTab.All) {
-//            contractors.filter { it.tab != null }
+data class CustomersAdminUiState(
+    val isLoading: Boolean = true,
+    val customers: List<CustomersAdminUiModel> = emptyList(),
+   // val selectedTab: CustomersTab = CustomersTab.All,
+    val error: String? = null
+)// {
+//    val visibleCustomers: List<CustomersAdminUiModel>
+//        get() = if (selectedTab == CustomersTab.All) {
+//            customers.filter { it.tab != null }
 //        } else {
-//            contractors.filter { it.tab == selectedTab }
+//            customers.filter { it.tab == selectedTab }
 //        }
-//
+
 //    val cancelledCount: Int
-//        get() = contractors.count { it.tab == null }
+//        get() = customers.count { it.tab == null }
 //}
-//
-//class ContractorsAdminViewModel(
-//    private val repo: FirebaseContractorRepository,
-//    private val auth: AdminRepository
-//) : ViewModel() {
-//    var state by mutableStateOf(ContractorsAdminUiState())
-//        private set
-//
-//    fun load() {
-//        val isAdmin = runBlocking {
-//            auth.isCurrentUserAdmin()
-//        }.getOrNull() ?: false
-//        if (!isAdmin) {
-//            state = state.copy(
-//                isLoading = false,
-//                error = "This account does not have access to this page."
-//            )
-//            return
-//        }
-//
-//        viewModelScope.launch {
-//            state = state.copy(
-//                isLoading = true,
-//                error = null
-//            )
-//
-//            try {
-//                repo.getAllContractors().fold(
-//                    onSuccess = { contractors ->
-//                        state = state.copy(
-//                            isLoading = false,
-//                            contractors = contractors.map { it.toUiModel() },
-//                            error = null
-//                        )
-//                    },
-//                    onFailure = { exception ->
-//                        state = state.copy(
-//                            isLoading = false,
-//                            error = exception.message
-//                                ?: "Couldn't load contractors"
-//                        )
-//
-//                    }
-//                )
-//            } catch (exception: Exception) {
-//                state = state.copy(
-//                    isLoading = false,
-//                    error = exception.message
-//                        ?: "Couldn't load contractors."
-//                )
-//            }
-//        }
-//    }
-//
-//    fun selectTab(tab: ContractorsTab) {
+
+class CustomersAdminViewModel(
+    private val repo: CustomerRepository = AppContainer.customerRepository,
+    private val auth: AdminRepository = AppContainer.adminRepository
+) : ViewModel() {
+    var state by mutableStateOf(CustomersAdminUiState())
+        private set
+
+    fun load() {
+        viewModelScope.launch {
+            state = state.copy(
+                isLoading = true,
+                error = null
+            )
+
+            try {
+                repo.getAllCustomers().fold(
+                    onSuccess = { customers ->
+                        state = state.copy(
+                            isLoading = false,
+                            customers = customers.map { it.toUiModel() },
+                            error = null
+                        )
+                    },
+                    onFailure = { exception ->
+                        state = state.copy(
+                            isLoading = false,
+                            error = exception.message
+                                ?: "Couldn't load customers"
+                        )
+
+                    }
+                )
+            } catch (exception: Exception) {
+                state = state.copy(
+                    isLoading = false,
+                    error = exception.message
+                        ?: "Couldn't load customers."
+                )
+            }
+        }
+    }
+
+//    fun selectTab(tab: CustomersTab) {
 //        state = state.copy(selectedTab = tab)
 //    }
-//
-//    private fun Contractor.toUiModel() = ContractorsAdminUiModel(
-//        reference = uid,
-//        companyName = companyName,
-//        email = email,
-//        isApproved = isApproved,
-//        tab = when (isApproved) {
-//            true -> ContractorsTab.Active
-//            false -> ContractorsTab.Pending
-//        }
-//    )
-//}
+
+    private fun Customer.toUiModel() = CustomersAdminUiModel(
+        customerId = customerId,
+        firstName = firstName,
+        lastName = lastName,
+        email = email,
+        phone = phone,
+        createdAt = createdAt
+    )
+}
