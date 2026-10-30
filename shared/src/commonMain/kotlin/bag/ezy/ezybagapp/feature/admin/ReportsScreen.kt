@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.model.data.Booking
 import bag.ezy.ezybagapp.model.repository.BookingReport
+import bag.ezy.ezybagapp.model.repository.ContractorPerformanceReport
 import kotlinx.coroutines.launch
 
 @Composable
@@ -23,6 +24,14 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
 
     var report by remember {
         mutableStateOf<BookingReport?>(null)
+    }
+
+    var contractorReport by remember {
+        mutableStateOf<ContractorPerformanceReport?>(null)
+    }
+
+    var selectedReport by remember {
+        mutableStateOf("")
     }
 
     var isLoading by remember {
@@ -66,7 +75,42 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
         report = AppContainer.reportRepository
             .generateBookingReport(bookings)
 
+        selectedReport = "Booking Report"
         generatedReport = true
+    }
+
+    fun generateContractorPerformanceReport() {
+        scope.launch {
+            isLoading = true
+            errorMessage = null
+
+            val contractorsResult =
+                AppContainer.contractorRepository.getAllContractors()
+
+            val bookingsResult =
+                AppContainer.bookingRepository.getAllBookings()
+
+            if (contractorsResult.isSuccess && bookingsResult.isSuccess) {
+
+                contractorReport =
+                    AppContainer.contractorPerformanceRepository
+                        .generateContractorPerformanceReport(
+                            contractors = contractorsResult.getOrThrow(),
+                            bookings = bookingsResult.getOrThrow()
+                        )
+
+                selectedReport = "Contractor Performance"
+                generatedReport = true
+
+            } else {
+                errorMessage =
+                    contractorsResult.exceptionOrNull()?.message
+                        ?: bookingsResult.exceptionOrNull()?.message
+                                ?: "Could not generate contractor performance report."
+            }
+
+            isLoading = false
+        }
     }
 
     Column(
@@ -100,33 +144,61 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
                 color = MaterialTheme.colorScheme.error
             )
 
-            Button(onClick = { loadBookings() }) {
+            Button(onClick = {
+                if (selectedReport == "Contractor Performance") {
+                    generateContractorPerformanceReport()
+                } else {
+                    loadBookings()
+                }
+            }) {
                 Text("Try Again")
             }
         }
 
-        // Show generated report
-        if (generatedReport && report != null) {
+        // Show the selected report
+        if (!isLoading && errorMessage == null &&
+            generatedReport && selectedReport.isNotBlank()
+        ) {
 
             TextButton(
                 onClick = {
                     generatedReport = false
                     report = null
+                    contractorReport = null
+                    selectedReport = ""
                 }
             ) {
                 Text("← Back to Reports")
             }
 
-            Text(
-                "Booking Report",
-                style = MaterialTheme.typography.headlineSmall
-            )
+            when (selectedReport) {
 
-            BookingStatistics(report!!)
+                "Booking Report" -> {
+                    Text(
+                        "Booking Report",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    report?.let {
+                        BookingStatistics(it)
+                    }
+                }
+
+                "Contractor Performance" -> {
+                    Text(
+                        "Contractor Performance",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    contractorReport?.let {
+                        ContractorPerformanceStatistics(it)
+                    }
+                }
+            }
         }
 
-        // Show report categories when no report has been generated
-        else if (!isLoading && errorMessage == null) {
+        // Show report categories
+        else if (!isLoading && errorMessage == null && !generatedReport) {
 
             Text(
                 "Available reports",
@@ -145,10 +217,12 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
 
             ReportCard(
                 title = "Contractor Performance",
-                description = "Completed jobs and contractor ratings.",
-                buttonText = "Coming soon",
-                enabled = false,
-                onClick = {}
+                description = "Assigned jobs, completed jobs and completion rates.",
+                buttonText = "Generate Report",
+                enabled = true,
+                onClick = {
+                    generateContractorPerformanceReport()
+                }
             )
 
             ReportCard(
@@ -216,7 +290,6 @@ private fun BookingStatistics(report: BookingReport) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             Text(
                 "Total Bookings",
                 style = MaterialTheme.typography.titleMedium,
@@ -270,6 +343,105 @@ private fun BookingStatistics(report: BookingReport) {
 }
 
 @Composable
+private fun ContractorPerformanceStatistics(
+    report: ContractorPerformanceReport
+) {
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+
+            Text(
+                "Total Contractors",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                report.totalContractors.toString(),
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            HorizontalDivider()
+
+            Text(
+                "Job Overview",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                "Assigned jobs: ${report.assignedJobs}"
+            )
+
+            Text(
+                "Completed jobs: ${report.completedJobs}"
+            )
+
+            Text(
+                "Completion Rate",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                "${(report.completionRate * 10).toInt() / 10.0}%",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            HorizontalDivider()
+
+            Text(
+                "Jobs by Contractor",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                "Comparison of assigned and completed jobs for each contractor.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            if (report.contractorStats.isEmpty()) {
+                Text("No contractors found.")
+            } else {
+                val maxValue = report.contractorStats.maxOf {
+                    it.assignedJobs
+                }.coerceAtLeast(1)
+
+                report.contractorStats.forEach { contractor ->
+
+                    Text(
+                        contractor.contractorName.ifBlank {
+                            "Unnamed Contractor"
+                        },
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    BookingBar(
+                        title = "Assigned",
+                        value = contractor.assignedJobs,
+                        maxValue = maxValue
+                    )
+
+                    BookingBar(
+                        title = "Completed",
+                        value = contractor.completedJobs,
+                        maxValue = maxValue
+                    )
+
+                    HorizontalDivider()
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun BookingBar(
     title: String,
     value: Int,
@@ -278,7 +450,6 @@ private fun BookingBar(
     Column(
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
