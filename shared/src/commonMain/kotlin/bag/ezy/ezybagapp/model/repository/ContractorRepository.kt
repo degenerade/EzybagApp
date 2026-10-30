@@ -69,8 +69,9 @@ class FirebaseContractorRepository : ContractorRepository {
 
     // Show each contractor on page where viewing all contractors
     override suspend fun getAllContractors(): Result<List<Contractor>> = runCatching {
-        // TODO: Query all contractors from Firestore
-        emptyList()
+        contractors.get().documents.map { document ->
+            document.data<Contractor>()
+        }
     }
 
     // Show verified contractors
