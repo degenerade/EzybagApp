@@ -13,6 +13,7 @@ import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.model.data.Booking
 import bag.ezy.ezybagapp.model.repository.BookingReport
 import bag.ezy.ezybagapp.model.repository.ContractorPerformanceReport
+import bag.ezy.ezybagapp.model.repository.CustomerActivityReport
 import kotlinx.coroutines.launch
 
 @Composable
@@ -28,6 +29,10 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
 
     var contractorReport by remember {
         mutableStateOf<ContractorPerformanceReport?>(null)
+    }
+
+    var customerReport by remember {
+        mutableStateOf<CustomerActivityReport?>(null)
     }
 
     var selectedReport by remember {
@@ -113,6 +118,40 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
         }
     }
 
+    fun generateCustomerActivityReport() {
+        scope.launch {
+            isLoading = true
+            errorMessage = null
+            selectedReport = "Customer Activity"
+
+            val customersResult =
+                AppContainer.customerRepository.getAllCustomers()
+
+            val bookingsResult =
+                AppContainer.bookingRepository.getAllBookings()
+
+            if (customersResult.isSuccess && bookingsResult.isSuccess) {
+
+                customerReport =
+                    AppContainer.customerActivityRepository
+                        .generateCustomerActivityReport(
+                            customers = customersResult.getOrThrow(),
+                            bookings = bookingsResult.getOrThrow()
+                        )
+
+                generatedReport = true
+
+            } else {
+                errorMessage =
+                    customersResult.exceptionOrNull()?.message
+                        ?: bookingsResult.exceptionOrNull()?.message
+                                ?: "Could not generate customer activity report."
+            }
+
+            isLoading = false
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -145,10 +184,14 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
             )
 
             Button(onClick = {
-                if (selectedReport == "Contractor Performance") {
-                    generateContractorPerformanceReport()
-                } else {
-                    loadBookings()
+                when (selectedReport) {
+                    "Contractor Performance" ->
+                        generateContractorPerformanceReport()
+
+                    "Customer Activity" ->
+                        generateCustomerActivityReport()
+
+                    else -> loadBookings()
                 }
             }) {
                 Text("Try Again")
@@ -165,6 +208,7 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
                     generatedReport = false
                     report = null
                     contractorReport = null
+                    customerReport = null
                     selectedReport = ""
                 }
             ) {
@@ -192,6 +236,17 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
 
                     contractorReport?.let {
                         ContractorPerformanceStatistics(it)
+                    }
+                }
+
+                "Customer Activity" -> {
+                    Text(
+                        "Customer Activity",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    customerReport?.let {
+                        CustomerActivityStatistics(it)
                     }
                 }
             }
@@ -228,9 +283,11 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
             ReportCard(
                 title = "Customer Activity",
                 description = "Customer registrations and booking activity.",
-                buttonText = "Coming soon",
-                enabled = false,
-                onClick = {}
+                buttonText = "Generate Report",
+                enabled = true,
+                onClick = {
+                    generateCustomerActivityReport()
+                }
             )
         }
     }
@@ -374,13 +431,9 @@ private fun ContractorPerformanceStatistics(
                 style = MaterialTheme.typography.titleLarge
             )
 
-            Text(
-                "Assigned jobs: ${report.assignedJobs}"
-            )
+            Text("Assigned jobs: ${report.assignedJobs}")
 
-            Text(
-                "Completed jobs: ${report.completedJobs}"
-            )
+            Text("Completed jobs: ${report.completedJobs}")
 
             Text(
                 "Completion Rate",
@@ -437,6 +490,86 @@ private fun ContractorPerformanceStatistics(
                     HorizontalDivider()
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CustomerActivityStatistics(
+    report: CustomerActivityReport
+) {
+    // Find the largest customer count so all bars use the same scale.
+    val maxValue = maxOf(
+        report.activeCustomers,
+        report.inactiveCustomers,
+        report.repeatCustomers,
+        1
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Total Customers")
+                    Text(
+                        report.totalCustomers.toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Column {
+                    Text("Total Bookings")
+                    Text(
+                        report.totalBookings.toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            HorizontalDivider()
+
+
+            BookingBar(
+                title = "Active Customers",
+                value = report.activeCustomers,
+                maxValue = maxValue
+            )
+
+            BookingBar(
+                title = "Inactive Customers",
+                value = report.inactiveCustomers,
+                maxValue = maxValue
+            )
+
+            BookingBar(
+                title = "Repeat Customers",
+                value = report.repeatCustomers,
+                maxValue = maxValue
+            )
+
+            HorizontalDivider()
+
+            Text(
+                "Average Bookings per Customer",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                "${(report.averageBookings * 10).toInt() / 10.0}",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
