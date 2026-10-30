@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp.feature.admin
+package bag.ezy.ezybagapp.feature.admin.customers
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

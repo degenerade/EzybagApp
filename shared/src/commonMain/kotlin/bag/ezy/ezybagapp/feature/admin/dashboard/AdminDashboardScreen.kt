@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.feature.admin.BookingsScreen
-import bag.ezy.ezybagapp.feature.admin.CustomersScreen
+import bag.ezy.ezybagapp.feature.admin.customers.CustomersScreen
 import bag.ezy.ezybagapp.feature.admin.IssuesScreen
 import bag.ezy.ezybagapp.feature.admin.ReportsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
@@ -155,7 +155,7 @@ fun AdminDashboardScreen(
 
                     MetricCard(
                         title = "Customers",
-                        value = state.totalContractors?.toString() ?: "—",
+                        value = state.totalCustomers?.toString() ?: "—",
                         onClick = { subScreen = AdminSubScreen.Customers },
                         modifier = Modifier.weight(1f)
                     )
@@ -168,7 +168,7 @@ fun AdminDashboardScreen(
                 ) {
                     MetricCard(
                         title = "Contractors",
-                        value = "—",
+                        value = state.totalContractors?.toString() ?: "—",
                         onClick = { subScreen = AdminSubScreen.Contractors },
                         modifier = Modifier.weight(1f)
                     )

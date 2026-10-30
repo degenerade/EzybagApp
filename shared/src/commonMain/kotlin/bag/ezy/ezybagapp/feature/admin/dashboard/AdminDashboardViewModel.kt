@@ -9,18 +9,32 @@ import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.model.repository.AuthRepository
 import bag.ezy.ezybagapp.model.repository.BookingRepository
 import bag.ezy.ezybagapp.model.repository.ContractorRepository
+import bag.ezy.ezybagapp.model.repository.CustomerRepository
 import bag.ezy.ezybagapp.model.repository.IssueRepository
 import kotlinx.coroutines.launch
 
 data class AdminDashboardUiState(
+    //username
     val userName: String = "",
+
+    //numbers on dashboard
     val totalBookings: Int? = null,
-    val isLoading: Boolean = true,
-    val bookingError: String? = null,
     val totalContractors: Int? = null,
+    val totalCustomers: Int? = null,
+    //revenue
+
+    //errors when retrieval of numbers is not possible
     val contractorError: String? = null,
-    val totalUnresolvedIssues: Int? = null,
+    val bookingError: String? = null,
+    val issueCustomer: String? = null,
     val issueError: String? = null,
+
+    // for actions
+    val totalUnresolvedIssues: Int? = null,
+
+    //?
+    val isLoading: Boolean = true,
+
 )
 
 class AdminDashboardViewModel(
@@ -28,6 +42,7 @@ class AdminDashboardViewModel(
     private val bookings: BookingRepository = AppContainer.bookingRepository,
     private val contractors: ContractorRepository = AppContainer.contractorRepository,
     private val issues: IssueRepository = AppContainer.issueRepository,
+    private val customers: CustomerRepository = AppContainer.customerRepository,
 ) : ViewModel() {
 
     var state by mutableStateOf(AdminDashboardUiState())
@@ -45,6 +60,7 @@ class AdminDashboardViewModel(
             val bookingCountResult = bookings.countAllBookings()
             val contractorCountResult = contractors.countAllContractors()
             val issueCountResult = issues.countUnresolvedIssues()
+            val customersCountResult = customers.countCustomers()
 
             state = if (bookingCountResult.isSuccess && contractorCountResult.isSuccess) {
                 state.copy(
@@ -71,6 +87,18 @@ class AdminDashboardViewModel(
                 state.copy(
                     issueError = issueCountResult.exceptionOrNull()?.message
                         ?: "Could not load issues"
+                )
+            }
+
+            state = if (customersCountResult.isSuccess) {
+                state.copy(
+                    totalCustomers = customersCountResult.getOrNull(),
+                    issueError = null
+                )
+            } else {
+                state.copy(
+                    issueCustomer = customersCountResult.exceptionOrNull()?.message
+                        ?: "Could not load customers"
                 )
             }
         }
