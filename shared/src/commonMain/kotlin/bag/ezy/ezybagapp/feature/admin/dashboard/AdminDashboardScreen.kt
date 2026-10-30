@@ -88,8 +88,9 @@ fun AdminDashboardScreen(
     when (subScreen) {
         AdminSubScreen.Bookings -> BookingsScreen(onBack = { subScreen = null })
         AdminSubScreen.Customers -> CustomersScreen(onBack = { subScreen = null })
-        AdminSubScreen.Contractors -> ContractorsAdminScreen(onBack = { subScreen = null })
-        AdminSubScreen.Issues -> IssuesScreen(onBack = { subScreen = null })
+        AdminSubScreen.Contractors -> ContractorsAdminScreen(onBack = { subScreen = null})
+        AdminSubScreen.Issues -> IssuesScreen(onBack = { subScreen = null
+            vm.load()})
         AdminSubScreen.Reports -> ReportsScreen(onBack = { subScreen = null })
         null -> {
             Column(
@@ -180,19 +181,6 @@ fun AdminDashboardScreen(
                     )
                 }
 
-                // Issues card
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    MetricCard(
-                        title = "Issues",
-                        value = "—",
-                        onClick = { subScreen = AdminSubScreen.Issues },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
                 // Reports navigation card
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -215,11 +203,13 @@ fun AdminDashboardScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                //should appear if there are > 0 unresoled issues
-                PendingActionCard(
-                    text = "55 unresolved issues",
-                    onClick = { subScreen = AdminSubScreen.Issues }
-                )
+                // Show unresolved issues only when there are issues to handle
+                if ((state.totalUnresolvedIssues ?: 0) > 0) {
+                    PendingActionCard(
+                        text = "Unresolved Issues (${state.totalUnresolvedIssues})",
+                        onClick = { subScreen = AdminSubScreen.Issues }
+                    )
+                }
 
                 //should appear if there are > 0 unverified contractor
                 PendingActionCard(
