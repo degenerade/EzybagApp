@@ -57,7 +57,6 @@ class CustomersAdminViewModel(
                             error = exception.message
                                 ?: "Couldn't load customers"
                         )
-
                     }
                 )
             } catch (exception: Exception) {
@@ -67,6 +66,29 @@ class CustomersAdminViewModel(
                         ?: "Couldn't load customers."
                 )
             }
+        }
+    }
+
+    fun deleteCustomer(customerId: String) {
+        if (customerId.isBlank()) return
+
+        // Visually remove customer immediately for instant feedback
+        state = state.copy(
+            customers = state.customers.filter { it.customerId != customerId }
+        )
+
+        viewModelScope.launch {
+            repo.deleteCustomer(customerId).fold(
+                onSuccess = {
+                    load() // Refresh from Firestore
+                },
+                onFailure = { exception ->
+                    state = state.copy(
+                        error = exception.message ?: "Failed to delete customer."
+                    )
+                    load() // Reload to restore list if deletion failed
+                }
+            )
         }
     }
 

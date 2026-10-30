@@ -24,11 +24,13 @@ class FirebaseCustomerRepository : CustomerRepository {
         if (!document.exists) null else document.data<Customer>()
     }
 
-
     override suspend fun getAllCustomers(): Result<List<Customer>> = runCatching {
         val snapshot = customers.get()
         snapshot.documents.mapNotNull { document ->
-            runCatching { document.data<Customer>() }.getOrNull()
+            runCatching {
+                val data = document.data<Customer>()
+                if (data.customerId.isBlank()) data.copy(customerId = document.id) else data
+            }.getOrNull()
         }
     }
 
@@ -38,9 +40,10 @@ class FirebaseCustomerRepository : CustomerRepository {
         snapshot.documents.size
     }
 
-    // Delete a customer record
+    // Delete a customer record from both customers and users collections
     override suspend fun deleteCustomer(customerId: String): Result<Unit> = runCatching {
         require(customerId.isNotBlank()) { "Customer ID is required." }
         customers.document(customerId).delete()
+        firestore.collection("users").document(customerId).delete()
     }
 }
