@@ -28,6 +28,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
+private val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+private fun formatCreatedDateTime(raw: String): String {
+    if (raw.isBlank()) return ""
+    val millis = raw.toLongOrNull()
+    if (millis != null) {
+        return runCatching {
+            val instant = Instant.fromEpochMilliseconds(millis)
+            val dt = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+            val monthStr = months.getOrNull(dt.month.ordinal) ?: ""
+            val minStr = dt.minute.toString().padStart(2, '0')
+            val hourStr = dt.hour.toString().padStart(2, '0')
+            "${dt.day} $monthStr ${dt.year}, $hourStr:$minStr"
+        }.getOrDefault(raw)
+    }
+    val instant = runCatching { Instant.parse(raw) }.getOrNull()
+    if (instant != null) {
+        val dt = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+        val monthStr = months.getOrNull(dt.month.ordinal) ?: ""
+        val minStr = dt.minute.toString().padStart(2, '0')
+        val hourStr = dt.hour.toString().padStart(2, '0')
+        return "${dt.day} $monthStr ${dt.year}, $hourStr:$minStr"
+    }
+    return raw
+}
 
 @Composable
 fun CustomersAdminScreen(
@@ -145,36 +174,46 @@ private fun CustomerAdminCard(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Text(
-                text = customer.customerId.ifBlank { "Customer" },
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(6.dp))
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = customer.fullName.ifBlank { customer.email },
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onBackground
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = customer.email,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium
-            )
+
+            if (customer.email.isNotBlank()) {
+                Text(
+                    text = customer.email,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            if (customer.phone.isNotBlank()) {
+                Text(
+                    text = "Phone: ${customer.phone}",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (customer.createdAt.isNotBlank()) {
+                Text(
+                    text = "Joined: ${formatCreatedDateTime(customer.createdAt)}",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
-
-//@Preview
-//@Composable
-//fun CustomersScreenPreview() {
-//    CustomersAdminScreen({}, {})
-//}

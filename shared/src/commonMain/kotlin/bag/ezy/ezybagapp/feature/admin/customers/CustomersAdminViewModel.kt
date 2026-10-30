@@ -25,19 +25,8 @@ data class CustomersAdminUiModel(
 data class CustomersAdminUiState(
     val isLoading: Boolean = true,
     val customers: List<CustomersAdminUiModel> = emptyList(),
-   // val selectedTab: CustomersTab = CustomersTab.All,
     val error: String? = null
-)// {
-//    val visibleCustomers: List<CustomersAdminUiModel>
-//        get() = if (selectedTab == CustomersTab.All) {
-//            customers.filter { it.tab != null }
-//        } else {
-//            customers.filter { it.tab == selectedTab }
-//        }
-
-//    val cancelledCount: Int
-//        get() = customers.count { it.tab == null }
-//}
+)
 
 class CustomersAdminViewModel(
     private val repo: CustomerRepository = AppContainer.customerRepository,
@@ -80,10 +69,6 @@ class CustomersAdminViewModel(
             }
         }
     }
-
-//    fun selectTab(tab: CustomersTab) {
-//        state = state.copy(selectedTab = tab)
-//    }
 
     private fun Customer.toUiModel() = CustomersAdminUiModel(
         customerId = customerId,
