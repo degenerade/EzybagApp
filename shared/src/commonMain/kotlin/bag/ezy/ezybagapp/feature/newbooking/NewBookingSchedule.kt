@@ -3,6 +3,7 @@ package bag.ezy.ezybagapp.feature.newbooking
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -26,12 +29,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -41,14 +47,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import ezybagapp.shared.generated.resources.Res
+import ezybagapp.shared.generated.resources.ic_calendar_month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.vectorResource
 import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,18 +68,49 @@ fun ScheduleBagQuoteScreen(
     onBack: () -> Unit,
     onBooked: (bookingId: String) -> Unit
 ) {
-    NewBookingScheduleContent(
-        state = vm.state,
-        onBack = onBack,
-        onDateSelected = vm::onDateSelected,
-        onTimeSelected = vm::onTimeSelected,
-        onAccessInfoChange = vm::onAccessInfoChange,
-        onInstructionsChange = vm::onInstructionChange,
-        onNeedsBagChange = vm::onNeedsBagChange,
-        onBagSizeChange = vm::onBagSizeChange,
-        onRequestQuote = vm::requestQuote,
-        onPay = { vm.pay(onBooked) },
-    )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .clickable(onClick = onBack),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Back",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            )
+        }
+
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            NewBookingScheduleContent(
+                state = vm.state,
+                onBack = onBack,
+                onDateSelected = vm::onDateSelected,
+                onTimeSelected = vm::onTimeSelected,
+                onAccessInfoChange = vm::onAccessInfoChange,
+                onInstructionsChange = vm::onInstructionChange,
+                onNeedsBagChange = vm::onNeedsBagChange,
+                onBagSizeChange = vm::onBagSizeChange,
+                onRequestQuote = vm::requestQuote,
+                onPay = { vm.pay(onBooked) },
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,250 +144,236 @@ fun NewBookingScheduleContent(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
+
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 12.dp)
+                .fillMaxWidth()
+                .border(
+                    BorderStroke(2.dp, MaterialTheme.colorScheme.outline),
+                    RoundedCornerShape(28.dp)
+                )
+                .background(
+                    MaterialTheme.colorScheme.surface,
+                    androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+                )
+                .padding(18.dp)
         ) {
+            Text(
+                text = "Schedule your pickup",
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Scrollable booking details
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .weight(1f)
-                    .border(
-                        BorderStroke(2.dp, MaterialTheme.colorScheme.outline),
-                        RoundedCornerShape(28.dp)
-                    )
-                    .background(
-                        MaterialTheme.colorScheme.surface,
-                        androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
-                    )
-                    .padding(18.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                TextButton(
-                    onClick = onBack
+                // Date and time pickers
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = "← Back",
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Box(modifier = Modifier.weight(1f)) {
+                        PickerField(
+                            label = "Date",
+                            value = selectedDateText,
+                            onClick = { showDatePicker = true }
+                        )
+                    }
+
+                    Box(modifier = Modifier.weight(1f)) {
+                        PickerField(
+                            label = "Time",
+                            value = selectedTimeText,
+                            onClick = { showTimePicker = true }
+                        )
+                    }
                 }
-                Text(
-                    text = "New booking",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold
+
+                // Access information
+                ScheduleTextField(
+                    label = "Access information",
+                    value = state.accessInfo,
+                    onValueChange = onAccessInfoChange,
+                    placeholder = "Gate, door code, or access details"
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                // Special instructions
+                ScheduleTextField(
+                    label = "Special instructions",
+                    value = state.specialInstructions,
+                    onValueChange = onInstructionsChange,
+                    placeholder = "Instructions for the contractor",
+                    singleLine = false
+                )
 
-                // Scrollable booking details
+                // Bag selection
                 Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .fillMaxWidth()
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                            androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
+                        )
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Date and time pickers
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            PickerField(
-                                label = "Date",
-                                value = selectedDateText,
-                                onClick = { showDatePicker = true }
-                            )
-                        }
+                        Text(
+                            text = "Need a bag?",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                        Box(modifier = Modifier.weight(1f)) {
-                            PickerField(
-                                label = "Time",
-                                value = selectedTimeText,
-                                onClick = { showTimePicker = true }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            BagOption(
+                                text = "Yes",
+                                selected = state.needsBag,
+                                onClick = { onNeedsBagChange(true) }
+                            )
+
+                            BagOption(
+                                text = "No",
+                                selected = !state.needsBag,
+                                onClick = { onNeedsBagChange(false) }
                             )
                         }
                     }
 
-                    // Access information
-                    ScheduleTextField(
-                        label = "Access information",
-                        value = state.accessInfo,
-                        onValueChange = onAccessInfoChange,
-                        placeholder = "Gate, door code, or access details"
-                    )
-
-                    // Special instructions
-                    ScheduleTextField(
-                        label = "Special instructions",
-                        value = state.specialInstructions,
-                        onValueChange = onInstructionsChange,
-                        placeholder = "Instructions for the contractor",
-                        singleLine = false
-                    )
-
-                    // Bag selection
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                1.dp,
-                                MaterialTheme.colorScheme.outline,
-                                androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
-                            )
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                    if (state.needsBag) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(
-                                text = "Need a bag?",
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                BagOption(
-                                    text = "Yes",
-                                    selected = state.needsBag,
-                                    onClick = { onNeedsBagChange(true) }
-                                )
-
-                                BagOption(
-                                    text = "No",
-                                    selected = !state.needsBag,
-                                    onClick = { onNeedsBagChange(false) }
-                                )
-                            }
-                        }
-
-                        if (state.needsBag) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                listOf("Small", "Medium", "Large").forEach { size ->
-                                    Box(modifier = Modifier.weight(1f)) {
-                                        BagOption(
-                                            text = size,
-                                            selected = state.bagSize == size,
-                                            onClick = { onBagSizeChange(size) }
-                                        )
-                                    }
+                            listOf("Small", "Medium", "Large").forEach { size ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    BagOption(
+                                        text = size,
+                                        selected = state.bagSize == size,
+                                        onClick = { onBagSizeChange(size) }
+                                    )
                                 }
                             }
                         }
                     }
-
-                    // Instant estimate
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                1.5.dp,
-                                MaterialTheme.colorScheme.primary,
-                                androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
-                            )
-                            .background(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
-                            )
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(
-                            text = "Instant estimate",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 16.sp
-                        )
-
-                        Text(
-                            text = state.estimate?.let { "£${it.toInt()}" } ?: "-",
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontSize = 38.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-
-                        Text(
-                            text = "${state.volume} · ${state.wasteType.lowercase()} waste",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 16.sp
-                        )
-
-                        if (state.needsBag) {
-                            Text(
-                                text = "${state.bagSize} bag selected",
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-
-                    // Request final quote
-                    OutlinedButton(
-                        onClick = onRequestQuote,
-                        enabled = !state.quoteRequested,
-                        modifier = Modifier.fillMaxWidth().height(58.dp),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline
-                        ),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    ) {
-                        Text(
-                            text = if (state.quoteRequested) "Final quote requested" else "Request a final quote",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
                 }
 
-                state.error?.let { msg ->
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = msg,
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 13.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Pay button stays at the bottom
-                Button(
-                    onClick = onPay,
-                    enabled = !state.isSubmitting,
+                // Instant estimate
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(66.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    if (state.isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary
+                        .border(
+                            1.5.dp,
+                            MaterialTheme.colorScheme.primary,
+                            androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
                         )
-                    } else {
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
+                        )
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Instant estimate",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 16.sp
+                    )
+
+                    Text(
+                        text = state.estimate?.let { "£${it.toInt()}" } ?: "-",
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontSize = 38.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+
+                    Text(
+                        text = "${state.volume} · ${state.wasteType.lowercase()} waste",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 16.sp
+                    )
+
+                    if (state.needsBag) {
                         Text(
-                            text = "Pay securely",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "${state.bagSize} bag selected",
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontSize = 14.sp
                         )
                     }
+                }
+
+                // Request final quote
+                OutlinedButton(
+                    onClick = onRequestQuote,
+                    enabled = !state.quoteRequested,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Text(
+                        text = if (state.quoteRequested) "Final quote requested" else "Request a final quote",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            state.error?.let { msg ->
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = msg,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 13.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Pay button stays at the bottom
+            Button(
+                onClick = onPay,
+                enabled = !state.isSubmitting,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(66.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                if (state.isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text(
+                        text = "Pay securely",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }

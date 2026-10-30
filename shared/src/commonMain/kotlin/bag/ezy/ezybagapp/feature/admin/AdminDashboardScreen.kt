@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,108 +30,111 @@ private val AdminBackground = Color(0xFFF5F7F6)
 
 @Composable
 fun AdminDashboardScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AdminBackground)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        // Dashboard header
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = AdminGreen,
-            shape = RoundedCornerShape(16.dp)
+    Scaffold { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(AdminBackground)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            // Dashboard header
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = AdminGreen,
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Text(
-                    text = "Administrator",
-                    color = Color.White,
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Bold
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Administrator",
+                        color = Color.White,
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "Overview",
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 15.sp
+                    )
+                }
+            }
+
+            // First row: bookings and customers
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                MetricCard(
+                    title = "Bookings",
+                    value = "—",
+                    modifier = Modifier.weight(1f)
                 )
 
-                Text(
-                    text = "Overview",
-                    color = Color.White.copy(alpha = 0.85f),
-                    fontSize = 15.sp
+                MetricCard(
+                    title = "Customers",
+                    value = "—",
+                    modifier = Modifier.weight(1f)
                 )
             }
-        }
 
-        // First row: bookings and customers
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MetricCard(
-                title = "Bookings",
-                value = "—",
-                modifier = Modifier.weight(1f)
-            )
+            // Second row: contractors and revenue
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                MetricCard(
+                    title = "Contractors",
+                    value = "—",
+                    modifier = Modifier.weight(1f)
+                )
 
-            MetricCard(
-                title = "Customers",
-                value = "—",
-                modifier = Modifier.weight(1f)
-            )
-        }
+                MetricCard(
+                    title = "Revenue",
+                    value = "—",
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        // Second row: contractors and revenue
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MetricCard(
-                title = "Contractors",
-                value = "—",
-                modifier = Modifier.weight(1f)
-            )
+            // Reports navigation card
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                NavigationCard(
+                    title = "Reports",
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-            MetricCard(
-                title = "Revenue",
-                value = "—",
-                modifier = Modifier.weight(1f)
-            )
-        }
+            Spacer(modifier = Modifier.height(4.dp))
 
-        // Reports navigation card
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            NavigationCard(
-                title = "Reports",
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Customer complaints and applications that need approval
-        Text(
-            text = "Pending actions",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            )
-        ) {
+            // Customer complaints and applications that need approval
             Text(
-                text = "Reported issues and pending applications will appear here.",
-                modifier = Modifier.padding(16.dp),
-                color = Color.Gray,
-                style = MaterialTheme.typography.bodyMedium
+                text = "Pending actions",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
+            ) {
+                Text(
+                    text = "Reported issues and pending applications will appear here.",
+                    modifier = Modifier.padding(16.dp),
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }

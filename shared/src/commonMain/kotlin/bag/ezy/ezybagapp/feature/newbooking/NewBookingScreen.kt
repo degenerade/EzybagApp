@@ -21,9 +21,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,18 +58,37 @@ fun NewBookingDetailsScreen(
         if (files != null) vm.onFilesPicked(files.map { it.name })
         // todo: keep actual files (not just names) when uploading to firebase
     }
-    NewBookingDetailsContent(
-        state = vm.state,
-        onAddressChange = vm::onAddressChange,
-        onPostcodeChange = vm::onPostcodeChange,
-        onPhoneChange = vm::onPhoneChange,
-        onWasteTypeSelected = vm::onWasteTypeSelected,
-        onDescriptionChange = vm::onDescriptionChange,
-        onVolumeSelected = vm::onVolumeSelected,
-        onAddMediaClick = { mediaPicker.launch() },
-        onFileRemoved = vm::onFileRemoved,
-        onContinue = { vm.continueFromDetails(onValid = onContinue) },
-    )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Book a pickup",
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            NewBookingDetailsContent(
+                state = vm.state,
+                onAddressChange = vm::onAddressChange,
+                onPostcodeChange = vm::onPostcodeChange,
+                onPhoneChange = vm::onPhoneChange,
+                onWasteTypeSelected = vm::onWasteTypeSelected,
+                onDescriptionChange = vm::onDescriptionChange,
+                onVolumeSelected = vm::onVolumeSelected,
+                onAddMediaClick = { mediaPicker.launch() },
+                onFileRemoved = vm::onFileRemoved,
+                onContinue = { vm.continueFromDetails(onValid = onContinue) },
+            )
+        }
+    }
+
 }
 
 @Composable
@@ -89,189 +110,172 @@ fun NewBookingDetailsContent(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .border(
+                    BorderStroke(
+                        2.dp,
+                        MaterialTheme.colorScheme.outline
+                    ),
+                    RoundedCornerShape(28.dp)
+                )
+                .background(
+                    MaterialTheme.colorScheme.surface,
+                    androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+                )
+                .verticalScroll(rememberScrollState())
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "EZY BAG",
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 3.sp
+                text = "Tell us about your waste",
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            BookingField(
+                label = "Collection address",
+                placeholder = "Enter collection address",
+                value = state.address,
+                onValueChange = onAddressChange
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    BookingField(
+                        label = "Postcode",
+                        placeholder = "Enter postcode",
+                        value = state.postcode,
+                        onValueChange = onPostcodeChange
+                    )
+                }
+
+                Box(modifier = Modifier.weight(1f)) {
+                    BookingField(
+                        label = "Phone",
+                        placeholder = "Phone number",
+                        value = state.phone,
+                        onValueChange = onPhoneChange
+                    )
+                }
+            }
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .border(BorderStroke(
-                        2.dp,
-                        MaterialTheme.colorScheme.outline),
-                        RoundedCornerShape(28.dp)
-                    )
-                    .background(
-                        MaterialTheme.colorScheme.surface,
-                        androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
-                    )
-                    .verticalScroll(rememberScrollState())
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "New booking",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "Waste type",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 13.sp
                 )
 
-                BookingField(
-                    label = "Collection address",
-                    placeholder = "Enter collection address",
-                    value = state.address,
-                    onValueChange = onAddressChange
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        BookingField(
-                            label = "Postcode",
-                            placeholder = "Enter postcode",
-                            value = state.postcode,
-                            onValueChange = onPostcodeChange
-                        )
-                    }
-
-                    Box(modifier = Modifier.weight(1f)) {
-                        BookingField(
-                            label = "Phone",
-                            placeholder = "Phone number",
-                            value = state.phone,
-                            onValueChange = onPhoneChange
-                        )
-                    }
-                }
-
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Waste type",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 13.sp
-                    )
-
-                    wasteTypes.chunked(3).forEach { rowTypes ->
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            rowTypes.forEach { type ->
-                                SelectionChip(
-                                    text = type,
-                                    selected = state.wasteType == type,
-                                    onClick = { onWasteTypeSelected(type) }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                BookingField(
-                    label = "Description",
-                    placeholder = "Describe the waste",
-                    value = state.description,
-                    onValueChange = onDescriptionChange,
-                    singleLine = false
-                )
-
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Estimated volume",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 13.sp
-                    )
-
+                wasteTypes.chunked(3).forEach { rowTypes ->
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        volumes.forEach { volume ->
+                        rowTypes.forEach { type ->
                             SelectionChip(
-                                text = volume,
-                                selected = state.volume == volume,
-                                onClick = { onVolumeSelected(volume) }
+                                text = type,
+                                selected = state.wasteType == type,
+                                onClick = { onWasteTypeSelected(type) }
                             )
                         }
                     }
                 }
+            }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+            BookingField(
+                label = "Description",
+                placeholder = "Describe the waste",
+                value = state.description,
+                onValueChange = onDescriptionChange,
+                singleLine = false
+            )
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Estimated volume",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 13.sp
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = onAddMediaClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline
-                        ),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurface
+                    volumes.forEach { volume ->
+                        SelectionChip(
+                            text = volume,
+                            selected = state.volume == volume,
+                            onClick = { onVolumeSelected(volume) }
                         )
-                    ) {
-                        Text("+ Add photos / videos")
                     }
+                }
+            }
 
-                    state.mediaFileNames.forEach { fileName ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onAddMediaClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Text("+ Add photos / videos")
+                }
+
+                state.mediaFileNames.forEach { fileName ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = fileName,
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 12.sp
+                        )
+
+                        TextButton(onClick = { onFileRemoved(fileName) }) {
                             Text(
-                                text = fileName,
-                                modifier = Modifier.weight(1f),
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 12.sp
+                                text = "Remove",
+                                color = MaterialTheme.colorScheme.primary
                             )
-
-                            TextButton(onClick = { onFileRemoved(fileName) }) {
-                                Text(
-                                    text = "Remove",
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
                         }
                     }
                 }
+            }
 
-                state.error?.let { msg ->
-                    Text(
-                        text = msg,
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 13.sp
-                    )
-                }
+            state.error?.let { msg ->
+                Text(
+                    text = msg,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 13.sp
+                )
+            }
 
-                Button(
-                    onClick = onContinue,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Text(text = "Continue", fontWeight = FontWeight.Bold)
-                }
+            Button(
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Text(text = "Continue", fontWeight = FontWeight.Bold)
             }
         }
     }
