@@ -32,6 +32,8 @@ interface BookingRepository {
 
     suspend fun getCurrentContractorBookings(): Result<List<Booking>>
 
+    suspend fun getAvailableBookings(): Result<List<Booking>>
+
     suspend fun selectContractor(
         bookingId: String,
         contractorId: String
@@ -75,9 +77,11 @@ class FirebaseBookingRepository : BookingRepository {
         }
     }
 
+
     override suspend fun getBooking(
         bookingId: String
     ): Result<Booking?> = runCatching {
+
         val uid = requireCurrentUserId()
 
         require(bookingId.isNotBlank()) {
@@ -90,15 +94,46 @@ class FirebaseBookingRepository : BookingRepository {
         if (!document.exists) {
             null
         } else {
+
             val booking = document.data<Booking>()
 
-            require(booking.customerId == uid) {
+            // The customer who created the booking can view it.
+            val isCustomer = booking.customerId == uid
+
+            // Check whether the signed-in user is an approved contractor.
+            val contractorDocument =
+                contractorsCollection.document(uid).get()
+
+            val isApprovedContractor =
+                contractorDocument.exists &&
+                        contractorDocument.data<Contractor>().let {
+                            it.uid == uid && it.isApproved
+                        }
+
+            // Contractors can view jobs assigned to them.
+            val isAssignedContractor =
+                isApprovedContractor &&
+                        booking.contractorId == uid
+
+            // Contractors can also open unassigned available jobs.
+            val isAvailableJob =
+                isApprovedContractor &&
+                        !booking.assigned &&
+                        booking.contractorId == null &&
+                        booking.status == "Upcoming"
+
+            require(
+                isCustomer ||
+                        isAssignedContractor ||
+                        isAvailableJob
+            ) {
                 "You are not authorized to access this booking."
             }
 
             booking
         }
     }
+
 
     override suspend fun getEstimate(
         wasteType: String,
@@ -153,6 +188,7 @@ class FirebaseBookingRepository : BookingRepository {
             customerId = uid,
             contractorId = null,
             status = "Upcoming",
+            assigned = false,
             createdAt = now
         )
 
@@ -243,7 +279,7 @@ class FirebaseBookingRepository : BookingRepository {
             "You can only select a contractor for your own booking."
         }
 
-        require(booking.contractorId == null) {
+        require(!booking.assigned && booking.contractorId == null) {
             "A contractor has already been assigned to this booking."
         }
 
@@ -255,7 +291,8 @@ class FirebaseBookingRepository : BookingRepository {
         // assignment, status, and contractor approval again.
         bookingsCollection.document(bookingId).update(
             "contractorId" to contractorId,
-            "status" to "Active"
+            "status" to "Active",
+            "assigned" to true
         )
     }
 
@@ -268,6 +305,26 @@ class FirebaseBookingRepository : BookingRepository {
         // Firestore Rules also require the contractor to be approved.
         val snapshot = bookingsCollection
             .where { "contractorId" equalTo uid }
+            .get()
+
+        snapshot.documents.mapNotNull { document ->
+            runCatching {
+                document.data<Booking>()
+            }.getOrNull()
+        }
+    }
+    override suspend fun getAvailableBookings():
+            Result<List<Booking>> = runCatching {
+
+        requireCurrentUserId()
+
+        val snapshot = bookingsCollection
+            .where {
+                "status" equalTo "Upcoming"
+            }
+            .where {
+                "assigned" equalTo false
+            }
             .get()
 
         snapshot.documents.mapNotNull { document ->
