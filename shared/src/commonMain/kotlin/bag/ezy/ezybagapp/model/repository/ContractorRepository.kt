@@ -20,6 +20,8 @@ interface ContractorRepository {
     suspend fun getUnverifiedContractors(): Result<List<Contractor>>
     suspend fun countUnverifiedContractors(): Result<Int>
     suspend fun changeContractorStatus(contractorId: String = "", isApproved: Boolean = true): Result<Unit>
+
+    suspend fun deleteContractor(contractorId: String = ""): Result<Unit>
 }
 
 class FirebaseContractorRepository : ContractorRepository {
@@ -118,4 +120,11 @@ class FirebaseContractorRepository : ContractorRepository {
                 document.data<Contractor>()
             }
         }
+
+    // Delete a contractor record from both contractors and users collections
+    override suspend fun deleteContractor(contractorId: String): Result<Unit> = runCatching {
+        require(contractorId.isNotBlank()) { "Contractor ID is required." }
+        contractors.document(contractorId).delete()
+        firestore.collection("users").document(contractorId).delete()
+    }
 }
