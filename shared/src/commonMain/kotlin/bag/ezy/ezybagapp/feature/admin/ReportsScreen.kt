@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp.feature.admin
 
 import androidx.compose.foundation.background
@@ -168,7 +167,8 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
 
         Text(
             "Reports & Analytics",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         HorizontalDivider()
@@ -220,7 +220,8 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
                 "Booking Report" -> {
                     Text(
                         "Booking Report",
-                        style = MaterialTheme.typography.headlineSmall
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     report?.let {
@@ -231,7 +232,8 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
                 "Contractor Performance" -> {
                     Text(
                         "Contractor Performance",
-                        style = MaterialTheme.typography.headlineSmall
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     contractorReport?.let {
@@ -242,7 +244,8 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
                 "Customer Activity" -> {
                     Text(
                         "Customer Activity",
-                        style = MaterialTheme.typography.headlineSmall
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     customerReport?.let {
@@ -257,7 +260,8 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
 
             Text(
                 "Available reports",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             ReportCard(
@@ -310,7 +314,8 @@ private fun ReportCard(
         ) {
             Text(
                 title,
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
@@ -363,7 +368,8 @@ private fun BookingStatistics(report: BookingReport) {
 
             Text(
                 "Booking Overview",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
@@ -428,16 +434,24 @@ private fun ContractorPerformanceStatistics(
 
             Text(
                 "Job Overview",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
-            Text("Assigned jobs: ${report.assignedJobs}")
+            Text(
+                "Assigned jobs: ${report.assignedJobs}",
+                color = MaterialTheme.colorScheme.onSurface
+            )
 
-            Text("Completed jobs: ${report.completedJobs}")
+            Text(
+                "Completed jobs: ${report.completedJobs}",
+                color = MaterialTheme.colorScheme.onSurface
+            )
 
             Text(
                 "Completion Rate",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
@@ -450,7 +464,8 @@ private fun ContractorPerformanceStatistics(
 
             Text(
                 "Jobs by Contractor",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
@@ -460,7 +475,10 @@ private fun ContractorPerformanceStatistics(
             )
 
             if (report.contractorStats.isEmpty()) {
-                Text("No contractors found.")
+                Text(
+                    "No contractors found.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             } else {
                 val maxValue = report.contractorStats.maxOf {
                     it.assignedJobs
@@ -472,7 +490,8 @@ private fun ContractorPerformanceStatistics(
                         contractor.contractorName.ifBlank {
                             "Unnamed Contractor"
                         },
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     BookingBar(
@@ -519,7 +538,10 @@ private fun CustomerActivityStatistics(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Total Customers")
+                    Text(
+                        "Total Customers",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Text(
                         report.totalCustomers.toString(),
                         style = MaterialTheme.typography.headlineMedium,
@@ -528,7 +550,10 @@ private fun CustomerActivityStatistics(
                 }
 
                 Column {
-                    Text("Total Bookings")
+                    Text(
+                        "Total Bookings",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Text(
                         report.totalBookings.toString(),
                         style = MaterialTheme.typography.headlineMedium,
@@ -538,7 +563,6 @@ private fun CustomerActivityStatistics(
             }
 
             HorizontalDivider()
-
 
             BookingBar(
                 title = "Active Customers",
@@ -562,7 +586,8 @@ private fun CustomerActivityStatistics(
 
             Text(
                 "Average Bookings per Customer",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
@@ -589,7 +614,8 @@ private fun BookingBar(
         ) {
             Text(
                 title,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
