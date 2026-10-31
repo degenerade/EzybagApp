@@ -113,9 +113,9 @@ fun SettingsScreen(
                         email = customer.email.ifBlank {
                             "No email available"
                         },
-                        phone = customer.phone.ifBlank {
-                            "Phone not added"
-                        },
+//                        phone = customer.phone.ifBlank {
+//                            "Phone not added"
+//                        },
                         initial = customer.name
                             .firstOrNull()
                             ?.uppercase()
@@ -138,38 +138,38 @@ fun SettingsScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            ExpandableRow(
-                title = "Privacy and data",
-                expanded = expandedSection == "privacy",
-                onClick = {
-                    expandedSection =
-                        if (expandedSection == "privacy") null
-                        else "privacy"
-                }
-            )
+//            ExpandableRow(
+//                title = "Privacy and data",
+//                expanded = expandedSection == "privacy",
+//                onClick = {
+//                    expandedSection =
+//                        if (expandedSection == "privacy") null
+//                        else "privacy"
+//                }
+//            )
 
-            if (expandedSection == "privacy") {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        "Information stored",
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "EzybagApp may store your name, email, phone number, saved address and booking information to provide and manage the service."
-                    )
-
-                    Text(
-                        "How it is used",
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "Your information is used to manage your account, arrange bookings, communicate about services and provide support."
-                    )
-                }
-            }
+//            if (expandedSection == "privacy") {
+//                Column(
+//                    modifier = Modifier.padding(16.dp),
+//                    verticalArrangement = Arrangement.spacedBy(8.dp)
+//                ) {
+//                    Text(
+//                        "Information stored",
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                    Text(
+//                        "EzybagApp may store your name, email to provide and manage the service."
+//                    )
+//
+//                    Text(
+//                        "How it is used",
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                    Text(
+//                        "Your information is used to manage your account, arrange bookings and provide support."
+//                    )
+//                }
+//            }
 
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant
@@ -497,7 +497,7 @@ fun SettingsScreen(
 private fun ProfileHeader(
     name: String,
     email: String,
-    phone: String,
+//    phone: String,
     initial: String
 ) {
     Row(
@@ -528,11 +528,11 @@ private fun ProfileHeader(
                 fontWeight = FontWeight.Bold
             )
 
-            Text(
-                text = if (phone.isNotBlank()) "$email · $phone" else email,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+//            Text(
+//                text = if (phone.isNotBlank()) "$email · $phone" else email,
+//                fontSize = 12.sp,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant
+//            )
         }
     }
 }
