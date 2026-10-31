@@ -40,6 +40,7 @@ interface BookingRepository {
     suspend fun getAllBookings(): Result<List<Booking>>
     suspend fun countAllBookings(): Result<Int>
     suspend fun deleteBooking(bookingId: String = ""): Result<Unit>
+    suspend fun getBookingsForContractor(contractorId: String): Result<List<Booking>>
 
 }
 
@@ -300,5 +301,15 @@ class FirebaseBookingRepository : BookingRepository {
                 document.data<Booking>()
             }.getOrNull()
         }
+    }
+
+    override suspend fun getBookingsForContractor(contractorId: String): Result<List<Booking>> = runCatching {
+        require(contractorId.isNotBlank()) { "Contractor ID is required." }
+
+        bookingsCollection
+            .where { "contractorId" equalTo contractorId }
+            .get()
+            .documents
+            .mapNotNull { document -> runCatching { document.data<Booking>() }.getOrNull() }
     }
 }

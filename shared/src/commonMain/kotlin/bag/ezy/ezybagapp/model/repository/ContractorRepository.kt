@@ -21,6 +21,7 @@ interface ContractorRepository {
     suspend fun countUnverifiedContractors(): Result<Int>
     suspend fun changeContractorStatus(contractorId: String = "", isApproved: Boolean = true): Result<Unit>
     suspend fun deleteContractor(contractorId: String = ""): Result<Unit>
+    suspend fun getContractor(contractorId: String): Result<Contractor?>
 }
 
 class FirebaseContractorRepository : ContractorRepository {
@@ -139,5 +140,18 @@ class FirebaseContractorRepository : ContractorRepository {
         require(contractorId.isNotBlank()) { "Contractor ID is required." }
         contractors.document(contractorId).delete()
         firestore.collection("users").document(contractorId).delete()
+    }
+
+    override suspend fun getContractor(contractorId: String): Result<Contractor?> = runCatching {
+        require(contractorId.isNotBlank()) { "Contractor ID is required." }
+
+        val document = contractors.document(contractorId).get()
+
+        if (!document.exists) {
+            null
+        } else {
+            val data = document.data<Contractor>()
+            if (data.uid.isBlank()) data.copy(uid = document.id) else data
+        }
     }
 }
