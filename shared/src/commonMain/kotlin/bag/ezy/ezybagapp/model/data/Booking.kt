@@ -48,5 +48,6 @@ data class Booking(
     val status: String = "Pending", // Pending, Upcoming, En Route, On Site, Completed, Cancelled
     val contractorCurrentLocation: GeoLocation? = null,
     val disposalDetails: DisposalDetails? = null,
+    val assigned: Boolean = false,
     val createdAt: String = "" //having such info is useful :D
 )
