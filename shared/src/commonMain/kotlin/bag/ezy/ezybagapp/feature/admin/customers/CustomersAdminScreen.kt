@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.ui.components.SearchField
 
 @Composable
 fun CustomersAdminScreen(
@@ -53,6 +54,7 @@ fun CustomersAdminScreen(
 
     CustomersScreenContent(
         state = vm.state,
+        onSearchChange = vm::onSearchChange,
         onRetry = vm::load,
         onDeleteCustomer = vm::deleteCustomer,
         onBack = onBack
@@ -62,11 +64,12 @@ fun CustomersAdminScreen(
 @Composable
 private fun CustomersScreenContent(
     state: CustomersAdminUiState,
+    onSearchChange: (String) -> Unit,
     onRetry: () -> Unit,
     onDeleteCustomer: (String) -> Unit,
     onBack: () -> Unit = {},
 ) {
-    val visible = state.customers
+    val visible = state.visibleCustomers
     val customerCountText =
         if (visible.size == 1) "1 customer" else "${visible.size} customers"
 
@@ -88,7 +91,13 @@ private fun CustomersScreenContent(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+        SearchField(
+            value = state.searchQuery,
+            onValueChange = onSearchChange,
+            placeholder = "Search name, email, phone, area, reg…",
+        )
+        Spacer(modifier = Modifier.height(12.dp))
         when {
             state.isLoading && state.customers.isEmpty() -> {
                 Box(
@@ -130,6 +139,19 @@ private fun CustomersScreenContent(
                             customer = customer,
                             onDelete = { customerToDelete = customer }
                         )
+                    }
+
+                    if (visible.isEmpty()) {
+                        item {
+                            Text(
+                                text = if (state.searchQuery.isNotBlank()) {
+                                    "No contractors match \"${state.searchQuery}\""
+                                } else {
+                                    "No contractors yet"
+                                },
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     if (visible.isEmpty()) {

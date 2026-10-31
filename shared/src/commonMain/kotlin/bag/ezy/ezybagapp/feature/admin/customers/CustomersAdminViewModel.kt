@@ -10,6 +10,7 @@ import bag.ezy.ezybagapp.model.data.Customer
 import bag.ezy.ezybagapp.model.queries.AdminRepository
 import bag.ezy.ezybagapp.model.repository.CustomerRepository
 import bag.ezy.ezybagapp.ui.format.formatDisplayDateTime
+import bag.ezy.ezybagapp.ui.search.matchesSearch
 import kotlinx.coroutines.launch
 
 data class CustomersAdminUiModel(
@@ -26,8 +27,14 @@ data class CustomersAdminUiModel(
 data class CustomersAdminUiState(
     val isLoading: Boolean = true,
     val customers: List<CustomersAdminUiModel> = emptyList(),
+    val searchQuery: String = "",
     val error: String? = null
-)
+) {
+    val visibleCustomers: List<CustomersAdminUiModel>
+        get() = customers.filter { c ->
+            matchesSearch(searchQuery, c.fullName, c.email, c.phone, c.customerId)
+        }
+}
 
 class CustomersAdminViewModel(
     private val repo: CustomerRepository = AppContainer.customerRepository,
@@ -91,6 +98,10 @@ class CustomersAdminViewModel(
                 }
             )
         }
+    }
+
+    fun onSearchChange(query: String) {
+        state = state.copy(searchQuery = query)
     }
 
     private fun Customer.toUiModel() = CustomersAdminUiModel(

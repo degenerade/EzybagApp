@@ -9,6 +9,7 @@ import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.model.data.Contractor
 import bag.ezy.ezybagapp.model.queries.AdminRepository
 import bag.ezy.ezybagapp.model.repository.ContractorRepository
+import bag.ezy.ezybagapp.ui.search.matchesSearch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -23,22 +24,33 @@ data class ContractorsAdminUiModel(
     val companyName: String,
     val email: String,
     val isApproved: Boolean,
-    val tab: ContractorsTab?
+    val tab: ContractorsTab?,
+    val fullName: String = "",
+    val phone: String = "",
+    val serviceAreas: String = "",
+    val vehicleRegistration: String = "",
+    val licence: String = ""
 )
 
 data class ContractorsAdminUiState(
     val isLoading: Boolean = true,
     val contractors: List<ContractorsAdminUiModel> = emptyList(),
     val selectedTab: ContractorsTab = ContractorsTab.All,
+    val searchQuery: String = "",
     val error: String? = null
 ) {
     val visibleContractors: List<ContractorsAdminUiModel>
-        get() = if (selectedTab == ContractorsTab.All) {
-            contractors.filter { it.tab != null }
-        } else {
-            contractors.filter { it.tab == selectedTab }
+        get() {
+            val inTab = if (selectedTab == ContractorsTab.All) contractors.filter { it.tab != null }
+                        else contractors.filter { it.tab == selectedTab }
+            return inTab.filter { c ->
+                matchesSearch(
+                    searchQuery,
+                    c.companyName, c.fullName, c.email, c.phone,
+                    c.serviceAreas, c.vehicleRegistration, c.licence, c.reference
+                )
+            }
         }
-
     val cancelledCount: Int
         get() = contractors.count { it.tab == null }
 }
@@ -153,14 +165,20 @@ class ContractorsAdminViewModel(
         }
     }
 
+    fun onSearchChange(query: String) {
+        state = state.copy(searchQuery = query)
+    }
+
     private fun Contractor.toUiModel() = ContractorsAdminUiModel(
         reference = uid,
         companyName = companyName,
         email = email,
         isApproved = isApproved,
-        tab = when (isApproved) {
-            true -> ContractorsTab.Active
-            false -> ContractorsTab.Pending
-        }
+        tab = if (isApproved) ContractorsTab.Active else ContractorsTab.Pending,
+        fullName = "$firstName $lastName".trim(),
+        phone = phone,
+        serviceAreas = serviceAreas,
+        vehicleRegistration = vehicleRegistrationNumber,
+        licence = wasteCarrierLicenceDetails
     )
 }

@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.ui.components.SearchField
 
 @Composable
 fun ContractorsAdminScreen(
@@ -63,6 +64,7 @@ fun ContractorsAdminScreen(
 
     ContractorsScreenContent(
         state = vm.state,
+        onSearchChange = vm::onSearchChange,
         onTabSelected = { tab ->
             vm.selectTab(tab)
             onTabChange(tab)
@@ -78,6 +80,7 @@ fun ContractorsAdminScreen(
 @Composable
 private fun ContractorsScreenContent(
     state: ContractorsAdminUiState,
+    onSearchChange: (String) -> Unit,
     onTabSelected: (ContractorsTab) -> Unit,
     onRetry: () -> Unit,
     onBack: () -> Unit = {},
@@ -107,6 +110,12 @@ private fun ContractorsScreenContent(
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        SearchField(
+            value = state.searchQuery,
+            onValueChange = onSearchChange,
+            placeholder = "Search name, email, phone, area, reg…",
         )
         Spacer(modifier = Modifier.height(12.dp))
         ContractorsTabs(
@@ -159,18 +168,14 @@ private fun ContractorsScreenContent(
                         )
                     }
 
-                    if (visible.isEmpty() && state.selectedTab.name != "All") {
+                    if (visible.isEmpty()) {
                         item {
                             Text(
-                                text = "No ${state.selectedTab.name.lowercase()} contractors",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    if (visible.isEmpty() && state.selectedTab.name == "All") {
-                        item {
-                            Text(
-                                text = "No contractors yet",
+                                text = when {
+                                    state.searchQuery.isNotBlank() -> "No contractors match \"${state.searchQuery}\""
+                                    state.selectedTab == ContractorsTab.All -> "No contractors yet"
+                                    else -> "No ${state.selectedTab.name.lowercase()} contractors"
+                                },
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
