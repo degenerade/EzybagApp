@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 
 @Composable
 fun BookingsScreen(
@@ -134,7 +134,7 @@ fun BookingsContent(
                         )
                     }
 
-                    if (visible.isEmpty()) {
+                    if (visible.isEmpty() && state.selectedTab.name != "All") {
                         item {
                             Text(
                                 text = "No ${state.selectedTab.name.lowercase()} bookings",
@@ -142,8 +142,16 @@ fun BookingsContent(
                             )
                         }
                     }
+                    if (visible.isEmpty() && state.selectedTab.name == "All") {
+                        item {
+                            Text(
+                                text = "Your bookings will appear here when you make them!",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
 
-                    if (state.selectedTab == BookingTab.All) {
+                    if (state.selectedTab == BookingTab.All && !visible.isEmpty()) {
                         item { CancelledCard(count = state.cancelledCount) }
                     }
                 }
@@ -293,7 +301,7 @@ private val previewBookings = listOf(
 @Preview
 @Composable
 private fun BookingsLoadedPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         BookingsContent(
             BookingsUiState(isLoading = false, bookings = previewBookings),
             {}, {}, {}, {}
@@ -304,7 +312,7 @@ private fun BookingsLoadedPreview() {
 @Preview
 @Composable
 private fun BookingsCompletedTabPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         BookingsContent(
             BookingsUiState(
                 isLoading = false,
@@ -319,9 +327,9 @@ private fun BookingsCompletedTabPreview() {
 @Preview
 @Composable
 private fun BookingsLoadingPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         BookingsContent(
-            BookingsUiState(isLoading = true),
+            BookingsUiState(isLoading = false),
             {}, {}, {}, {}
         )
     }
@@ -330,7 +338,7 @@ private fun BookingsLoadingPreview() {
 @Preview
 @Composable
 private fun BookingsErrorPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         BookingsContent(
             BookingsUiState(
                 isLoading = false,

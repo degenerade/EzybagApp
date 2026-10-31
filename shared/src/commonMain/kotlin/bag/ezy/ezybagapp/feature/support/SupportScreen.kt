@@ -43,14 +43,11 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import bag.ezy.ezybagapp.ui.format.formatDisplayDateTime
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
-import dev.gitlive.firebase.firestore.where
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlin.random.Random
 import kotlin.time.Clock
@@ -445,13 +442,8 @@ private fun ReportCard(item: DisplayIssueReport) {
             )
 
             Text(
-                text = "Submitted: ${
-                    if (report.createdAt > 0L) {
-                        formatReportDate(report.createdAt)
-                    } else {
-                        "Date unavailable"
-                    }
-                }",
+                text = "Submitted: ${formatDisplayDateTime(report.createdAt)
+                    .ifBlank { "Date unavailable" }}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -473,29 +465,6 @@ private fun ReportCard(item: DisplayIssueReport) {
                 )
             }
         }
-    }
-}
-
-private fun formatReportDate(timestamp: Long): String {
-    return try {
-        val dateTime = Instant
-            .fromEpochMilliseconds(timestamp)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-
-        val months = listOf(
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        )
-
-        val day = dateTime.dayOfMonth.toString().padStart(2, '0')
-        val month = months[dateTime.monthNumber - 1]
-        val year = dateTime.year
-        val hour = dateTime.hour.toString().padStart(2, '0')
-        val minute = dateTime.minute.toString().padStart(2, '0')
-
-        "$day $month $year, $hour:$minute"
-    } catch (_: Exception) {
-        "Date unavailable"
     }
 }
 

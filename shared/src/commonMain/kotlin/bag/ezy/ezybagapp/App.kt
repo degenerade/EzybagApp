@@ -19,7 +19,8 @@ import bag.ezy.ezybagapp.dev.DEV_MENU_ENABLED
 import bag.ezy.ezybagapp.dev.DevMenu
 import bag.ezy.ezybagapp.dev.DevMenuButton
 import bag.ezy.ezybagapp.di.AppContainer
-import bag.ezy.ezybagapp.feature.admin.AdminDashboardScreen
+import bag.ezy.ezybagapp.feature.admin.dashboard.AdminDashboardScreen
+import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
@@ -40,7 +41,7 @@ import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.feature.startpage.StartScreen
 import bag.ezy.ezybagapp.model.queries.AdminRepository
 import bag.ezy.ezybagapp.model.repository.FirebaseContractorRepository
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import kotlinx.coroutines.launch
 
 enum class Screen {
@@ -59,12 +60,13 @@ enum class Screen {
     BookingConfirmation,
     Ratings,
     AdminDashboard,
+    ContractorsAdmin,
     DbTest,
 }
 
 @Composable
 fun App() {
-    ClearawayTheme {
+    EzybagTheme {
         var screen by rememberSaveable {
             mutableStateOf(
                 if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn
@@ -302,7 +304,19 @@ fun App() {
                     onReportIssue = { /* TODO */ }
                 )
 
-                Screen.AdminDashboard -> AdminDashboardScreen()
+                Screen.AdminDashboard -> AdminDashboardScreen(
+                    onOpenAccount = {
+                        authVm.signOut {
+                            screen = Screen.SignIn
+                        }
+                    }
+                )
+
+                Screen.ContractorsAdmin -> ContractorsAdminScreen(
+                    onBack = {
+                        screen = Screen.AdminDashboard
+                    }
+                )
             }
 
             if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {

@@ -38,7 +38,14 @@ interface BookingRepository {
         bookingId: String,
         contractorId: String
     ): Result<Unit>
+
+    suspend fun getAllBookings(): Result<List<Booking>>
+    suspend fun countAllBookings(): Result<Int>
+    suspend fun deleteBooking(bookingId: String = ""): Result<Unit>
+    suspend fun getBookingsForContractor(contractorId: String): Result<List<Booking>>
+
 }
+
 
 class FirebaseBookingRepository : BookingRepository {
 
@@ -77,7 +84,6 @@ class FirebaseBookingRepository : BookingRepository {
         }
     }
 
-
     override suspend fun getBooking(
         bookingId: String
     ): Result<Booking?> = runCatching {
@@ -94,7 +100,6 @@ class FirebaseBookingRepository : BookingRepository {
         if (!document.exists) {
             null
         } else {
-
             val booking = document.data<Booking>()
 
             // The customer who created the booking can view it.
@@ -133,7 +138,6 @@ class FirebaseBookingRepository : BookingRepository {
             booking
         }
     }
-
 
     override suspend fun getEstimate(
         wasteType: String,
@@ -225,6 +229,25 @@ class FirebaseBookingRepository : BookingRepository {
         bookingsCollection.document(booking.bookingId).update(
             "pricing.finalQuoteRequested" to true
         )
+    }
+
+    override suspend fun getAllBookings(): Result<List<Booking>> = runCatching {
+        val snapshot = bookingsCollection.get()
+
+        snapshot.documents.mapNotNull { document ->
+            runCatching {
+                document.data<Booking>()
+            }.getOrNull()
+        }
+    }
+
+    override suspend fun countAllBookings(): Result<Int> = runCatching {
+        val snapshot = bookingsCollection.get()
+        snapshot.documents.size
+    }
+
+    override suspend fun deleteBooking(bookingId: String): Result<Unit> = runCatching {
+        // TODO: Delete booking document from Firestore
     }
 
     override suspend fun selectContractor(
@@ -332,5 +355,15 @@ class FirebaseBookingRepository : BookingRepository {
                 document.data<Booking>()
             }.getOrNull()
         }
+    }
+
+    override suspend fun getBookingsForContractor(contractorId: String): Result<List<Booking>> = runCatching {
+        require(contractorId.isNotBlank()) { "Contractor ID is required." }
+
+        bookingsCollection
+            .where { "contractorId" equalTo contractorId }
+            .get()
+            .documents
+            .mapNotNull { document -> runCatching { document.data<Booking>() }.getOrNull() }
     }
 }

@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 
 @Composable
 fun ContractorApprovalPendingScreen(
@@ -137,7 +137,7 @@ fun ContractorApprovalPendingScreen(
 @Preview
 @Composable
 private fun ContractorApprovalPendingPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         ContractorApprovalPendingScreen()
     }
 }
