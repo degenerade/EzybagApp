@@ -42,6 +42,7 @@ import bag.ezy.ezybagapp.feature.admin.customers.CustomersAdminScreen
 import bag.ezy.ezybagapp.feature.admin.IssuesScreen
 import bag.ezy.ezybagapp.feature.admin.ReportsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
+import bag.ezy.ezybagapp.ui.format.formatPrice
 
 private enum class AdminSubScreen {
     Bookings,
@@ -175,7 +176,7 @@ fun AdminDashboardScreen(
 
                     MetricCard(
                         title = "Revenue",
-                        value = "—",
+                        value = state.totalRevenue?.let { formatPrice(it) } ?: "—",
                         onClick = { subScreen = AdminSubScreen.Reports },
                         modifier = Modifier.weight(1f)
                     )
@@ -195,27 +196,45 @@ fun AdminDashboardScreen(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Pending actions
-                Text(
-                    text = "Pending actions",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold
-                )
+                //Pending Actions space
+
+                val unresolvedCount = state.totalUnresolvedIssues ?: 0
+                val unverifiedCount = state.totalUnverifiedContractors ?: 0
+
+                if (unresolvedCount > 0 || unverifiedCount > 0) {
+                    Text(
+                        text = "Pending actions",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
                 // Show unresolved issues only when there are issues to handle
-                if ((state.totalUnresolvedIssues ?: 0) > 0) {
+                if (unresolvedCount > 0) {
+                    val issueText = if (unresolvedCount == 1) {
+                        "1 unresolved issue"
+                    } else {
+                        "Unresolved Issues ($unresolvedCount)"
+                    }
                     PendingActionCard(
-                        text = "Unresolved Issues (${state.totalUnresolvedIssues})",
+                        text = issueText,
                         onClick = { subScreen = AdminSubScreen.Issues }
                     )
                 }
 
-                //should appear if there are > 0 unverified contractor
-                PendingActionCard(
-                    text = "5 contractors are waiting for approval",
-                    onClick = { subScreen = AdminSubScreen.Contractors }
-                )
+                // Show unverified contractors pending approval
+                if (unverifiedCount > 0) {
+                    val contractorText = if (unverifiedCount == 1) {
+                        "1 contractor is waiting for approval"
+                    } else {
+                        "$unverifiedCount contractors are waiting for approval"
+                    }
+                    PendingActionCard(
+                        text = contractorText,
+                        onClick = { subScreen = AdminSubScreen.Contractors }
+                    )
+                }
             }
         }
     }
