@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -61,6 +63,7 @@ fun ContractorsAdminScreen(
         onRetry = vm::load,
         onBack = onBack,
         onDeleteContractor = vm::deleteContractor,
+        onToggleApproval = vm::toggleApprovalStatus
     )
 }
 
@@ -71,6 +74,7 @@ private fun ContractorsScreenContent(
     onRetry: () -> Unit,
     onBack: () -> Unit = {},
     onDeleteContractor: (String) -> Unit,
+    onToggleApproval: (String, Boolean) -> Unit,
 ) {
     val visible = state.visibleContractors
     val contractorCountText =
@@ -140,8 +144,9 @@ private fun ContractorsScreenContent(
                     items(visible, key = { it.reference }) { contractor ->
                         ContractorAdminCard(
                             contractor = contractor,
+                            onClick = { },
                             onDelete = { contractorToDelete = contractor },
-                            onClick = {  }
+                            onToggleApproval = { onToggleApproval(contractor.reference, contractor.isApproved) }
                         )
                     }
 
@@ -239,8 +244,9 @@ private fun ContractorsTabs(
 @Composable
 private fun ContractorAdminCard(
     contractor: ContractorsAdminUiModel,
-    onClick: () -> Unit,
-    onDelete: () -> Unit,
+    onClick: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    onToggleApproval: () -> Unit = {},
 ) {
     Card(
         onClick = onClick,
@@ -278,7 +284,6 @@ private fun ContractorAdminCard(
                 }
             }
 
-            //all of this is Approved/Pending
             Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -286,7 +291,7 @@ private fun ContractorAdminCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = contractor.companyName,
+                    text = contractor.companyName.ifBlank { contractor.email },
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -319,12 +324,27 @@ private fun ContractorAdminCard(
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium
             )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Action button: Approve for pending contractors, Unapprove for approved contractors
+            Button(
+                onClick = onToggleApproval,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (contractor.isApproved) {
+                        MaterialTheme.colorScheme.secondary
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+                )
+            ) {
+                Text(
+                    text = if (contractor.isApproved) "Unapprove" else "Approve",
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
-
-//@Preview
-//@Composable
-//fun ContractorsScreenPreview() {
-//    ContractorsAdminScreen({}, {})
-//}

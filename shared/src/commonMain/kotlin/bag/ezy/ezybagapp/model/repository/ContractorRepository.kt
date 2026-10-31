@@ -71,38 +71,52 @@ class FirebaseContractorRepository : ContractorRepository {
 
     // Show each contractor on page where viewing all contractors
     override suspend fun getAllContractors(): Result<List<Contractor>> = runCatching {
-        contractors.get().documents.map { document ->
-            document.data<Contractor>()
+        contractors.get().documents.mapNotNull { document ->
+            runCatching {
+                val data = document.data<Contractor>()
+                if (data.uid.isBlank()) data.copy(uid = document.id) else data
+            }.getOrNull()
         }
     }
 
     // Show verified contractors
     override suspend fun getVerifiedContractors(): Result<List<Contractor>> = runCatching {
-        // TODO: Query verified contractors from Firestore
-        emptyList()
+        val snapshot = contractors.where { "isApproved" equalTo true }.get()
+        snapshot.documents.mapNotNull { document ->
+            runCatching {
+                val data = document.data<Contractor>()
+                if (data.uid.isBlank()) data.copy(uid = document.id) else data
+            }.getOrNull()
+        }
     }
 
     // Count total contractors
     override suspend fun countAllContractors(): Result<Int> = runCatching {
-        // TODO: Count total number of contractors from Firestore
-        0
+        val snapshot = contractors.get()
+        snapshot.documents.size
     }
 
     // Show unverified contractors
     override suspend fun getUnverifiedContractors(): Result<List<Contractor>> = runCatching {
-        // TODO: Query unverified contractors from Firestore
-        emptyList()
+        val snapshot = contractors.where { "isApproved" equalTo false }.get()
+        snapshot.documents.mapNotNull { document ->
+            runCatching {
+                val data = document.data<Contractor>()
+                if (data.uid.isBlank()) data.copy(uid = document.id) else data
+            }.getOrNull()
+        }
     }
 
     // Count unverified contractors
     override suspend fun countUnverifiedContractors(): Result<Int> = runCatching {
-        // TODO: Count total unverified contractors from Firestore
-        0
+        val snapshot = contractors.where { "isApproved" equalTo false }.get()
+        snapshot.documents.size
     }
 
     // Change contractor approval status
     override suspend fun changeContractorStatus(contractorId: String, isApproved: Boolean): Result<Unit> = runCatching {
-        // TODO: Update contractor approval status in Firestore
+        require(contractorId.isNotBlank()) { "Contractor ID is required." }
+        contractors.document(contractorId).update("isApproved" to isApproved)
     }
 
     override suspend fun getCurrentContractor(): Result<Contractor?> =

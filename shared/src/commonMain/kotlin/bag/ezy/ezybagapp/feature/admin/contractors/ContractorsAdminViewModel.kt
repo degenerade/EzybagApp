@@ -100,6 +100,39 @@ class ContractorsAdminViewModel(
         state = state.copy(selectedTab = tab)
     }
 
+    fun toggleApprovalStatus(contractorId: String, currentApproved: Boolean) {
+        if (contractorId.isBlank()) return
+        val newStatus = !currentApproved
+
+        // Update UI state immediately for instant visual feedback
+        state = state.copy(
+            contractors = state.contractors.map {
+                if (it.reference == contractorId) {
+                    it.copy(
+                        isApproved = newStatus,
+                        tab = if (newStatus) ContractorsTab.Active else ContractorsTab.Pending
+                    )
+                } else {
+                    it
+                }
+            }
+        )
+
+        viewModelScope.launch {
+            repo.changeContractorStatus(contractorId, newStatus).fold(
+                onSuccess = {
+                    load()
+                },
+                onFailure = { exception ->
+                    state = state.copy(
+                        error = exception.message ?: "Failed to update contractor status."
+                    )
+                    load()
+                }
+            )
+        }
+    }
+
     fun deleteContractor(contractorId: String) {
         if (contractorId.isBlank()) return
         state = state.copy(
