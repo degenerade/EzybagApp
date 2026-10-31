@@ -55,13 +55,15 @@ fun SignInScreen(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(
-            "Clearaway",
+            text = "Clearaway",
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 18.sp,
             fontWeight = FontWeight.ExtraBold
         )
 
         Text(
-            "Book a waste pickup in minutes",
+            text = "Book a waste pickup in minutes",
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 26.sp,
             lineHeight = 30.sp,
             fontWeight = FontWeight.ExtraBold,

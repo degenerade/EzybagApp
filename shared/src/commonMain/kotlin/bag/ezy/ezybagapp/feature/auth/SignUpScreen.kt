@@ -55,7 +55,8 @@ fun SignUpScreen(
         }
 
         Text(
-            "Create your account",
+            text = "Create your account",
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 26.sp,
             fontWeight = FontWeight.ExtraBold
         )
