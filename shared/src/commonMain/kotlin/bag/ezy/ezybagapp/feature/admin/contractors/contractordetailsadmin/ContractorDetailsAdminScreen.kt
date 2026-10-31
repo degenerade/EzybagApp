@@ -194,7 +194,9 @@ private fun ContractorHeader(contractor: Contractor) {
                 text = if (contractor.isApproved) "Approved" else "Pending approval",
                 highlighted = contractor.isApproved,
             )
-            StatusChip(text = contractor.status, highlighted = contractor.status == "Online")
+            if (contractor.currentJobId != null) {
+                StatusChip(text = "On a job", highlighted = true)
+            }
         }
         Text(
             text = "ID: ${contractor.uid}",
@@ -289,39 +291,39 @@ private fun DocumentRow(label: String, url: String?, onOpen: (String) -> Unit) {
     }
 }
 
-private val previewContractor = Contractor(
-    uid = "abc123",
-    firstName = "Jake", lastName = "Rowe",
-    email = "jake@dropwaste.example", phone = "+44 7700 900123",
-    companyName = "Drop Waste Ltd",
-    serviceAreas = "Truro, Falmouth, Redruth",
-    vehicleType = "Luton van", vehicleRegistrationNumber = "WK21 ABC",
-    wasteCarrierLicenceDetails = "CBDU123456",
-    insuranceProvider = "Hiscox", policyNumber = "HX-99812",
-    isApproved = false, status = "Offline",
-)
-
-@Preview
-@Composable
-private fun ContractorDetailsPreview() {
-    EzybagTheme {
-        ContractorDetailsAdminContent(
-            state = ContractorDetailsUiState(
-                isLoading = false, contractor = previewContractor,
-                totalJobs = 12, activeJobs = 1, completedJobs = 10,
-            ),
-            onBack = {}, onRetry = {}, onToggleApproval = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun ContractorDetailsNotFoundPreview() {
-    EzybagTheme {
-        ContractorDetailsAdminContent(
-            state = ContractorDetailsUiState(isLoading = false, error = "Contractor not found"),
-            onBack = {}, onRetry = {}, onToggleApproval = {},
-        )
-    }
-}
+//private val previewContractor = Contractor(
+//    uid = "abc123",
+//    firstName = "Jake", lastName = "Rowe",
+//    email = "jake@dropwaste.example", phone = "+44 7700 900123",
+//    companyName = "Drop Waste Ltd",
+//    serviceAreas = "Truro, Falmouth, Redruth",
+//    vehicleType = "Luton van", vehicleRegistrationNumber = "WK21 ABC",
+//    wasteCarrierLicenceDetails = "CBDU123456",
+//    insuranceProvider = "Hiscox", policyNumber = "HX-99812",
+//    isApproved = false, status = "Offline",
+//)
+//
+//@Preview
+//@Composable
+//private fun ContractorDetailsPreview() {
+//    EzybagTheme {
+//        ContractorDetailsAdminContent(
+//            state = ContractorDetailsUiState(
+//                isLoading = false, contractor = previewContractor,
+//                totalJobs = 12, activeJobs = 1, completedJobs = 10,
+//            ),
+//            onBack = {}, onRetry = {}, onToggleApproval = {},
+//        )
+//    }
+//}
+//
+//@Preview
+//@Composable
+//private fun ContractorDetailsNotFoundPreview() {
+//    EzybagTheme {
+//        ContractorDetailsAdminContent(
+//            state = ContractorDetailsUiState(isLoading = false, error = "Contractor not found"),
+//            onBack = {}, onRetry = {}, onToggleApproval = {},
+//        )
+//    }
+//}
