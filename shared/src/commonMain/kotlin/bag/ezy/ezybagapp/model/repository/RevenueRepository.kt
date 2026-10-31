@@ -1,5 +1,6 @@
 package bag.ezy.ezybagapp.model.repository
 
+import bag.ezy.ezybagapp.model.data.Booking
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 
@@ -10,9 +11,18 @@ interface RevenueRepository {
 class FirebaseRevenueRepository : RevenueRepository {
 
     private val firestore = Firebase.firestore
+    private val bookingsCollection = firestore.collection("bookings")
 
     override suspend fun countRevenue(): Result<Double> = runCatching {
-        // TODO: Calculate total revenue from Firestore transactions/bookings
-        0.0
+        val snapshot = bookingsCollection
+            .where { "status" equalTo "Completed" }
+            .get()
+
+        snapshot.documents.sumOf { document ->
+            runCatching {
+                val booking = document.data<Booking>()
+                booking.pricing.estimatedQuote
+            }.getOrDefault(0.0)
+        }
     }
 }

@@ -42,6 +42,7 @@ import bag.ezy.ezybagapp.feature.admin.customers.CustomersAdminScreen
 import bag.ezy.ezybagapp.feature.admin.IssuesScreen
 import bag.ezy.ezybagapp.feature.admin.ReportsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
+import bag.ezy.ezybagapp.ui.format.formatPrice
 
 private enum class AdminSubScreen {
     Bookings,
@@ -175,7 +176,7 @@ fun AdminDashboardScreen(
 
                     MetricCard(
                         title = "Revenue",
-                        value = "—",
+                        value = state.totalRevenue?.let { formatPrice(it) } ?: "—",
                         onClick = { subScreen = AdminSubScreen.Reports },
                         modifier = Modifier.weight(1f)
                     )

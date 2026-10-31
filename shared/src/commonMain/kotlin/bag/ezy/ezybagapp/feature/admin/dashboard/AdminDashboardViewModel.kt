@@ -11,6 +11,7 @@ import bag.ezy.ezybagapp.model.repository.BookingRepository
 import bag.ezy.ezybagapp.model.repository.ContractorRepository
 import bag.ezy.ezybagapp.model.repository.CustomerRepository
 import bag.ezy.ezybagapp.model.repository.IssueRepository
+import bag.ezy.ezybagapp.model.repository.RevenueRepository
 import kotlinx.coroutines.launch
 
 data class AdminDashboardUiState(
@@ -21,13 +22,14 @@ data class AdminDashboardUiState(
     val totalBookings: Int? = null,
     val totalContractors: Int? = null,
     val totalCustomers: Int? = null,
-    //revenue
+    val totalRevenue: Double? = null,
 
     //errors when retrieval of numbers is not possible
     val contractorError: String? = null,
     val bookingError: String? = null,
     val issueCustomer: String? = null,
     val issueError: String? = null,
+    val revenueError: String? = null,
 
     // for actions
     val totalUnresolvedIssues: Int? = null,
@@ -43,6 +45,7 @@ class AdminDashboardViewModel(
     private val contractors: ContractorRepository = AppContainer.contractorRepository,
     private val issues: IssueRepository = AppContainer.issueRepository,
     private val customers: CustomerRepository = AppContainer.customerRepository,
+    private val revenue: RevenueRepository = AppContainer.revenueRepository
 ) : ViewModel() {
 
     var state by mutableStateOf(AdminDashboardUiState())
@@ -61,11 +64,12 @@ class AdminDashboardViewModel(
             val contractorCountResult = contractors.countAllContractors()
             val issueCountResult = issues.countUnresolvedIssues()
             val customersCountResult = customers.countCustomers()
+            val revenueCountResult = revenue.countRevenue()
 
             state = if (bookingCountResult.isSuccess && contractorCountResult.isSuccess) {
                 state.copy(
                     totalBookings = bookingCountResult.getOrNull(),
-                    totalContractors = contractorCountResult.getOrNull(),
+                    totalContractors = contractorCountResult.getOrNull()
                 )
             } else if (bookingCountResult.isFailure) {
                 state.copy(
@@ -78,6 +82,7 @@ class AdminDashboardViewModel(
                         ?: "Could not load contractors"
                 )
             }
+
             state = if (issueCountResult.isSuccess) {
                 state.copy(
                     totalUnresolvedIssues = issueCountResult.getOrNull(),
@@ -90,15 +95,29 @@ class AdminDashboardViewModel(
                 )
             }
 
+            //customer count
             state = if (customersCountResult.isSuccess) {
                 state.copy(
                     totalCustomers = customersCountResult.getOrNull(),
-                    issueError = null
+                    issueCustomer = null
                 )
             } else {
                 state.copy(
                     issueCustomer = customersCountResult.exceptionOrNull()?.message
                         ?: "Could not load customers"
+                )
+            }
+
+            //revenue count
+            state = if (revenueCountResult.isSuccess) {
+                state.copy(
+                    totalRevenue = revenueCountResult.getOrNull(),
+                    revenueError = null
+                )
+            } else {
+                state.copy(
+                    revenueError = revenueCountResult.exceptionOrNull()?.message
+                        ?: "Could not load revenue"
                 )
             }
         }
