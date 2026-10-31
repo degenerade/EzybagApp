@@ -23,6 +23,5 @@ object AppContainer {
     val issueRepository = FirebaseIssueRepository()
     val contractorPerformanceRepository = ContractorPerformanceRepository()
     val customerActivityRepository = CustomerActivityRepository()
-
     val revenueRepository = FirebaseRevenueRepository()
 }

@@ -5,9 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.model.data.Contractor
-import bag.ezy.ezybagapp.model.repository.FirebaseContractorRepository
 import bag.ezy.ezybagapp.model.queries.AdminRepository
+import bag.ezy.ezybagapp.model.repository.ContractorRepository
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -43,8 +44,8 @@ data class ContractorsAdminUiState(
 }
 
 class ContractorsAdminViewModel(
-    private val repo: FirebaseContractorRepository,
-    private val auth: AdminRepository
+    private val repo: ContractorRepository = AppContainer.contractorRepository,
+    private val auth: AdminRepository = AppContainer.adminRepository
 ) : ViewModel() {
     var state by mutableStateOf(ContractorsAdminUiState())
         private set
@@ -97,6 +98,59 @@ class ContractorsAdminViewModel(
 
     fun selectTab(tab: ContractorsTab) {
         state = state.copy(selectedTab = tab)
+    }
+
+    fun toggleApprovalStatus(contractorId: String, currentApproved: Boolean) {
+        if (contractorId.isBlank()) return
+        val newStatus = !currentApproved
+
+        // Update UI state immediately for instant visual feedback
+        state = state.copy(
+            contractors = state.contractors.map {
+                if (it.reference == contractorId) {
+                    it.copy(
+                        isApproved = newStatus,
+                        tab = if (newStatus) ContractorsTab.Active else ContractorsTab.Pending
+                    )
+                } else {
+                    it
+                }
+            }
+        )
+
+        viewModelScope.launch {
+            repo.changeContractorStatus(contractorId, newStatus).fold(
+                onSuccess = {
+                    load()
+                },
+                onFailure = { exception ->
+                    state = state.copy(
+                        error = exception.message ?: "Failed to update contractor status."
+                    )
+                    load()
+                }
+            )
+        }
+    }
+
+    fun deleteContractor(contractorId: String) {
+        if (contractorId.isBlank()) return
+        state = state.copy(
+            contractors = state.contractors.filter { it.reference != contractorId }
+        )
+        viewModelScope.launch {
+            repo.deleteContractor(contractorId).fold(
+                onSuccess = {
+                    load()
+                },
+                onFailure = { exception ->
+                    state = state.copy(
+                        error = exception.message ?: "Failed to delete contractor."
+                    )
+                    load()
+                }
+            )
+        }
     }
 
     private fun Contractor.toUiModel() = ContractorsAdminUiModel(

@@ -12,21 +12,35 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +48,7 @@ import bag.ezy.ezybagapp.di.AppContainer
 
 @Composable
 fun ContractorsAdminScreen(
+    initialTab: ContractorsTab = ContractorsTab.All,
     vm: ContractorsAdminViewModel = viewModel {
         ContractorsAdminViewModel(
             AppContainer.contractorRepository,
@@ -41,13 +56,18 @@ fun ContractorsAdminScreen(
     },
     onBack: () -> Unit
 ) {
-    LaunchedEffect(Unit) { vm.load() }
+    LaunchedEffect(initialTab) {
+        vm.selectTab(initialTab)
+        vm.load()
+    }
 
     ContractorsScreenContent(
         state = vm.state,
         onTabSelected = vm::selectTab,
         onRetry = vm::load,
-        onBack = onBack
+        onBack = onBack,
+        onDeleteContractor = vm::deleteContractor,
+        onToggleApproval = vm::toggleApprovalStatus
     )
 }
 
@@ -57,10 +77,15 @@ private fun ContractorsScreenContent(
     onTabSelected: (ContractorsTab) -> Unit,
     onRetry: () -> Unit,
     onBack: () -> Unit = {},
+    onDeleteContractor: (String) -> Unit,
+    onToggleApproval: (String, Boolean) -> Unit,
 ) {
     val visible = state.visibleContractors
     val contractorCountText =
         if (visible.size == 1) "1 contractor" else "${visible.size} contractors"
+
+    //for deletion
+    var contractorToDelete by remember { mutableStateOf<ContractorsAdminUiModel?>(null) }
 
     Column(
         modifier = Modifier
@@ -123,7 +148,9 @@ private fun ContractorsScreenContent(
                     items(visible, key = { it.reference }) { contractor ->
                         ContractorAdminCard(
                             contractor = contractor,
-                            onClick = {  }
+                            onClick = { },
+                            onDelete = { contractorToDelete = contractor },
+                            onToggleApproval = { onToggleApproval(contractor.reference, contractor.isApproved) }
                         )
                     }
 
@@ -146,6 +173,44 @@ private fun ContractorsScreenContent(
                 }
             }
         }
+    }
+
+    // Confirmation Popup Dialog
+    if (contractorToDelete != null) {
+        val target = contractorToDelete!!
+        val nameToDisplay = target.companyName.ifBlank { target.email }
+
+        AlertDialog(
+            onDismissRequest = { contractorToDelete = null },
+            title = {
+                Text(text = "Confirm Deletion")
+            },
+            text = {
+                Text(text = "Do you actually want to delete $nameToDisplay?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val idToDelete = target.reference
+                        contractorToDelete = null
+                        onDeleteContractor(idToDelete)
+                    }
+                ) {
+                    Text(
+                        text = "Yes",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { contractorToDelete = null }
+                ) {
+                    Text(text = "No")
+                }
+            }
+        )
     }
 }
 
@@ -183,7 +248,9 @@ private fun ContractorsTabs(
 @Composable
 private fun ContractorAdminCard(
     contractor: ContractorsAdminUiModel,
-    onClick: () -> Unit
+    onClick: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    onToggleApproval: () -> Unit = {},
 ) {
     Card(
         onClick = onClick,
@@ -194,26 +261,65 @@ private fun ContractorAdminCard(
         )
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Text(
-                text = contractor.reference,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = contractor.reference,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+                //delete button :)
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete contractor",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = contractor.companyName,
+                    text = contractor.companyName.ifBlank { contractor.email },
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Text(
-                    text = if (contractor.isApproved) "Approved" else "Pending",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (contractor.isApproved) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    }
+                ) {
+                    Text(
+                        text = if (contractor.isApproved) "Approved" else "Pending",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (contractor.isApproved) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.secondary
+                        },
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(6.dp))
             Text(
@@ -222,12 +328,27 @@ private fun ContractorAdminCard(
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium
             )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Action button: Approve for pending contractors, Unapprove for approved contractors
+            Button(
+                onClick = onToggleApproval,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (contractor.isApproved) {
+                        MaterialTheme.colorScheme.secondary
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+                )
+            ) {
+                Text(
+                    text = if (contractor.isApproved) "Unapprove" else "Approve",
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
-
-//@Preview
-//@Composable
-//fun ContractorsScreenPreview() {
-//    ContractorsAdminScreen({}, {})
-//}

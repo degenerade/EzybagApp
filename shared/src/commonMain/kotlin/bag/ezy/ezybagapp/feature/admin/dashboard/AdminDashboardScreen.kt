@@ -42,6 +42,7 @@ import bag.ezy.ezybagapp.feature.admin.customers.CustomersAdminScreen
 import bag.ezy.ezybagapp.feature.admin.IssuesScreen
 import bag.ezy.ezybagapp.feature.admin.ReportsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
+import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsTab
 import bag.ezy.ezybagapp.ui.format.formatPrice
 
 private enum class AdminSubScreen {
@@ -85,13 +86,24 @@ fun AdminDashboardScreen(
     LaunchedEffect(Unit) { vm.load() }
 
     var subScreen by remember { mutableStateOf<AdminSubScreen?>(null) }
+    var contractorInitialTab by remember { mutableStateOf(ContractorsTab.All) }
 
     when (subScreen) {
         AdminSubScreen.Bookings -> BookingsScreen(onBack = { subScreen = null })
         AdminSubScreen.Customers -> CustomersAdminScreen(onBack = { subScreen = null })
-        AdminSubScreen.Contractors -> ContractorsAdminScreen(onBack = { subScreen = null})
-        AdminSubScreen.Issues -> IssuesScreen(onBack = { subScreen = null
-            vm.load()})
+        AdminSubScreen.Contractors -> ContractorsAdminScreen(
+            initialTab = contractorInitialTab,
+            onBack = {
+                subScreen = null
+                vm.load()
+            }
+        )
+        AdminSubScreen.Issues -> IssuesScreen(
+            onBack = {
+                subScreen = null
+                vm.load()
+            }
+        )
         AdminSubScreen.Reports -> ReportsScreen(onBack = { subScreen = null })
         null -> {
             Column(
@@ -170,7 +182,10 @@ fun AdminDashboardScreen(
                     MetricCard(
                         title = "Contractors",
                         value = state.totalContractors?.toString() ?: "—",
-                        onClick = { subScreen = AdminSubScreen.Contractors },
+                        onClick = {
+                            contractorInitialTab = ContractorsTab.All
+                            subScreen = AdminSubScreen.Contractors
+                        },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -196,27 +211,46 @@ fun AdminDashboardScreen(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Pending actions
-                Text(
-                    text = "Pending actions",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold
-                )
+                val unresolvedCount = state.totalUnresolvedIssues ?: 0
+                val unverifiedCount = state.totalUnverifiedContractors ?: 0
+
+                if (unresolvedCount > 0 || unverifiedCount > 0) {
+                    Text(
+                        text = "Pending actions",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
                 // Show unresolved issues only when there are issues to handle
-                if ((state.totalUnresolvedIssues ?: 0) > 0) {
+                if (unresolvedCount > 0) {
+                    val issueText = if (unresolvedCount == 1) {
+                        "1 unresolved issue"
+                    } else {
+                        "Unresolved Issues ($unresolvedCount)"
+                    }
                     PendingActionCard(
-                        text = "Unresolved Issues (${state.totalUnresolvedIssues})",
+                        text = issueText,
                         onClick = { subScreen = AdminSubScreen.Issues }
                     )
                 }
 
-                //should appear if there are > 0 unverified contractor
-                PendingActionCard(
-                    text = "5 contractors are waiting for approval",
-                    onClick = { subScreen = AdminSubScreen.Contractors }
-                )
+                // Show unverified contractors pending approval
+                if (unverifiedCount > 0) {
+                    val contractorText = if (unverifiedCount == 1) {
+                        "1 contractor is waiting for approval"
+                    } else {
+                        "$unverifiedCount contractors are waiting for approval"
+                    }
+                    PendingActionCard(
+                        text = contractorText,
+                        onClick = {
+                            contractorInitialTab = ContractorsTab.Pending
+                            subScreen = AdminSubScreen.Contractors
+                        }
+                    )
+                }
             }
         }
     }
