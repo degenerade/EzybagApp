@@ -54,20 +54,24 @@ fun ContractorsAdminScreen(
             AppContainer.contractorRepository,
             AppContainer.adminRepository)
     },
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenContractor: (String) -> Unit = {},
+    onTabChange: (ContractorsTab) -> Unit = {}
 ) {
-    LaunchedEffect(initialTab) {
-        vm.selectTab(initialTab)
-        vm.load()
-    }
+    remember(initialTab) { vm.selectTab(initialTab) }
+    LaunchedEffect(Unit) { vm.load() }
 
     ContractorsScreenContent(
         state = vm.state,
-        onTabSelected = vm::selectTab,
+        onTabSelected = { tab ->
+            vm.selectTab(tab)
+            onTabChange(tab)
+        },
         onRetry = vm::load,
         onBack = onBack,
         onDeleteContractor = vm::deleteContractor,
-        onToggleApproval = vm::toggleApprovalStatus
+        onToggleApproval = vm::toggleApprovalStatus,
+        onOpenContractor = onOpenContractor
     )
 }
 
@@ -79,6 +83,7 @@ private fun ContractorsScreenContent(
     onBack: () -> Unit = {},
     onDeleteContractor: (String) -> Unit,
     onToggleApproval: (String, Boolean) -> Unit,
+    onOpenContractor: (String) -> Unit
 ) {
     val visible = state.visibleContractors
     val contractorCountText =
@@ -148,7 +153,7 @@ private fun ContractorsScreenContent(
                     items(visible, key = { it.reference }) { contractor ->
                         ContractorAdminCard(
                             contractor = contractor,
-                            onClick = { },
+                            onClick = { onOpenContractor(contractor.reference) },
                             onDelete = { contractorToDelete = contractor },
                             onToggleApproval = { onToggleApproval(contractor.reference, contractor.isApproved) }
                         )
