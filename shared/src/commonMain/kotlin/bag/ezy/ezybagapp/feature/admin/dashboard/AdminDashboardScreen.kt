@@ -45,6 +45,8 @@ import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsTab
 import bag.ezy.ezybagapp.feature.admin.Settings.SettingsScreen
 import bag.ezy.ezybagapp.ui.format.formatPrice
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 private enum class AdminSubScreen {
     Bookings,
@@ -85,26 +87,29 @@ fun AdminDashboardScreen(
     }
 ) {
     val state = vm.state
-    LaunchedEffect(Unit) { vm.load() }
 
     var subScreen by remember { mutableStateOf<AdminSubScreen?>(null) }
     var contractorInitialTab by remember { mutableStateOf(ContractorsTab.All) }
+
+    // Auto-refresh counts whenever returning to Dashboard and every 30 seconds
+    LaunchedEffect(subScreen) {
+        while (isActive) {
+            if (subScreen == null) {
+                vm.load()
+            }
+            delay(30_000L)
+        }
+    }
 
     when (subScreen) {
         AdminSubScreen.Bookings -> BookingsScreen(onBack = { subScreen = null })
         AdminSubScreen.Customers -> CustomersAdminScreen(onBack = { subScreen = null })
         AdminSubScreen.Contractors -> ContractorsAdminScreen(
             initialTab = contractorInitialTab,
-            onBack = {
-                subScreen = null
-                vm.load()
-            }
+            onBack = { subScreen = null }
         )
         AdminSubScreen.Issues -> IssuesScreen(
-            onBack = {
-                subScreen = null
-                vm.load()
-            }
+            onBack = { subScreen = null }
         )
         AdminSubScreen.Reports -> ReportsScreen(onBack = { subScreen = null })
         AdminSubScreen.Settings -> SettingsScreen(
