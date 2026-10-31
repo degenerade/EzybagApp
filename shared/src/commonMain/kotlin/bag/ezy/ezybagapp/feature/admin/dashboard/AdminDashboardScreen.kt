@@ -43,6 +43,7 @@ import bag.ezy.ezybagapp.feature.admin.IssuesScreen
 import bag.ezy.ezybagapp.feature.admin.ReportsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsTab
+import bag.ezy.ezybagapp.feature.admin.Settings.SettingsScreen
 import bag.ezy.ezybagapp.ui.format.formatPrice
 
 private enum class AdminSubScreen {
@@ -50,7 +51,8 @@ private enum class AdminSubScreen {
     Customers,
     Contractors,
     Issues,
-    Reports
+    Reports,
+    Settings
 }
 
 @Composable
@@ -105,6 +107,10 @@ fun AdminDashboardScreen(
             }
         )
         AdminSubScreen.Reports -> ReportsScreen(onBack = { subScreen = null })
+        AdminSubScreen.Settings -> SettingsScreen(
+            onSignOut = onOpenAccount,
+            onBack = { subScreen = null }
+        )
         null -> {
             Column(
                 modifier = Modifier
@@ -149,7 +155,7 @@ fun AdminDashboardScreen(
                         }
 
                         AccountAvatar(
-                            onClick = onOpenAccount
+                            onClick = { subScreen = AdminSubScreen.Settings }
                         )
                     }
                 }
