@@ -306,8 +306,9 @@ fun App() {
 
                 Screen.AdminDashboard -> AdminDashboardScreen(
                     onOpenAccount = {
-                        customerTab = MainTab.Account
-                        screen = Screen.Home
+                        authVm.signOut {
+                            screen = Screen.SignIn
+                        }
                     }
                 )
 
