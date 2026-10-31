@@ -48,6 +48,7 @@ import bag.ezy.ezybagapp.di.AppContainer
 
 @Composable
 fun ContractorsAdminScreen(
+    initialTab: ContractorsTab = ContractorsTab.All,
     vm: ContractorsAdminViewModel = viewModel {
         ContractorsAdminViewModel(
             AppContainer.contractorRepository,
@@ -55,7 +56,10 @@ fun ContractorsAdminScreen(
     },
     onBack: () -> Unit
 ) {
-    LaunchedEffect(Unit) { vm.load() }
+    LaunchedEffect(initialTab) {
+        vm.selectTab(initialTab)
+        vm.load()
+    }
 
     ContractorsScreenContent(
         state = vm.state,

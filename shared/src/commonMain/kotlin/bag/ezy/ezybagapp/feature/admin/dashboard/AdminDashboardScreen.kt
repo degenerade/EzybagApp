@@ -42,6 +42,7 @@ import bag.ezy.ezybagapp.feature.admin.customers.CustomersAdminScreen
 import bag.ezy.ezybagapp.feature.admin.IssuesScreen
 import bag.ezy.ezybagapp.feature.admin.ReportsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
+import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsTab
 import bag.ezy.ezybagapp.ui.format.formatPrice
 
 private enum class AdminSubScreen {
@@ -85,13 +86,24 @@ fun AdminDashboardScreen(
     LaunchedEffect(Unit) { vm.load() }
 
     var subScreen by remember { mutableStateOf<AdminSubScreen?>(null) }
+    var contractorInitialTab by remember { mutableStateOf(ContractorsTab.All) }
 
     when (subScreen) {
         AdminSubScreen.Bookings -> BookingsScreen(onBack = { subScreen = null })
         AdminSubScreen.Customers -> CustomersAdminScreen(onBack = { subScreen = null })
-        AdminSubScreen.Contractors -> ContractorsAdminScreen(onBack = { subScreen = null})
-        AdminSubScreen.Issues -> IssuesScreen(onBack = { subScreen = null
-            vm.load()})
+        AdminSubScreen.Contractors -> ContractorsAdminScreen(
+            initialTab = contractorInitialTab,
+            onBack = {
+                subScreen = null
+                vm.load()
+            }
+        )
+        AdminSubScreen.Issues -> IssuesScreen(
+            onBack = {
+                subScreen = null
+                vm.load()
+            }
+        )
         AdminSubScreen.Reports -> ReportsScreen(onBack = { subScreen = null })
         null -> {
             Column(
@@ -170,7 +182,10 @@ fun AdminDashboardScreen(
                     MetricCard(
                         title = "Contractors",
                         value = state.totalContractors?.toString() ?: "—",
-                        onClick = { subScreen = AdminSubScreen.Contractors },
+                        onClick = {
+                            contractorInitialTab = ContractorsTab.All
+                            subScreen = AdminSubScreen.Contractors
+                        },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -195,8 +210,6 @@ fun AdminDashboardScreen(
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
-
-                //Pending Actions space
 
                 val unresolvedCount = state.totalUnresolvedIssues ?: 0
                 val unverifiedCount = state.totalUnverifiedContractors ?: 0
@@ -232,7 +245,10 @@ fun AdminDashboardScreen(
                     }
                     PendingActionCard(
                         text = contractorText,
-                        onClick = { subScreen = AdminSubScreen.Contractors }
+                        onClick = {
+                            contractorInitialTab = ContractorsTab.Pending
+                            subScreen = AdminSubScreen.Contractors
+                        }
                     )
                 }
             }
