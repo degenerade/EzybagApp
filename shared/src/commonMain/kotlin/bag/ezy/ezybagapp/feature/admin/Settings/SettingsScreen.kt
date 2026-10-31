@@ -32,11 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,50 +39,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import bag.ezy.ezybagapp.model.repository.CustomerProfile
-import bag.ezy.ezybagapp.model.repository.FirebaseAuthRepository
-import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
+import bag.ezy.ezybagapp.di.AppContainer
 
 @Composable
 fun SettingsScreen(
     onSignOut: () -> Unit,
     onBack: () -> Unit = {},
+    vm: SettingsViewModel = viewModel {
+        SettingsViewModel(AppContainer.authRepository)
+    },
     modifier: Modifier = Modifier
 ) {
-    val repository = remember { FirebaseAuthRepository() }
-    val scope = rememberCoroutineScope()
-
-    var profile by remember {
-        mutableStateOf<CustomerProfile?>(null)
-    }
-    var loading by remember { mutableStateOf(true) }
-
-    var expandedSection by remember {
-        mutableStateOf<String?>(null)
-    }
-
-    var phone by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-
-    var currentPassword by remember { mutableStateOf("") }
-    var newPassword by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var changingPassword by remember { mutableStateOf(false) }
-    var passwordMessage by remember { mutableStateOf<String?>(null) }
-    var passwordChangeSucceeded by remember { mutableStateOf(false) }
-
-    // Account deletion state
-    var deletingAccount by remember { mutableStateOf(false) }
-    var deleteAccountPassword by remember { mutableStateOf("") }
-    var deleteAccountMessage by remember { mutableStateOf<String?>(null) }
-    var deleteAccountSucceeded by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        profile = repository.getCurrentCustomerProfile()
-        phone = profile?.phone.orEmpty()
-        address = profile?.address.orEmpty()
-        loading = false
-    }
+    val state = vm.state
+    LaunchedEffect(Unit) { vm.load() }
 
     Scaffold(modifier = modifier) { innerPadding ->
         Column(
@@ -104,22 +69,14 @@ fun SettingsScreen(
             Spacer(Modifier.height(8.dp))
 
             when {
-                loading -> Text("Loading account...")
+                state.loading -> Text("Loading account...")
 
-                profile != null -> {
-                    val customer = profile!!
+                state.profile != null -> {
+                    val customer = state.profile
                     ProfileHeader(
                         name = customer.name.ifBlank { "Admin" },
-                        email = customer.email.ifBlank {
-                            "No email available"
-                        },
-//                        phone = customer.phone.ifBlank {
-//                            "Phone not added"
-//                        },
-                        initial = customer.name
-                            .firstOrNull()
-                            ?.uppercase()
-                            ?: "A"
+                        email = customer.email.ifBlank { "No email available" },
+                        initial = customer.name.firstOrNull()?.uppercase() ?: "A"
                     )
                 }
 
@@ -138,60 +95,17 @@ fun SettingsScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-//            ExpandableRow(
-//                title = "Privacy and data",
-//                expanded = expandedSection == "privacy",
-//                onClick = {
-//                    expandedSection =
-//                        if (expandedSection == "privacy") null
-//                        else "privacy"
-//                }
-//            )
-
-//            if (expandedSection == "privacy") {
-//                Column(
-//                    modifier = Modifier.padding(16.dp),
-//                    verticalArrangement = Arrangement.spacedBy(8.dp)
-//                ) {
-//                    Text(
-//                        "Information stored",
-//                        fontWeight = FontWeight.Bold
-//                    )
-//                    Text(
-//                        "EzybagApp may store your name, email to provide and manage the service."
-//                    )
-//
-//                    Text(
-//                        "How it is used",
-//                        fontWeight = FontWeight.Bold
-//                    )
-//                    Text(
-//                        "Your information is used to manage your account, arrange bookings and provide support."
-//                    )
-//                }
-//            }
-
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant
             )
 
             ExpandableRow(
                 title = "Change password",
-                expanded = expandedSection == "password",
-                onClick = {
-                    expandedSection =
-                        if (expandedSection == "password") null
-                        else "password"
-
-                    currentPassword = ""
-                    newPassword = ""
-                    confirmPassword = ""
-                    passwordMessage = null
-                    passwordChangeSucceeded = false
-                }
+                expanded = state.expandedSection == "password",
+                onClick = { vm.toggleSection("password") }
             )
 
-            if (expandedSection == "password") {
+            if (state.expandedSection == "password") {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -206,106 +120,42 @@ fun SettingsScreen(
                     )
 
                     OutlinedTextField(
-                        value = currentPassword,
-                        onValueChange = {
-                            currentPassword = it
-                            passwordMessage = null
-                            passwordChangeSucceeded = false
-                        },
+                        value = state.currentPassword,
+                        onValueChange = vm::onCurrentPasswordChange,
                         label = { Text("Current password") },
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !changingPassword
+                        enabled = !state.changingPassword
                     )
 
                     OutlinedTextField(
-                        value = newPassword,
-                        onValueChange = {
-                            newPassword = it
-                            passwordMessage = null
-                            passwordChangeSucceeded = false
-                        },
+                        value = state.newPassword,
+                        onValueChange = vm::onNewPasswordChange,
                         label = { Text("New password") },
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !changingPassword
+                        enabled = !state.changingPassword
                     )
 
                     OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = {
-                            confirmPassword = it
-                            passwordMessage = null
-                            passwordChangeSucceeded = false
-                        },
+                        value = state.confirmPassword,
+                        onValueChange = vm::onConfirmPasswordChange,
                         label = { Text("Confirm new password") },
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !changingPassword
+                        enabled = !state.changingPassword
                     )
 
                     Button(
-                        onClick = {
-                            passwordMessage = null
-                            passwordChangeSucceeded = false
-
-                            when {
-                                currentPassword.isBlank() -> {
-                                    passwordMessage =
-                                        "Enter your current password."
-                                }
-
-                                newPassword.length < 8 -> {
-                                    passwordMessage =
-                                        "Your new password must contain at least 8 characters."
-                                }
-
-                                newPassword != confirmPassword -> {
-                                    passwordMessage =
-                                        "The new passwords do not match."
-                                }
-
-                                currentPassword == newPassword -> {
-                                    passwordMessage =
-                                        "Your new password must be different from your current password."
-                                }
-
-                                else -> {
-                                    scope.launch {
-                                        changingPassword = true
-
-                                        try {
-                                            repository.changePassword(
-                                                currentPassword = currentPassword,
-                                                newPassword = newPassword
-                                            ).onSuccess {
-                                                passwordChangeSucceeded = true
-                                                passwordMessage =
-                                                    "Password changed successfully."
-
-                                                currentPassword = ""
-                                                newPassword = ""
-                                                confirmPassword = ""
-                                            }.onFailure { error ->
-                                                passwordMessage =
-                                                    error.message
-                                                        ?: "Unable to change password. Check your current password and try again."
-                                            }
-                                        } finally {
-                                            changingPassword = false
-                                        }
-                                    }
-                                }
-                            }
-                        },
+                        onClick = vm::changePassword,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !changingPassword
+                        enabled = !state.changingPassword
                     ) {
                         Text(
-                            if (changingPassword) {
+                            if (state.changingPassword) {
                                 "Changing password..."
                             } else {
                                 "Change password"
@@ -313,10 +163,10 @@ fun SettingsScreen(
                         )
                     }
 
-                    passwordMessage?.let { message ->
+                    state.passwordMessage?.let { message ->
                         Text(
                             text = message,
-                            color = if (passwordChangeSucceeded) {
+                            color = if (state.passwordChangeSucceeded) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.error
@@ -345,12 +195,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(8.dp))
 
             OutlinedButton(
-                onClick = {
-                    expandedSection = "delete"
-                    deleteAccountPassword = ""
-                    deleteAccountMessage = null
-                    deleteAccountSucceeded = false
-                },
+                onClick = { vm.toggleSection("delete") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -369,7 +214,7 @@ fun SettingsScreen(
                 )
             }
 
-            if (expandedSection == "delete") {
+            if (state.expandedSection == "delete") {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -391,23 +236,19 @@ fun SettingsScreen(
                     )
 
                     OutlinedTextField(
-                        value = deleteAccountPassword,
-                        onValueChange = {
-                            deleteAccountPassword = it
-                            deleteAccountMessage = null
-                            deleteAccountSucceeded = false
-                        },
+                        value = state.deleteAccountPassword,
+                        onValueChange = vm::onDeletePasswordChange,
                         label = { Text("Current password") },
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !deletingAccount
+                        enabled = !state.deletingAccount
                     )
 
-                    deleteAccountMessage?.let { message ->
+                    state.deleteAccountMessage?.let { message ->
                         Text(
                             text = message,
-                            color = if (deleteAccountSucceeded) {
+                            color = if (state.deleteAccountSucceeded) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.error
@@ -417,57 +258,15 @@ fun SettingsScreen(
                     }
 
                     Button(
-                        onClick = {
-                            if (deleteAccountPassword.isBlank()) {
-                                deleteAccountMessage =
-                                    "Enter your current password to continue."
-                            } else {
-                                scope.launch {
-                                    deletingAccount = true
-                                    deleteAccountMessage = null
-                                    deleteAccountSucceeded = false
-
-                                    try {
-                                        val result =
-                                            repository.deleteCurrentAccount(
-                                                currentPassword = deleteAccountPassword
-                                            )
-
-                                        result.fold(
-                                            onSuccess = {
-                                                deleteAccountSucceeded = true
-                                                deleteAccountMessage =
-                                                    "Your Firebase sign-in account was deleted."
-
-                                                deleteAccountPassword = ""
-
-                                                repository.signOut()
-                                                onSignOut()
-                                            },
-                                            onFailure = { error ->
-                                                deleteAccountMessage =
-                                                    error.message
-                                                        ?: "Account deletion failed. Please try again."
-                                            }
-                                        )
-                                    } catch (error: Exception) {
-                                        deleteAccountMessage =
-                                            error.message
-                                                ?: "Account deletion failed. Please try again."
-                                    } finally {
-                                        deletingAccount = false
-                                    }
-                                }
-                            }
-                        },
-                        enabled = !deletingAccount,
+                        onClick = { vm.deleteAccount(onSuccess = onSignOut) },
+                        enabled = !state.deletingAccount,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error
                         )
                     ) {
                         Text(
-                            if (deletingAccount) {
+                            if (state.deletingAccount) {
                                 "Deleting account..."
                             } else {
                                 "Permanently delete account"
@@ -476,13 +275,8 @@ fun SettingsScreen(
                     }
 
                     TextButton(
-                        onClick = {
-                            expandedSection = null
-                            deleteAccountPassword = ""
-                            deleteAccountMessage = null
-                            deleteAccountSucceeded = false
-                        },
-                        enabled = !deletingAccount,
+                        onClick = { vm.toggleSection("delete") },
+                        enabled = !state.deletingAccount,
                         modifier = Modifier.align(Alignment.End)
                     ) {
                         Text("Cancel")
@@ -497,7 +291,6 @@ fun SettingsScreen(
 private fun ProfileHeader(
     name: String,
     email: String,
-//    phone: String,
     initial: String
 ) {
     Row(
@@ -528,11 +321,11 @@ private fun ProfileHeader(
                 fontWeight = FontWeight.Bold
             )
 
-//            Text(
-//                text = if (phone.isNotBlank()) "$email · $phone" else email,
-//                fontSize = 12.sp,
-//                color = MaterialTheme.colorScheme.onSurfaceVariant
-//            )
+            Text(
+                text = email,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
