@@ -48,6 +48,7 @@ import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsTab
 import bag.ezy.ezybagapp.feature.admin.Settings.SettingsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.contractordetailsadmin.ContractorDetailsAdminScreen
 import bag.ezy.ezybagapp.ui.format.formatPrice
+import bag.ezy.ezybagapp.feature.admin.RevenueScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
@@ -58,6 +59,7 @@ private enum class AdminSubScreen {
     ContractorDetails,
     Issues,
     Reports,
+    Revenue,
     Settings
 }
 
@@ -126,6 +128,9 @@ fun AdminDashboardScreen(
             onBack = { subScreen = null }
         )
         AdminSubScreen.Reports -> ReportsScreen(onBack = { subScreen = null })
+        AdminSubScreen.Revenue -> RevenueScreen(
+            onBack = { subScreen = null }
+        )
         AdminSubScreen.Settings -> SettingsScreen(
             onSignOut = onOpenAccount,
             onBack = { subScreen = null }
@@ -222,7 +227,7 @@ fun AdminDashboardScreen(
                     MetricCard(
                         title = "Revenue",
                         value = state.totalRevenue?.let { formatPrice(it) } ?: "—",
-                        onClick = { subScreen = AdminSubScreen.Reports },
+                        onClick = { subScreen = AdminSubScreen.Revenue },
                         modifier = Modifier.weight(1f)
                     )
                 }
