@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.model.data.Contractor
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 
 @Composable
 fun ContractorDetailsAdminScreen(
@@ -304,7 +304,7 @@ private val previewContractor = Contractor(
 @Preview
 @Composable
 private fun ContractorDetailsPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         ContractorDetailsAdminContent(
             state = ContractorDetailsUiState(
                 isLoading = false, contractor = previewContractor,
@@ -318,7 +318,7 @@ private fun ContractorDetailsPreview() {
 @Preview
 @Composable
 private fun ContractorDetailsNotFoundPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         ContractorDetailsAdminContent(
             state = ContractorDetailsUiState(isLoading = false, error = "Contractor not found"),
             onBack = {}, onRetry = {}, onToggleApproval = {},

@@ -25,7 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 
 @Composable
 fun ContractorJobsScreen(
@@ -268,7 +268,7 @@ private val previewState = ContractorJobsUiState(
 @Preview
 @Composable
 private fun ContractorJobsPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         ContractorJobsContent(
             state = previewState,
             onOpenJob = {}

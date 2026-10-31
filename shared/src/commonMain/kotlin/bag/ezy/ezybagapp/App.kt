@@ -41,7 +41,7 @@ import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.feature.startpage.StartScreen
 import bag.ezy.ezybagapp.model.queries.AdminRepository
 import bag.ezy.ezybagapp.model.repository.FirebaseContractorRepository
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import kotlinx.coroutines.launch
 
 enum class Screen {
@@ -66,7 +66,7 @@ enum class Screen {
 
 @Composable
 fun App() {
-    ClearawayTheme {
+    EzybagTheme {
         var screen by rememberSaveable {
             mutableStateOf(
                 if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn

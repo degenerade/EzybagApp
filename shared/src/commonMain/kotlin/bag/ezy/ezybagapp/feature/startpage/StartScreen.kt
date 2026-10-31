@@ -26,10 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import bag.ezy.ezybagapp.feature.startpage.StartUiState
-import bag.ezy.ezybagapp.feature.startpage.StartViewModel
 import bag.ezy.ezybagapp.model.data.UserRole
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 
 @Composable
 fun StartScreen(
@@ -192,7 +190,7 @@ fun StartContent(
 @Preview(showBackground = true)
 @Composable
 private fun StartScreenPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         StartContent(
             state = StartUiState(),
             onCustomerSignUp = {},

@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
@@ -366,7 +366,7 @@ private fun SelectionChip(
 @Preview
 @Composable
 private fun NewBookingDetailsEmptyPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         NewBookingDetailsContent(
             NewBookingState(),
             {},
@@ -384,7 +384,7 @@ private fun NewBookingDetailsEmptyPreview() {
 @Preview
 @Composable
 private fun NewBookingDetailsFilledPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         NewBookingDetailsContent(
             NewBookingState(
                 address = "12 Elm Road", postcode = "M1 4BT", wasteType = "Furniture",

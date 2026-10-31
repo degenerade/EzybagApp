@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import ezybagapp.shared.generated.resources.Res
 import ezybagapp.shared.generated.resources.ic_bungalow
 import ezybagapp.shared.generated.resources.ic_calendar_month
@@ -536,7 +536,7 @@ private fun BookingsButtonsRow(
 @Preview
 @Composable
 private fun HomeContentPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         HomeContent(
             state = HomeUiState(
                 isLoading = false,

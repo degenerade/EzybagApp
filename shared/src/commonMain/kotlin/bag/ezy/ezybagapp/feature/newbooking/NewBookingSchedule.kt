@@ -46,7 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
@@ -567,7 +567,7 @@ private fun formatBookingTime(hour: Int, minute: Int): String {
 @Preview
 @Composable
 private fun NewBookingScheduleEmptyPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         NewBookingScheduleContent(
             NewBookingState(estimate = 145.0),
             {},
@@ -586,7 +586,7 @@ private fun NewBookingScheduleEmptyPreview() {
 @Preview
 @Composable
 private fun NewBookingScheduleFilledPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         NewBookingScheduleContent(
             NewBookingState(
                 wasteType = "Furniture", volume = "Small", estimate = 70.0,

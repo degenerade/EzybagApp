@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import ezybagapp.shared.generated.resources.Res
 import ezybagapp.shared.generated.resources.call
 import ezybagapp.shared.generated.resources.cancel
@@ -495,7 +495,7 @@ private fun ButtonsRow(modifier: Modifier = Modifier.Companion) {
 @Preview
 @Composable
 private fun BookingDetailsPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         BookingDetailsContent(
             state = BookingDetailsUiState(
                 isLoading = false,
@@ -511,7 +511,7 @@ private fun BookingDetailsPreview() {
 @Preview
 @Composable
 private fun BookingDetailsNotFoundPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         BookingDetailsContent(BookingDetailsUiState(isLoading = false, error = "Booking not found"), onBack = {})
     }
 }
