@@ -9,6 +9,7 @@ import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.model.data.Customer
 import bag.ezy.ezybagapp.model.queries.AdminRepository
 import bag.ezy.ezybagapp.model.repository.CustomerRepository
+import bag.ezy.ezybagapp.ui.format.formatDisplayDateTime
 import kotlinx.coroutines.launch
 
 data class CustomersAdminUiModel(
@@ -98,6 +99,6 @@ class CustomersAdminViewModel(
         lastName = lastName,
         email = email,
         phone = phone,
-        createdAt = createdAt
+        createdAt = formatDisplayDateTime(createdAt)
     )
 }

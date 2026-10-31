@@ -38,35 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-
-private val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-
-private fun formatCreatedDateTime(raw: String): String {
-    if (raw.isBlank()) return ""
-    val millis = raw.toLongOrNull()
-    if (millis != null) {
-        return runCatching {
-            val instant = Instant.fromEpochMilliseconds(millis)
-            val dt = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-            val monthStr = months.getOrNull(dt.month.ordinal) ?: ""
-            val minStr = dt.minute.toString().padStart(2, '0')
-            val hourStr = dt.hour.toString().padStart(2, '0')
-            "${dt.day} $monthStr ${dt.year}, $hourStr:$minStr"
-        }.getOrDefault(raw)
-    }
-    val instant = runCatching { Instant.parse(raw) }.getOrNull()
-    if (instant != null) {
-        val dt = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        val monthStr = months.getOrNull(dt.month.ordinal) ?: ""
-        val minStr = dt.minute.toString().padStart(2, '0')
-        val hourStr = dt.hour.toString().padStart(2, '0')
-        return "${dt.day} $monthStr ${dt.year}, $hourStr:$minStr"
-    }
-    return raw
-}
 
 @Composable
 fun CustomersAdminScreen(
@@ -272,7 +243,7 @@ private fun CustomerAdminCard(
 
             if (customer.createdAt.isNotBlank()) {
                 Text(
-                    text = "Joined: ${formatCreatedDateTime(customer.createdAt)}",
+                    text = "Joined: ${customer.createdAt}",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

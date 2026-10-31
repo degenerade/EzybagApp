@@ -31,9 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import bag.ezy.ezybagapp.ui.format.formatDisplayDateTime
 
 @Composable
 fun IssuesScreen(
@@ -239,7 +237,8 @@ private fun IssueCard(
             )
 
             Text(
-                text = "Submitted: ${formatIssueDate(report.createdAt)}",
+                text = "Submitted: ${formatDisplayDateTime(report.createdAt)
+                    .ifBlank { "Date unavailable" }}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -264,25 +263,5 @@ private fun IssueCard(
                 }
             }
         }
-    }
-}
-
-private fun formatIssueDate(timestamp: Long): String {
-    if (timestamp <= 0L) return "Date unavailable"
-
-    return try {
-        val dateTime = Instant
-            .fromEpochMilliseconds(timestamp)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-
-        val day = dateTime.dayOfMonth.toString().padStart(2, '0')
-        val month = dateTime.monthNumber.toString().padStart(2, '0')
-        val year = dateTime.year
-        val hour = dateTime.hour.toString().padStart(2, '0')
-        val minute = dateTime.minute.toString().padStart(2, '0')
-
-        "$day/$month/$year, $hour:$minute"
-    } catch (_: Exception) {
-        "Date unavailable"
     }
 }
