@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.contractorjobs
 
 import androidx.compose.foundation.background
@@ -11,21 +12,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
 
 @Composable
 fun ContractorJobsScreen(
@@ -36,16 +37,17 @@ fun ContractorJobsScreen(
 ) {
     ContractorJobsContent(
         state = vm.state,
-        onOpenJob = onOpenJob
+        onOpenJob = onOpenJob,
+        onRefresh = vm::loadAvailableJobs
     )
 }
 
 @Composable
 fun ContractorJobsContent(
     state: ContractorJobsUiState,
-    onOpenJob: (String) -> Unit
+    onOpenJob: (String) -> Unit,
+    onRefresh: () -> Unit
 ) {
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -60,218 +62,160 @@ fun ContractorJobsContent(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        Text(
-            text = "Within ${state.radiusMiles} miles",
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(
-            modifier = Modifier.height(24.dp)
-        )
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "${state.nearbyCount} nearby opportunities",
+            text = "${state.jobs.size} available opportunities",
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
+        Spacer(modifier = Modifier.height(20.dp))
 
-        Text(
-            text = "List / map · ${state.area} · all waste types",
-            fontSize = 13.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(
-            modifier = Modifier.height(24.dp)
-        )
-
-        MapPlaceholder(
-            radiusMiles = state.radiusMiles
-        )
-
-        Spacer(
-            modifier = Modifier.height(28.dp)
-        )
-
-        Card(
+        Button(
+            onClick = onRefresh,
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+            enabled = !state.isLoading
         ) {
+            Text("Refresh jobs")
+        }
 
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
+        Spacer(modifier = Modifier.height(16.dp))
 
-                state.jobs.forEachIndexed { index, job ->
+        when {
+            state.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
 
-                    JobRow(
-                        job = job,
-                        onClick = {
-                            onOpenJob(job.reference)
-                        }
+            state.error != null -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = state.error,
+                        color = MaterialTheme.colorScheme.error
                     )
 
-                    if (index < state.jobs.lastIndex) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.outline
-                                )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(onClick = onRefresh) {
+                        Text("Try again")
+                    }
+                }
+            }
+
+            state.jobs.isEmpty() -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No available jobs at the moment.\nPlease check again later.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = state.jobs,
+                        key = { it.reference }
+                    ) { job ->
+
+                        JobCard(
+                            job = job,
+                            onClick = {
+                                onOpenJob(job.reference)
+                            }
                         )
                     }
                 }
             }
         }
-
-        Spacer(
-            modifier = Modifier.weight(1f)
-        )
-
-        Button(
-            onClick = {
-                state.nearestJob?.let { job ->
-                    onOpenJob(job.reference)
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Open nearest job")
-        }
     }
 }
 
 @Composable
-private fun MapPlaceholder(
-    radiusMiles: Int
-) {
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(170.dp)
-            .background(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = MaterialTheme.shapes.medium
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-
-        Text(
-            text = "Map / route preview",
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Medium
-        )
-
-        Surface(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(12.dp),
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surface
-        ) {
-
-            Text(
-                text = "Live route · $radiusMiles min away",
-                modifier = Modifier.padding(
-                    horizontal = 12.dp,
-                    vertical = 8.dp
-                ),
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-@Composable
-private fun JobRow(
+private fun JobCard(
     job: ContractorJobUiModel,
     onClick: () -> Unit
 ) {
-
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                onClick()
-            }
-            .padding(
-                horizontal = 10.dp,
-                vertical = 12.dp
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
     ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = job.reference,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-        Column {
+                Text(
+                    text = job.price,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "${job.reference} · ${job.time}",
-                fontSize = 12.sp,
+                text = job.wasteType,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = job.time,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(
-                modifier = Modifier.height(4.dp)
-            )
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "${job.wasteType} · ${job.distanceMiles} mi",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground
+                text = job.address,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "View job details →",
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
             )
         }
-
-        Text(
-            text = job.price,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-    }
-}
-
-private val previewState = ContractorJobsUiState(
-    radiusMiles = 18,
-    nearbyCount = 5,
-    area = "South London",
-    jobs = listOf(
-        ContractorJobUiModel(
-            reference = "CC-10518",
-            time = "Today 16:00",
-            wasteType = "Furniture",
-            distanceMiles = 6.1,
-            price = "£88.40"
-        ),
-        ContractorJobUiModel(
-            reference = "CC-10522",
-            time = "Tomorrow 09:00",
-            wasteType = "Construction",
-            distanceMiles = 10.4,
-            price = "£144.70"
-        )
-    )
-)
-
-@Preview
-@Composable
-private fun ContractorJobsPreview() {
-    ClearawayTheme {
-        ContractorJobsContent(
-            state = previewState,
-            onOpenJob = {}
-        )
     }
 }
