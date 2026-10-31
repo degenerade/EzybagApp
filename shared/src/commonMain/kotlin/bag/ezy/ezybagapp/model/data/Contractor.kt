@@ -21,6 +21,5 @@ data class Contractor(
     val proofOfInsuranceUrl: String? = null,
     val proofOfIdentityUrl: String? = null,
     val currentJobId: String? = null,
-    val status: String = "Offline",
     val location: GeoLocation? = null
 )

@@ -4,12 +4,14 @@ package bag.ezy.ezybagapp.model.repository
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
+import kotlin.contracts.contract
 
 interface ReviewRepository {
     suspend fun submitReview(
         bookingId: String,
         rating: Int,
-        comment: String
+        comment: String,
+        contractorId: String = ""
     ): Result<Unit>
 }
 
@@ -21,7 +23,8 @@ class FirebaseReviewRepository : ReviewRepository {
     override suspend fun submitReview(
         bookingId: String,
         rating: Int,
-        comment: String
+        comment: String,
+        contractorId: String
     ): Result<Unit> = runCatching {
         require(bookingId.isNotBlank()) {
             "Booking ID is required."
@@ -38,6 +41,7 @@ class FirebaseReviewRepository : ReviewRepository {
             "customerId" to customerId,
             "rating" to rating,
             "comment" to comment.trim(),
+            "contractorId" to contractorId,
             "createdAt" to ""
         )
 

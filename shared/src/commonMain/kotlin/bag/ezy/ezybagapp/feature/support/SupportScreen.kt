@@ -136,7 +136,7 @@ fun SupportScreen() {
                 title = {
                     Text(
                         text = "Support",
-                        fontSize = 20.sp,
+                        fontSize = 25.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
                 }
