@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp.model.repository
 
 import bag.ezy.ezybagapp.model.data.Booking
@@ -247,7 +246,8 @@ class FirebaseBookingRepository : BookingRepository {
     }
 
     override suspend fun deleteBooking(bookingId: String): Result<Unit> = runCatching {
-        // TODO: Delete booking document from Firestore
+        require(bookingId.isNotBlank()) { "Booking ID is required." }
+        bookingsCollection.document(bookingId).delete()
     }
 
     override suspend fun selectContractor(
