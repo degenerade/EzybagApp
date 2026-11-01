@@ -62,18 +62,21 @@ class HomeViewModel(
 
     fun selectFilter(filter: HomeBookingFilter) { state = state.copy(filter = filter) }
 
-    private fun Booking.toUi() = HomeBookingUiModel(
-        id = bookingId,
-        title = listOf(wasteDetails.type, wasteDetails.estimatedVolume).filter { it.isNotBlank() }.joinToString(" · "),
-        address = listOf(collectionAddress.street, collectionAddress.postcode).filter { it.isNotBlank() }.joinToString(", "),
-        status = status,
-        dateTime = listOf(formatDisplayDate(schedule.preferredDate), formatDisplayTime(schedule.preferredTime))
-            .filter { it.isNotBlank() }.joinToString(" · "),
-        price = if (pricing.estimatedQuote > 0) formatPrice(pricing.estimatedQuote) else "",
-        filter = when (status) {
-            "Completed" -> HomeBookingFilter.Completed
-            "Cancelled" -> null
-            else -> HomeBookingFilter.Upcoming
-        },
-    )
+    private fun Booking.toUi(): HomeBookingUiModel {
+        val effectiveStatus = if (paymentstatus.equals("pending", ignoreCase = true)) "Pending" else status
+        return HomeBookingUiModel(
+            id = bookingId,
+            title = listOf(wasteDetails.type, wasteDetails.estimatedVolume).filter { it.isNotBlank() }.joinToString(" · "),
+            address = listOf(collectionAddress.street, collectionAddress.postcode).filter { it.isNotBlank() }.joinToString(", "),
+            status = effectiveStatus,
+            dateTime = listOf(formatDisplayDate(schedule.preferredDate), formatDisplayTime(schedule.preferredTime))
+                .filter { it.isNotBlank() }.joinToString(" · "),
+            price = if (pricing.estimatedQuote > 0) formatPrice(pricing.estimatedQuote) else "",
+            filter = when (effectiveStatus) {
+                "Completed" -> HomeBookingFilter.Completed
+                "Cancelled" -> null
+                else -> HomeBookingFilter.Upcoming
+            },
+        )
+    }
 }

@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp.model.repository
 
 import bag.ezy.ezybagapp.model.data.Booking
@@ -43,7 +42,10 @@ interface BookingRepository {
     suspend fun countAllBookings(): Result<Int>
     suspend fun deleteBooking(bookingId: String = ""): Result<Unit>
     suspend fun getBookingsForContractor(contractorId: String): Result<List<Booking>>
-
+    suspend fun updatePaymentStatus(
+        bookingId: String,
+        status: String
+    ): Result<Unit>
 }
 
 
@@ -191,13 +193,47 @@ class FirebaseBookingRepository : BookingRepository {
             bookingId = document.id,
             customerId = uid,
             contractorId = null,
-            status = "Upcoming",
+            status = if (booking.paymentstatus.equals("pending", ignoreCase = true)) "Pending" else booking.status.ifBlank { "Pending" },
+            paymentstatus = booking.paymentstatus.ifBlank { "pending" },
             assigned = false,
             createdAt = now
         )
 
         document.set(bookingToSave)
         document.id
+    }
+
+    override suspend fun updatePaymentStatus(
+        bookingId: String,
+        status: String
+    ): Result<Unit> = runCatching {
+        require(bookingId.isNotBlank()) {
+            "Booking ID is required."
+        }
+
+        val updates: Map<String, Any> = when (status.lowercase()) {
+            "pending" -> mapOf(
+                "paymentstatus" to "pending",
+                "status" to "Pending"
+            )
+            "failed" -> mapOf(
+                "paymentstatus" to "failed",
+                "status" to "Failed"
+            )
+            "canceled", "cancelled" -> mapOf(
+                "paymentstatus" to "canceled",
+                "status" to "Cancelled"
+            )
+            "successful", "completed" -> mapOf(
+                "paymentstatus" to "successful",
+                "status" to "Upcoming"
+            )
+            else -> mapOf(
+                "paymentstatus" to status
+            )
+        }
+
+        bookingsCollection.document(bookingId).update(updates)
     }
 
     override suspend fun requestFinalQuote(
@@ -247,7 +283,8 @@ class FirebaseBookingRepository : BookingRepository {
     }
 
     override suspend fun deleteBooking(bookingId: String): Result<Unit> = runCatching {
-        // TODO: Delete booking document from Firestore
+        require(bookingId.isNotBlank()) { "Booking ID is required." }
+        bookingsCollection.document(bookingId).delete()
     }
 
     override suspend fun selectContractor(

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,13 +55,15 @@ import org.jetbrains.compose.resources.stringResource
 fun BookingDetailsScreen(
     bookingId: String,
     onBack: () -> Unit,
+    onRateContractor: ((bookingId: String, contractorId: String) -> Unit)? = null,
     vm: BookingDetailsViewModel = viewModel(key = "booking-$bookingId") {
         BookingDetailsViewModel(bookingId, AppContainer.bookingRepository)
     }
 ) {
     BookingDetailsContent(
         state = vm.state,
-        onBack = onBack
+        onBack = onBack,
+        onRateContractor = onRateContractor
     )
 }
 
@@ -69,6 +72,7 @@ fun BookingDetailsScreen(
 fun BookingDetailsContent(
     state: BookingDetailsUiState,
     onBack: () -> Unit,
+    onRateContractor: ((bookingId: String, contractorId: String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -107,7 +111,6 @@ fun BookingDetailsContent(
                     date = state.date,
                     time = state.time
                 )
-                Map()
                 Job(
                     description = state.description,
                     volume = state.volume,
@@ -115,21 +118,38 @@ fun BookingDetailsContent(
                 )
                 Collection(
                     address = state.address,
-                    access = "Side gate, code 1234", // todo
-                    instructions = "Call on arrival" // todo
+                    access = state.accessInfo,
+                    instructions = state.specialInstructions
                 )
-                Contractor(
-                    contractorName = "Jake R.", // todo
-                    contractorInitial = "J", // todo
-                    contractorRating = "4.8", // todo
-                    contractorCompanyName = "Drop Waste Ltd" // todo
-                )
+                if (state.assigned) {
+                    Contractor(
+                        contractorName = state.contractorName,
+                        contractorInitial = state.contractorInitial,
+                        contractorRating = state.contractorRating,
+                        contractorCompanyName = state.contractorCompanyName
+                    )
+                }
                 Payment(
                     totalPrice = state.price,
-                    paymentStatus = "Paid", // todo
-                    paymentMethod = "Visa ending 4417" // todo
+                    paymentStatus = state.paymentStatus,
+                    paymentMethod = "Stripe"
                 )
-                ButtonsRow()
+                if (state.status.equals("Completed", ignoreCase = true) && onRateContractor != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onRateContractor(state.bookingId, state.contractorId)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "Rate contractor",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }
@@ -199,23 +219,6 @@ private fun JobStatusAndDateRow(
     }
 }
 
-@Composable
-private fun Map(modifier: Modifier = Modifier.Companion) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Map Preview",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
 
 @Composable
 private fun Job(
@@ -345,33 +348,6 @@ private fun Contractor(
                     }
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = {},
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-                ) {
-                    Text(
-                        text = stringResource(Res.string.message),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                OutlinedButton(
-                    onClick = {},
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-                ) {
-                    Text(
-                        text = stringResource(Res.string.call),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
         }
     }
 }
@@ -446,48 +422,6 @@ private fun CardRows(
         ) {
             Text(text = parameterHeaderThree, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(text = parameterNameThree, fontWeight = FontWeight.SemiBold)
-        }
-    }
-}
-
-@Composable
-private fun ButtonsRow(modifier: Modifier = Modifier.Companion) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        OutlinedButton(
-            onClick = {},
-            modifier = Modifier.weight(1f).height(40.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-        ) {
-            Text(
-                text = stringResource(Res.string.edit_booking),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        OutlinedButton(
-            onClick = {},
-            modifier = Modifier.weight(1f).height(40.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-        ) {
-            Text(
-                text = stringResource(Res.string.cancel),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        Button(
-            onClick = {},
-            modifier = Modifier.weight(1f).height(40.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-        ) {
-            Text(
-                text = stringResource(Res.string.get_help),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            )
         }
     }
 }
