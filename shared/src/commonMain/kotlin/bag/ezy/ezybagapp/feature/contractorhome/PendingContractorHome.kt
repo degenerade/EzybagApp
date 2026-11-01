@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.contractorhome
 
 import androidx.compose.foundation.layout.Arrangement
@@ -19,18 +20,17 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun PendingContractorHome(
-    firstName: String,
+    contactName: String,
     companyName: String
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(20.dp),
-        verticalArrangement =
-            Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Hi ${firstName.ifBlank { "there" }}",
+            text = "Hi ${contactName.ifBlank { "there" }}",
             fontSize = 26.sp,
             fontWeight = FontWeight.ExtraBold
         )
@@ -39,8 +39,7 @@ fun PendingContractorHome(
             Text(
                 text = companyName,
                 fontSize = 14.sp,
-                color =
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -51,21 +50,18 @@ fun PendingContractorHome(
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor =
-                    MaterialTheme.colorScheme.primaryContainer
+                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
-                verticalArrangement =
-                    Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = "Application pending",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color =
-                        MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 Text(
@@ -76,8 +72,7 @@ fun PendingContractorHome(
                 Text(
                     text = "Once your account has been approved, you'll be able to view your jobs and access available work.",
                     fontSize = 14.sp,
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -85,8 +80,7 @@ fun PendingContractorHome(
         Text(
             text = "You can still use Account to view your submitted details, or Support if you need help.",
             fontSize = 14.sp,
-            color =
-                MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

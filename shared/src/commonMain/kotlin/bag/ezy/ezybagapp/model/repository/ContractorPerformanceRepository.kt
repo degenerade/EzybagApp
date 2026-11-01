@@ -54,7 +54,7 @@ class ContractorPerformanceRepository {
 
             ContractorStats(
                 contractorName = contractor.companyName.ifBlank {
-                    "${contractor.firstName} ${contractor.lastName}".trim()
+                    contractor.contactName
                 },
                 assignedJobs = contractorBookings.size,
                 completedJobs = completedJobs
