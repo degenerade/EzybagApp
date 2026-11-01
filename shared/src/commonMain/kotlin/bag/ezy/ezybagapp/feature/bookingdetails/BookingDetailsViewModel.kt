@@ -67,16 +67,22 @@ class BookingDetailsViewModel(
                     val contractorId = booking.contractorId
                     val isAssigned = booking.assigned && !contractorId.isNullOrBlank()
 
-                    if (isAssigned && contractorId != null) {
+                    if (booking.assigned && !contractorId.isNullOrBlank()) {
                         contractorRepo.getContractor(contractorId)
                             .onSuccess { contractor ->
                                 if (contractor != null) {
                                     val name = contractor.contactName.trim()
-                                    contractorName = if (name.isNotBlank()) name else "Assigned Contractor"
+                                    contractorName = name.ifBlank { "Assigned Contractor" }
                                     contractorInitial = contractor.contactName.take(1).uppercase().ifBlank { "C" }
                                     contractorCompanyName = contractor.companyName.ifBlank { "Independent Contractor" }
                                 }
                             }
+                    }
+
+                    val effectiveStatus = if (booking.paymentstatus.equals("pending", ignoreCase = true)) {
+                        "Pending"
+                    } else {
+                        booking.status
                     }
 
                     state = BookingDetailsUiState(
@@ -85,7 +91,7 @@ class BookingDetailsViewModel(
                         contractorId = contractorId ?: "",
                         title = "${booking.wasteDetails.type} waste",
                         volume = booking.wasteDetails.estimatedVolume,
-                        status = booking.status,
+                        status = effectiveStatus,
                         paymentStatus = booking.paymentstatus.ifBlank { "pending" }.replaceFirstChar { it.uppercase() },
                         date = formatDisplayDate(booking.schedule.preferredDate),
                         time = formatDisplayTime(booking.schedule.preferredTime),

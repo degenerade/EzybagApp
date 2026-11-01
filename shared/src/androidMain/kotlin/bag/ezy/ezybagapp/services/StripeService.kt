@@ -5,7 +5,7 @@ import com.stripe.model.PaymentIntent
 import com.stripe.param.PaymentIntentCreateParams
 
 class StripeService(
-    private val apiKey: String = ""
+    private val apiKey: String = stripeSecretKey
 ) {
 
     fun createPaymentIntent(
@@ -13,7 +13,8 @@ class StripeService(
         currency: String = "gbp",
         paymentMethodId: String? = null
     ): String? {
-        val stripeClient = StripeClient(apiKey)
+        val keyToUse = apiKey.ifBlank { stripeSecretKey }
+        val stripeClient = StripeClient(keyToUse)
 
         val paramsBuilder = PaymentIntentCreateParams.builder()
             .setAmount(amount)
@@ -37,5 +38,9 @@ class StripeService(
             e.printStackTrace()
             null
         }
+    }
+
+    companion object {
+        var stripeSecretKey: String = ""
     }
 }

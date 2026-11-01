@@ -193,8 +193,8 @@ class FirebaseBookingRepository : BookingRepository {
             bookingId = document.id,
             customerId = uid,
             contractorId = null,
-            status = "Upcoming",
-            paymentstatus = "pending",
+            status = if (booking.paymentstatus.equals("pending", ignoreCase = true)) "Pending" else booking.status.ifBlank { "Pending" },
+            paymentstatus = booking.paymentstatus.ifBlank { "pending" },
             assigned = false,
             createdAt = now
         )
@@ -212,6 +212,10 @@ class FirebaseBookingRepository : BookingRepository {
         }
 
         val updates: Map<String, Any> = when (status.lowercase()) {
+            "pending" -> mapOf(
+                "paymentstatus" to "pending",
+                "status" to "Pending"
+            )
             "failed" -> mapOf(
                 "paymentstatus" to "failed",
                 "status" to "Failed"

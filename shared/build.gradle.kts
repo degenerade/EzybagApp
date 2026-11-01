@@ -56,6 +56,9 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
+            implementation("com.stripe:stripe-android:23.25.1")
+            // Include the financial connections SDK to support US bank account as a payment method
+            implementation("com.stripe:financial-connections:23.25.1")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -73,9 +76,6 @@ kotlin {
             implementation("io.github.vinceglb:filekit-compose:0.8.8")
             implementation(libs.kotlinx.datetime)
             implementation("com.stripe:stripe-java:34.0.0")
-            implementation("com.stripe:stripe-android:23.25.1")
-            // Include the financial connections SDK to support US bank account as a payment method
-            implementation("com.stripe:financial-connections:23.25.1")
             implementation("io.github.cdimascio:dotenv-java:3.2.0")
         }
         commonTest.dependencies {
