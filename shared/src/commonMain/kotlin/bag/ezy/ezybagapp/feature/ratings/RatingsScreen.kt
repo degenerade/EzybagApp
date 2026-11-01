@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
-import bag.ezy.ezybagapp.ui.theme.ClearawayTheme
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 
 private val RatingAccentGreen = Color(0xFF1E6F5C)
 private val RatingIssueColor = Color(0xFFC4472F)
@@ -297,7 +297,7 @@ fun RatingsContent(
 @Preview
 @Composable
 private fun RatingsEmptyPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         RatingsContent(
             state = RatingsUiState(),
             onRatingSelected = {},
@@ -312,7 +312,7 @@ private fun RatingsEmptyPreview() {
 @Preview
 @Composable
 private fun RatingsErrorPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         RatingsContent(
             state = RatingsUiState(
                 rating = 4,
@@ -331,7 +331,7 @@ private fun RatingsErrorPreview() {
 @Preview
 @Composable
 private fun RatingsSubmittedPreview() {
-    ClearawayTheme {
+    EzybagTheme {
         RatingsContent(
             state = RatingsUiState(
                 rating = 5,

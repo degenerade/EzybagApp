@@ -5,8 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Contractor(
     val uid: String = "",
-    val firstName: String = "",
-    val lastName: String = "",
+    val contactName: String = "",
     val email: String = "",
     val phone: String = "",
     val companyName: String = "",

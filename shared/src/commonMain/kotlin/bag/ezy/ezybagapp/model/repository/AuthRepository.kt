@@ -279,18 +279,15 @@ class FirebaseAuthRepository : AuthRepository {
             password = currentPassword
         )
 
-        // Step 1: Verify the customer's identity.
+        // Step 1: Verify the account holder's identity.
         user.reauthenticate(credential)
 
-        // Step 2: Delete only the customer's profile document.
-        // This uses the UID, not the email address.
-        // No bookings, reviews, contractor records, or support
-        // reports are deleted by this operation.
-        customers.document(uid).delete()
+        // Step 2: Delete profile/credential documents across Firestore collections.
+        runCatching { customers.document(uid).delete() }
+        runCatching { firestore.collection("users").document(uid).delete() }
+        runCatching { firestore.collection("admins").document(uid).delete() }
 
         // Step 3: Delete the Authentication account last.
-        // If Firestore deletion fails, execution stops here and
-        // the Authentication account is not deleted.
         user.delete()
     }
 

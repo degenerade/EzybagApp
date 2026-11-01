@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.contractoraccount
 
 import androidx.compose.foundation.layout.Arrangement
@@ -99,12 +100,8 @@ private fun ContractorAccountContent(
     contractor: Contractor,
     onSignOut: () -> Unit
 ) {
-    val fullName = listOf(
-        contractor.firstName,
-        contractor.lastName
-    )
-        .filter { it.isNotBlank() }
-        .joinToString(" ")
+    // Contractor now has one contactName field instead of firstName and lastName.
+    val fullName = contractor.contactName.trim()
 
     Column(
         modifier = Modifier
@@ -138,7 +135,7 @@ private fun ContractorAccountContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = contractor.firstName
+                        text = fullName
                             .firstOrNull()
                             ?.uppercase()
                             ?: "C",

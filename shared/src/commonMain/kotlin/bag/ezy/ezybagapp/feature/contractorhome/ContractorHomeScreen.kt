@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.contractorhome
 
 import androidx.compose.foundation.layout.Box
@@ -50,7 +51,7 @@ fun ContractorHomeScreen(
 
             !state.contractor.isApproved -> {
                 PendingContractorHome(
-                    firstName = state.contractor.firstName,
+                    contactName = state.contractor.contactName,
                     companyName = state.contractor.companyName
                 )
             }

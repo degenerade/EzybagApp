@@ -44,7 +44,9 @@ fun ApprovedContractorHome(
     ) {
         Text(
             text = "Hi ${
-                contractor.firstName
+                contractor.contactName
+                    .trim()
+                    .substringBefore(" ")
                     .ifBlank { "there" }
             }",
             fontSize = 26.sp,
