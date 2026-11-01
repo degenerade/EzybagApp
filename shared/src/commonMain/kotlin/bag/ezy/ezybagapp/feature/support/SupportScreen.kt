@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -57,25 +59,31 @@ fun SupportScreen(
                 title = {
                     Text(
                         text = "Support",
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                }
+                },
+                windowInsets = WindowInsets(0.dp)
             )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxWidth()
-                .padding(16.dp)
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = "Our team is here Monday to Saturday, 8am to 6pm.",
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
             )
 
             CallUs(companyPhoneNumber = "+44 20 0000 0000")
@@ -87,6 +95,7 @@ fun SupportScreen(
             Text(
                 text = "We usually reply within one working day.",
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(16.dp)
             )
 
@@ -152,7 +161,7 @@ fun SupportScreen(
                         value = state.description,
                         onValueChange = vm::onDescriptionChange,
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Describe the issue") },
+                        label = { Text("Describe the issue or details") },
                         placeholder = { Text("Explain what happened...") },
                         minLines = 4,
                         maxLines = 7,
@@ -181,7 +190,7 @@ fun SupportScreen(
                         enabled = !state.submitting
                     ) {
                         Text(
-                            text = if (state.submitting) "Submitting..." else "Submit report",
+                            text = if (state.submitting) "Submitting..." else "Submit",
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -196,7 +205,7 @@ fun SupportScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "My Reports",
+                    text = "My Issues",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
@@ -208,7 +217,7 @@ fun SupportScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = "Refresh reports"
+                        contentDescription = "Refresh issues"
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Refresh")
@@ -238,7 +247,7 @@ fun SupportScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "You haven't submitted any reports yet.",
+                        text = "You haven't submitted any issues yet.",
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodyMedium
                     )
