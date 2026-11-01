@@ -12,5 +12,12 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
+      - name: Create secrets.properties
+        env:
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: |
+          printf 'STRIPE_PUBLISHABLE_KEY=%s\n' "$STRIPE_PUBLISHABLE_KEY" > secrets.properties
+          printf 'STRIPE_SECRET_KEY=%s\n' "$STRIPE_SECRET_KEY" >> secrets.properties
       - run: chmod +x gradlew
       - run: ./gradlew :androidApp:assembleDebug
