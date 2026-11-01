@@ -1,10 +1,10 @@
-
 package bag.ezy.ezybagapp.model.repository
 
+import bag.ezy.ezybagapp.model.data.Review
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
-import kotlin.contracts.contract
+import kotlin.time.Clock
 
 interface ReviewRepository {
     suspend fun submitReview(
@@ -36,16 +36,19 @@ class FirebaseReviewRepository : ReviewRepository {
         val customerId = auth.currentUser?.uid
             ?: throw IllegalStateException("Please sign in before submitting a review.")
 
-        val review = mapOf(
-            "bookingId" to bookingId,
-            "customerId" to customerId,
-            "rating" to rating,
-            "comment" to comment.trim(),
-            "contractorId" to contractorId,
-            "createdAt" to ""
+        val doc = firestore.collection("reviews").document
+        val now = Clock.System.now().toString()
+
+        val review = Review(
+            reviewId = doc.id,
+            bookingId = bookingId,
+            customerId = customerId,
+            contractorId = contractorId,
+            stars = rating,
+            comment = comment.trim(),
+            createdAt = now
         )
 
-        firestore.collection("reviews").document
-            .set(review)
+        doc.set(Review.serializer(), review)
     }
 }
