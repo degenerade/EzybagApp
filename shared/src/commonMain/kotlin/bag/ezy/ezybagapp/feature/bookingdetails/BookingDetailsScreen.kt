@@ -150,10 +150,10 @@ fun BookingDetailsContent(
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
             title = {
-                Text(text = "Confirm Cancellation")
+                Text(text = "Confirm Deletion")
             },
             text = {
-                Text(text = "Are you sure you want to cancel this booking?")
+                Text(text = "Are you sure you want to delete this booking?")
             },
             confirmButton = {
                 TextButton(
@@ -548,17 +548,17 @@ private fun ButtonsRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        OutlinedButton(
-            onClick = {},
-            modifier = Modifier.weight(1f).height(40.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-        ) {
-            Text(
-                text = stringResource(Res.string.edit_booking),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+//        OutlinedButton(
+//            onClick = {},
+//            modifier = Modifier.weight(1f).height(40.dp),
+//            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
+//        ) {
+//            Text(
+//                text = stringResource(Res.string.edit_booking),
+//                fontSize = 13.sp,
+//                fontWeight = FontWeight.SemiBold
+//            )
+//        }
         OutlinedButton(
             onClick = onCancelClick,
             modifier = Modifier.weight(1f).height(40.dp),

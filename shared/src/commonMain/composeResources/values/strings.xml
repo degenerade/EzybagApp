@@ -4,7 +4,7 @@
     <string name="rate_contractor">Rate</string>
     <string name="invoice">Invoice</string>
     <string name="edit_booking">Edit booking</string>
-    <string name="cancel">Cancel</string>
+    <string name="cancel">Delete</string>
     <string name="track">Track</string>
     <string name="message">Message</string>
     <string name="call">Call</string>
