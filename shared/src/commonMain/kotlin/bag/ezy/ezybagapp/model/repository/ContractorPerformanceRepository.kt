@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.model.repository
 
 import bag.ezy.ezybagapp.model.data.Booking
@@ -43,9 +44,8 @@ class ContractorPerformanceRepository {
 
         // Calculate performance for each contractor
         val contractorStats = contractors.map { contractor ->
-
             val contractorBookings = assignedBookings.filter {
-                it.contractorId == contractor.uid
+                it.contractorId?.trim() == contractor.uid.trim()
             }
 
             val completedJobs = contractorBookings.count {
