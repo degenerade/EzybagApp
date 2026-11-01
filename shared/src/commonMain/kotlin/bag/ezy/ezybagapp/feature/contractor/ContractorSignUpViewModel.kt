@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.contractor
 
 import androidx.compose.runtime.getValue
@@ -12,8 +13,7 @@ import kotlinx.coroutines.launch
 
 data class ContractorSignupUiState(
     val company: String = "",
-    val firstName: String = "",
-    val lastName: String = "",
+    val contactName: String = "",
     val email: String = "",
     val phone: String = "",
     val areas: String = "",
@@ -28,6 +28,8 @@ data class ContractorSignupUiState(
     val insuranceDoc: Boolean = false,
     val identityDoc: Boolean = false,
     val declaration: Boolean = false,
+    val termsAccepted: Boolean = false,
+    val privacyAccepted: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -46,12 +48,8 @@ class ContractorSignupViewModel(
         state = state.copy(company = value, error = null)
     }
 
-    fun onFirstNameChange(value: String) {
-        state = state.copy(firstName = value, error = null)
-    }
-
-    fun onLastNameChange(value: String) {
-        state = state.copy(lastName = value, error = null)
+    fun onContactNameChange(value: String) {
+        state = state.copy(contactName = value, error = null)
     }
 
     fun onEmailChange(value: String) {
@@ -110,89 +108,135 @@ class ContractorSignupViewModel(
         state = state.copy(declaration = value, error = null)
     }
 
+    fun onTermsAcceptedChange(value: Boolean) {
+        state = state.copy(termsAccepted = value, error = null)
+    }
+
+    fun onPrivacyAcceptedChange(value: Boolean) {
+        state = state.copy(privacyAccepted = value, error = null)
+    }
+
     fun submit() {
-        val missing = buildList {
-            if (state.company.isBlank()) add("company name")
-            if (state.firstName.isBlank()) add("first name")
-            if (state.lastName.isBlank()) add("last name")
+        if (state.isLoading) return
 
-            if (state.email.isBlank() || !state.email.contains("@")) {
-                add("valid email")
+        val currentState = state
+        val email = currentState.email.trim()
+        val phoneDigits = currentState.phone.filter { it.isDigit() }
+
+        val errors = buildList {
+            if (currentState.company.isBlank()) {
+                add("Company name is required.")
             }
 
-            if (state.phone.isBlank()) add("phone number")
-            if (state.areas.isBlank()) add("service areas")
-            if (state.licence.isBlank()) add("licence number")
-            if (!state.licenceDoc) add("licence document")
-            if (state.insurer.isBlank()) add("insurance provider")
-            if (state.policy.isBlank()) add("policy number")
-            if (!state.insuranceDoc) add("proof of insurance")
-            if (state.vehicle.isBlank()) add("vehicle type")
-
-            if (state.registration.isBlank()) {
-                add("vehicle registration")
+            if (currentState.contactName.isBlank()) {
+                add("Contact name is required.")
             }
 
-            if (!state.identityDoc) add("proof of identity")
-            if (!state.declaration) add("declaration")
+            val emailRegex =
+                Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+
+            if (!emailRegex.matches(email)) {
+                add("Enter a valid email address.")
+            }
+
+            if (phoneDigits.length !in 7..15) {
+                add("Enter a valid phone number with 7 to 15 digits.")
+            }
+
+            if (currentState.areas.isBlank()) {
+                add("Service areas are required.")
+            }
+
+            if (currentState.licence.isBlank()) {
+                add("Waste carrier licence number is required.")
+            }
+
+            if (!currentState.licenceDoc) {
+                add("Please mark the waste carrier licence document as selected.")
+            }
+
+            if (currentState.insurer.isBlank()) {
+                add("Insurance provider is required.")
+            }
+
+            if (currentState.policy.isBlank()) {
+                add("Insurance policy number is required.")
+            }
+
+            if (!currentState.insuranceDoc) {
+                add("Please mark proof of insurance as selected.")
+            }
+
+            if (currentState.vehicle.isBlank()) {
+                add("Vehicle type is required.")
+            }
+
+            if (currentState.registration.isBlank()) {
+                add("Vehicle registration number is required.")
+            }
+
+            if (!currentState.identityDoc) {
+                add("Please mark proof of identity as selected.")
+            }
+
+            if (currentState.password.length < 8) {
+                add("Password must contain at least 8 characters.")
+            }
+
+            if (currentState.password != currentState.confirmPassword) {
+                add("Passwords do not match.")
+            }
+
+            if (!currentState.declaration) {
+                add("You must confirm that your information is accurate.")
+            }
+
+            if (!currentState.termsAccepted) {
+                add("You must accept the Contractor Terms and Conditions.")
+            }
+
+            if (!currentState.privacyAccepted) {
+                add("You must acknowledge the Privacy Notice.")
+            }
         }
 
-        if (missing.isNotEmpty()) {
-            state = state.copy(
-                error = "Please complete: ${missing.joinToString(", ")}."
-            )
-            return
-        }
-
-        if (state.password.length < 8) {
-            state = state.copy(
-                error = "Password must contain at least 8 characters."
-            )
-            return
-        }
-
-        if (state.password != state.confirmPassword) {
-            state = state.copy(
-                error = "Passwords do not match."
-            )
+        if (errors.isNotEmpty()) {
+            state = state.copy(error = errors.joinToString("\n"))
             return
         }
 
         val contractor = Contractor(
-            firstName = state.firstName.trim(),
-            lastName = state.lastName.trim(),
-            email = state.email.trim(),
-            phone = state.phone.trim(),
-            companyName = state.company.trim(),
-            serviceAreas = state.areas.trim(),
-            policyNumber = state.policy.trim(),
-            vehicleType = state.vehicle.trim(),
-            vehicleRegistrationNumber = state.registration.trim(),
-            wasteCarrierLicenceDetails = state.licence.trim(),
-            insuranceProvider = state.insurer.trim(),
+            contactName = currentState.contactName.trim(),
+            email = email,
+            phone = currentState.phone.trim(),
+            companyName = currentState.company.trim(),
+            serviceAreas = currentState.areas.trim(),
+            policyNumber = currentState.policy.trim(),
+            vehicleType = currentState.vehicle.trim(),
+            vehicleRegistrationNumber = currentState.registration.trim(),
+            wasteCarrierLicenceDetails = currentState.licence.trim(),
+            insuranceProvider = currentState.insurer.trim(),
             isApproved = false
         )
 
+        val password = currentState.password
+
         viewModelScope.launch {
-            state = state.copy(
-                isLoading = true,
-                error = null
-            )
+            state = state.copy(isLoading = true, error = null)
 
             repository.registerContractor(
                 contractor = contractor,
-                password = state.password
-            )
-                .onSuccess {
-                    state = state.copy(isLoading = false)
-                    submitted = true
-                }
-                .onFailure {
-                    state = state.copy(
-                        isLoading = false,
-                        error = it.message ?: "Unable to submit application."
-                    )
-                }
+                password = password
+            ).onSuccess {
+                state = state.copy(isLoading = false)
+                submitted = true
+            }.onFailure { exception ->
+                state = state.copy(
+                    isLoading = false,
+                    error = exception.message
+                        ?: "Unable to submit application. Please try again."
+                )
+            }
         }
     }
 }

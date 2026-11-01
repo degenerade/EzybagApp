@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.admin.contractors
 
 import androidx.compose.runtime.getValue
@@ -41,16 +42,27 @@ data class ContractorsAdminUiState(
 ) {
     val visibleContractors: List<ContractorsAdminUiModel>
         get() {
-            val inTab = if (selectedTab == ContractorsTab.All) contractors.filter { it.tab != null }
-                        else contractors.filter { it.tab == selectedTab }
-            return inTab.filter { c ->
+            val inTab = if (selectedTab == ContractorsTab.All) {
+                contractors.filter { it.tab != null }
+            } else {
+                contractors.filter { it.tab == selectedTab }
+            }
+
+            return inTab.filter { contractor ->
                 matchesSearch(
                     searchQuery,
-                    c.companyName, c.fullName, c.email, c.phone,
-                    c.serviceAreas, c.vehicleRegistration, c.licence, c.reference
+                    contractor.companyName,
+                    contractor.fullName,
+                    contractor.email,
+                    contractor.phone,
+                    contractor.serviceAreas,
+                    contractor.vehicleRegistration,
+                    contractor.licence,
+                    contractor.reference
                 )
             }
         }
+
     val cancelledCount: Int
         get() = contractors.count { it.tab == null }
 }
@@ -59,6 +71,7 @@ class ContractorsAdminViewModel(
     private val repo: ContractorRepository = AppContainer.contractorRepository,
     private val auth: AdminRepository = AppContainer.adminRepository
 ) : ViewModel() {
+
     var state by mutableStateOf(ContractorsAdminUiState())
         private set
 
@@ -66,6 +79,7 @@ class ContractorsAdminViewModel(
         val isAdmin = runBlocking {
             auth.isCurrentUserAdmin()
         }.getOrNull() ?: false
+
         if (!isAdmin) {
             state = state.copy(
                 isLoading = false,
@@ -95,7 +109,6 @@ class ContractorsAdminViewModel(
                             error = exception.message
                                 ?: "Couldn't load contractors"
                         )
-
                     }
                 )
             } catch (exception: Exception) {
@@ -112,17 +125,25 @@ class ContractorsAdminViewModel(
         state = state.copy(selectedTab = tab)
     }
 
-    fun toggleApprovalStatus(contractorId: String, currentApproved: Boolean) {
+    fun toggleApprovalStatus(
+        contractorId: String,
+        currentApproved: Boolean
+    ) {
         if (contractorId.isBlank()) return
+
         val newStatus = !currentApproved
 
-        // Update UI state immediately for instant visual feedback
+        // Update UI state immediately for instant visual feedback.
         state = state.copy(
             contractors = state.contractors.map {
                 if (it.reference == contractorId) {
                     it.copy(
                         isApproved = newStatus,
-                        tab = if (newStatus) ContractorsTab.Active else ContractorsTab.Pending
+                        tab = if (newStatus) {
+                            ContractorsTab.Active
+                        } else {
+                            ContractorsTab.Pending
+                        }
                     )
                 } else {
                     it
@@ -131,13 +152,17 @@ class ContractorsAdminViewModel(
         )
 
         viewModelScope.launch {
-            repo.changeContractorStatus(contractorId, newStatus).fold(
+            repo.changeContractorStatus(
+                contractorId,
+                newStatus
+            ).fold(
                 onSuccess = {
                     load()
                 },
                 onFailure = { exception ->
                     state = state.copy(
-                        error = exception.message ?: "Failed to update contractor status."
+                        error = exception.message
+                            ?: "Failed to update contractor status."
                     )
                     load()
                 }
@@ -147,9 +172,13 @@ class ContractorsAdminViewModel(
 
     fun deleteContractor(contractorId: String) {
         if (contractorId.isBlank()) return
+
         state = state.copy(
-            contractors = state.contractors.filter { it.reference != contractorId }
+            contractors = state.contractors.filter {
+                it.reference != contractorId
+            }
         )
+
         viewModelScope.launch {
             repo.deleteContractor(contractorId).fold(
                 onSuccess = {
@@ -157,7 +186,8 @@ class ContractorsAdminViewModel(
                 },
                 onFailure = { exception ->
                     state = state.copy(
-                        error = exception.message ?: "Failed to delete contractor."
+                        error = exception.message
+                            ?: "Failed to delete contractor."
                     )
                     load()
                 }
@@ -169,16 +199,21 @@ class ContractorsAdminViewModel(
         state = state.copy(searchQuery = query)
     }
 
-    private fun Contractor.toUiModel() = ContractorsAdminUiModel(
-        reference = uid,
-        companyName = companyName,
-        email = email,
-        isApproved = isApproved,
-        tab = if (isApproved) ContractorsTab.Active else ContractorsTab.Pending,
-        fullName = "$firstName $lastName".trim(),
-        phone = phone,
-        serviceAreas = serviceAreas,
-        vehicleRegistration = vehicleRegistrationNumber,
-        licence = wasteCarrierLicenceDetails
-    )
+    private fun Contractor.toUiModel() =
+        ContractorsAdminUiModel(
+            reference = uid,
+            companyName = companyName,
+            email = email,
+            isApproved = isApproved,
+            tab = if (isApproved) {
+                ContractorsTab.Active
+            } else {
+                ContractorsTab.Pending
+            },
+            fullName = contactName,
+            phone = phone,
+            serviceAreas = serviceAreas,
+            vehicleRegistration = vehicleRegistrationNumber,
+            licence = wasteCarrierLicenceDetails
+        )
 }

@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -98,9 +98,16 @@ fun BookingsScreen(onBack: () -> Unit = {}) {
     // Filter bookings by selected status and search query.
     val filteredBookings = bookings.filter { booking ->
 
+        val effectiveStatus =
+            if (booking.paymentstatus.equals("pending", ignoreCase = true)) {
+                "Pending"
+            } else {
+                booking.status
+            }
+
         val matchesStatus =
             selectedStatus == "All statuses" ||
-                    booking.status.equals(selectedStatus, ignoreCase = true)
+                    effectiveStatus.equals(selectedStatus, ignoreCase = true)
 
         val matchesSearch =
             searchQuery.isBlank() ||
@@ -108,7 +115,7 @@ fun BookingsScreen(onBack: () -> Unit = {}) {
                     booking.collectionAddress.street.contains(searchQuery, ignoreCase = true) ||
                     booking.collectionAddress.postcode.contains(searchQuery, ignoreCase = true) ||
                     booking.wasteDetails.type.contains(searchQuery, ignoreCase = true) ||
-                    booking.status.contains(searchQuery, ignoreCase = true)
+                    effectiveStatus.contains(searchQuery, ignoreCase = true)
 
         matchesStatus && matchesSearch
     }

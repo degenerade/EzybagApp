@@ -46,9 +46,9 @@ data class Booking(
     val schedule: Schedule = Schedule(),
     val pricing: Pricing = Pricing(),
     val status: String = "Pending", // Pending, Upcoming, En Route, On Site, Completed, Cancelled
-    val paymentstatus: String = "",
+    val paymentstatus: String = "pending", // pending, successful, failed, canceled
     val contractorCurrentLocation: GeoLocation? = null,
     val disposalDetails: DisposalDetails? = null,
     val assigned: Boolean = false,
-    val createdAt: String = "" //having such info is useful :D
+    val createdAt: String = "" // having such info is useful :D
 )
