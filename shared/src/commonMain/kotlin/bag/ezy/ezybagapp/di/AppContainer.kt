@@ -6,24 +6,19 @@ import bag.ezy.ezybagapp.model.repository.CustomerActivityRepository
 import bag.ezy.ezybagapp.model.repository.FirebaseAuthRepository
 import bag.ezy.ezybagapp.model.repository.FirebaseBookingRepository
 import bag.ezy.ezybagapp.model.repository.FirebaseContractorRepository
-
 import bag.ezy.ezybagapp.model.repository.FirebaseCustomerRepository
 import bag.ezy.ezybagapp.model.repository.FirebaseIssueRepository
 import bag.ezy.ezybagapp.model.repository.FirebaseRevenueRepository
-
 import bag.ezy.ezybagapp.model.repository.FirebaseReviewRepository
 import bag.ezy.ezybagapp.model.repository.ReportRepository
 
 object AppContainer {
     val authRepository = FirebaseAuthRepository()
     val bookingRepository = FirebaseBookingRepository()
-
     val reportRepository = ReportRepository()
-
-    val contractorRepository = FirebaseContractorRepository()
-
     val reviewRepository = FirebaseReviewRepository()
     val adminRepository = AdminRepository()
+    val contractorRepository = FirebaseContractorRepository()
     val customerRepository = FirebaseCustomerRepository()
     val issueRepository = FirebaseIssueRepository()
     val contractorPerformanceRepository = ContractorPerformanceRepository()

@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
     id("com.google.gms.google-services")
-    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 kotlin {
@@ -19,10 +18,6 @@ dependencies {
     implementation("androidx.credentials:credentials:1.6.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
-    implementation("com.stripe:stripe-java:34.0.0")
-    implementation("com.stripe:stripe-android:23.25.1")
-    // Include the financial connections SDK to support US bank account as a payment method
-    implementation("com.stripe:financial-connections:23.25.1")
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
@@ -59,9 +54,5 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
-}
-secrets {
-    propertiesFileName = "secrets.properties"
 }

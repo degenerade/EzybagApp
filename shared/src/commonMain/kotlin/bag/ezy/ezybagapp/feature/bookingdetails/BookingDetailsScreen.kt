@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,12 +30,18 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,6 +52,8 @@ import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import ezybagapp.shared.generated.resources.Res
 import ezybagapp.shared.generated.resources.call
 import ezybagapp.shared.generated.resources.cancel
+import ezybagapp.shared.generated.resources.edit_booking
+import ezybagapp.shared.generated.resources.get_help
 import ezybagapp.shared.generated.resources.message
 import org.jetbrains.compose.resources.stringResource
 
@@ -52,15 +61,16 @@ import org.jetbrains.compose.resources.stringResource
 fun BookingDetailsScreen(
     bookingId: String,
     onBack: () -> Unit,
-    onRateContractor: ((bookingId: String, contractorId: String) -> Unit)? = null,
     vm: BookingDetailsViewModel = viewModel(key = "booking-$bookingId") {
-        BookingDetailsViewModel(bookingId, AppContainer.bookingRepository)
+        BookingDetailsViewModel(bookingId, AppContainer.bookingRepository, AppContainer.contractorRepository)
     }
 ) {
     BookingDetailsContent(
         state = vm.state,
         onBack = onBack,
-        onRateContractor = onRateContractor
+        onCancelBooking = {
+            vm.cancelBooking(onDeleted = onBack)
+        }
     )
 }
 
@@ -69,9 +79,11 @@ fun BookingDetailsScreen(
 fun BookingDetailsContent(
     state: BookingDetailsUiState,
     onBack: () -> Unit,
-    onRateContractor: ((bookingId: String, contractorId: String) -> Unit)? = null,
+    onCancelBooking: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    var showCancelDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -117,29 +129,54 @@ fun BookingDetailsContent(
                 Collection(
                     address = state.address,
                     access = state.accessInfo,
-                    instructions = state.specialInstructions
+                    instructions = state.instructions
                 )
-                Contractor(
-                    contractorName = state.contractorName,
-                    contractorInitial = state.contractorName.firstOrNull()?.uppercase() ?: "C",
-                    contractorRating = state.contractorRating,
-                    contractorCompanyName = state.contractorCompanyName
+                ContractorSection(
+                    state = state
                 )
                 Payment(
                     totalPrice = state.price,
                     paymentStatus = state.paymentStatus,
-                    paymentMethod = "Standard"
+                    paymentMethod = state.paymentMethod
                 )
                 ButtonsRow(
-                    status = state.status,
-                    onRateClick = {
-                        if (onRateContractor != null && state.bookingId.isNotBlank()) {
-                            onRateContractor(state.bookingId, state.contractorId ?: "")
-                        }
-                    }
+                    onCancelClick = { showCancelDialog = true }
                 )
             }
         }
+    }
+
+    if (showCancelDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = {
+                Text(text = "Confirm Deletion")
+            },
+            text = {
+                Text(text = "Are you sure you want to delete this booking?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showCancelDialog = false
+                        onCancelBooking()
+                    }
+                ) {
+                    Text(
+                        text = "Yes",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCancelDialog = false }
+                ) {
+                    Text(text = "No")
+                }
+            }
+        )
     }
 }
 
@@ -286,13 +323,12 @@ private fun Collection(
 }
 
 @Composable
-private fun Contractor(
-    contractorName: String,
-    contractorInitial: String,
-    contractorRating: String,
-    contractorCompanyName: String,
+private fun ContractorSection(
+    state: BookingDetailsUiState,
     modifier: Modifier = Modifier.Companion
 ) {
+    val uriHandler = LocalUriHandler.current
+
     ElevatedCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
@@ -303,82 +339,125 @@ private fun Contractor(
         Text(
             text = "Contractor",
             fontWeight = FontWeight.ExtraBold,
-            modifier = modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
         )
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+        if (state.hasContractor) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(56.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = contractorInitial,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White
-                        )
-                    }
-                }
-                Column {
-                    Text(
-                        text = if (contractorCompanyName.isNotBlank()) "$contractorName · $contractorCompanyName" else contractorName,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (contractorRating.isNotBlank()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
                             Text(
-                                text = contractorRating,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = state.contractorInitial,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White
                             )
                         }
                     }
+                    Column {
+                        Text(
+                            text = if (state.contractorCompanyName.isNotBlank() && state.contractorCompanyName != state.contractorName) {
+                                "${state.contractorName} · ${state.contractorCompanyName}"
+                            } else {
+                                state.contractorName
+                            },
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    //Yet to be implemented
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Star,
+//                            contentDescription = null,
+//                            tint = MaterialTheme.colorScheme.primary,
+//                            modifier = Modifier.size(16.dp)
+//                        )
+//                        Text(
+//                            text = state.contractorRating,
+//                            fontSize = 13.sp,
+//                            fontWeight = FontWeight.Medium,
+//                            color = MaterialTheme.colorScheme.onSurfaceVariant
+//                        )
+//                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            if (state.contractorEmail.isNotBlank()) {
+                                runCatching {
+                                    uriHandler.openUri("mailto:${state.contractorEmail}")
+                                }
+                            }
+                        },
+                        enabled = state.contractorEmail.isNotBlank(),
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.message),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            if (state.contractorPhone.isNotBlank()) {
+                                runCatching {
+                                    uriHandler.openUri("tel:${state.contractorPhone.filterNot { it == ' ' }}")
+                                }
+                            }
+                        },
+                        enabled = state.contractorPhone.isNotBlank(),
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.call),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        } else {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Button(
-                    onClick = {},
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-                ) {
+                Text(
+                    text = "No contractor assigned currently",
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "We will assign a verified contractor to your collection soon.",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (state.contractorError != null) {
                     Text(
-                        text = stringResource(Res.string.message),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                OutlinedButton(
-                    onClick = {},
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-                ) {
-                    Text(
-                        text = stringResource(Res.string.call),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
+                        text = state.contractorError,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
@@ -462,39 +541,46 @@ private fun CardRows(
 
 @Composable
 private fun ButtonsRow(
-    status: String,
-    onRateClick: () -> Unit,
+    onCancelClick: () -> Unit = {},
     modifier: Modifier = Modifier.Companion
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        if (status.equals("Completed", ignoreCase = true)) {
-            Button(
-                onClick = onRateClick,
-                modifier = Modifier.weight(1f).height(40.dp),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-            ) {
-                Text(
-                    text = "Rate Contractor",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        } else {
-            Button(
-                onClick = {},
-                modifier = Modifier.weight(1f).height(40.dp),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-            ) {
-                Text(
-                    text = stringResource(Res.string.cancel),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+//        OutlinedButton(
+//            onClick = {},
+//            modifier = Modifier.weight(1f).height(40.dp),
+//            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
+//        ) {
+//            Text(
+//                text = stringResource(Res.string.edit_booking),
+//                fontSize = 13.sp,
+//                fontWeight = FontWeight.SemiBold
+//            )
+//        }
+        OutlinedButton(
+            onClick = onCancelClick,
+            modifier = Modifier.weight(1f).height(40.dp),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
+        ) {
+            Text(
+                text = stringResource(Res.string.cancel),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold
+            )
         }
+//        Button(
+//            onClick = {},
+//            modifier = Modifier.weight(1f).height(40.dp),
+//            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
+//        ) {
+//            Text(
+//                text = stringResource(Res.string.get_help),
+//                fontSize = 13.sp,
+//                fontWeight = FontWeight.SemiBold
+//            )
+//        }
     }
 }
 
@@ -508,6 +594,7 @@ private fun BookingDetailsPreview() {
                 title = "Construction waste", volume = "Half van", status = "En route",
                 date = "Thu 8 Oct", time = "9:00 AM", description = "Old kitchen units and rubble",
                 bag = "Medium bag", address = "12 Elm Road, M1 4BT", price = "£145",
+                hasContractor = true, contractorName = "Jake R.", contractorCompanyName = "Drop Waste Ltd"
             ),
             onBack = {},
         )

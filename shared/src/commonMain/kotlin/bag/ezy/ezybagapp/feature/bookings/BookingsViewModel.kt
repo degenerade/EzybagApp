@@ -99,19 +99,16 @@ class BookingsViewModel(
         state = state.copy(selectedTab = tab)
     }
 
-    private fun Booking.toUiModel(): BookingUiModel {
-        val effectiveStatus = if (paymentstatus.equals("pending", ignoreCase = true)) "Pending" else status
-        return BookingUiModel(
-            reference = bookingId,
-            wasteType = wasteDetails.type,
-            status = effectiveStatus,
-            date = formatDisplayDate(schedule.preferredDate),
-            tab = when (effectiveStatus) {
-                "En route", "On site" -> BookingTab.Active
-                "Completed" -> BookingTab.Completed
-                "Cancelled", "Failed" -> null
-                else -> BookingTab.Upcoming
-            }
-        )
-    }
+    private fun Booking.toUiModel() = BookingUiModel(
+        reference = bookingId,
+        wasteType = wasteDetails.type,
+        status = status,
+        date = formatDisplayDate(schedule.preferredDate),
+        tab = when (status) {
+            "En route", "On site" -> BookingTab.Active
+            "Completed" -> BookingTab.Completed
+            "Cancelled" -> null
+            else -> BookingTab.Upcoming
+        }
+    )
 }

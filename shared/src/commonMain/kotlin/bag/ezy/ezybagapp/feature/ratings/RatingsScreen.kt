@@ -16,19 +16,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,12 +37,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val RatingAccentGreen = Color(0xFF1E6F5C)
+private val RatingIssueColor = Color(0xFFC4472F)
+
 @Composable
 fun RatingsScreen(
     bookingId: String,
     contractorId: String = "",
-    onBack: (() -> Unit)? = null,
+    onReportIssue: () -> Unit,
     vm: RatingsViewModel = viewModel(key = "ratings-$bookingId") {
         RatingsViewModel(
             bookingId = bookingId,
@@ -56,23 +53,7 @@ fun RatingsScreen(
         )
     }
 ) {
-    Scaffold(
-        topBar = {
-            if (onBack != null) {
-                TopAppBar(
-                    title = { Text("Rate Service") },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    }
-                )
-            }
-        }
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
@@ -81,6 +62,7 @@ fun RatingsScreen(
                 onRatingSelected = vm::onRatingSelected,
                 onCommentChange = vm::onCommentChange,
                 onSubmit = vm::submit,
+                onReportIssue = onReportIssue
             )
         }
     }
@@ -91,7 +73,8 @@ fun RatingsContent(
     state: RatingsUiState,
     onRatingSelected: (Int) -> Unit,
     onCommentChange: (String) -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    onReportIssue: () -> Unit
 ) {
     val colors = MaterialTheme.colorScheme
     val cardShape = RoundedCornerShape(24.dp)
@@ -145,7 +128,7 @@ fun RatingsContent(
                 ) {
                     Text(
                         text = "COMPLETED JOB",
-                        color = colors.primary,
+                        color = RatingAccentGreen,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -267,9 +250,9 @@ fun RatingsContent(
                     Text(
                         text = message,
                         color = if (state.isError) {
-                            colors.error
+                            RatingIssueColor
                         } else {
-                            colors.primary
+                            RatingAccentGreen
                         },
                         fontSize = 13.sp
                     )
@@ -284,7 +267,7 @@ fun RatingsContent(
                         .height(52.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colors.primary,
+                        containerColor = RatingAccentGreen,
                         contentColor = Color.White
                     )
                 ) {
@@ -319,7 +302,8 @@ private fun RatingsEmptyPreview() {
             state = RatingsUiState(),
             onRatingSelected = {},
             onCommentChange = {},
-            onSubmit = {}
+            onSubmit = {},
+            onReportIssue = {}
         )
     }
 }
@@ -337,7 +321,8 @@ private fun RatingsErrorPreview() {
             ),
             onRatingSelected = {},
             onCommentChange = {},
-            onSubmit = {}
+            onSubmit = {},
+            onReportIssue = {}
         )
     }
 }
@@ -356,7 +341,8 @@ private fun RatingsSubmittedPreview() {
             ),
             onRatingSelected = {},
             onCommentChange = {},
-            onSubmit = {}
+            onSubmit = {},
+            onReportIssue = {}
         )
     }
 }
