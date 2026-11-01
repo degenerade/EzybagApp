@@ -1,4 +1,3 @@
-
 package bag.ezy.ezybagapp.feature.support
 
 import androidx.compose.foundation.layout.Arrangement
@@ -32,102 +31,24 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import bag.ezy.ezybagapp.ui.format.formatDisplayDateTime
-import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.auth.auth
-import dev.gitlive.firebase.firestore.firestore
-import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-import kotlin.random.Random
-import kotlin.time.Clock
-
-private val issueCategories = listOf(
-    "Booking",
-    "Payment",
-    "App problem",
-    "Contractor",
-    "Account",
-    "Other"
-)
-
-@Serializable
-private data class IssueReport(
-    val customerId: String = "",
-    val category: String = "",
-    val description: String = "",
-    val status: String = "Open",
-    val createdAt: Long = 0L
-)
-
-private data class DisplayIssueReport(
-    val id: String,
-    val report: IssueReport
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SupportScreen() {
-    var selectedCategory by remember { mutableStateOf("Booking") }
-    var description by remember { mutableStateOf("") }
-    var categoryMenuExpanded by remember { mutableStateOf(false) }
-    var submitting by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf<String?>(null) }
-    var isError by remember { mutableStateOf(false) }
-
-    var reports by remember { mutableStateOf<List<DisplayIssueReport>>(emptyList()) }
-    var loadingReports by remember { mutableStateOf(false) }
-    var reportsError by remember { mutableStateOf<String?>(null) }
-
-    val scope = rememberCoroutineScope()
-
-    suspend fun loadReports() {
-        val userId = Firebase.auth.currentUser?.uid
-
-        if (userId.isNullOrBlank()) {
-            reports = emptyList()
-            reportsError = "Please sign in to view your reports."
-            return
-        }
-
-        loadingReports = true
-        reportsError = null
-
-        try {
-            val snapshot = Firebase.firestore
-                .collection("issueReports")
-                .where {
-                    "customerId" equalTo userId
-                }
-                .get()
-
-            reports = snapshot.documents.mapNotNull { document ->
-                runCatching {
-                    DisplayIssueReport(
-                        id = document.id,
-                        report = document.data<IssueReport>()
-                    )
-                }.getOrNull()
-            }.sortedByDescending { it.report.createdAt }
-        } catch (e: Exception) {
-            reportsError = "Could not load your reports. Please try again."
-        } finally {
-            loadingReports = false
-        }
-    }
+fun SupportScreen(
+    vm: SupportViewModel = viewModel { SupportViewModel() }
+) {
+    val state = vm.state
 
     LaunchedEffect(Unit) {
-        loadReports()
+        vm.loadReports()
     }
 
     Scaffold(
@@ -199,29 +120,28 @@ fun SupportScreen() {
 
                     Column {
                         OutlinedButton(
-                            onClick = { categoryMenuExpanded = true },
+                            onClick = { vm.setCategoryMenuExpanded(true) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(9.dp)
                         ) {
                             Text(
-                                text = selectedCategory,
+                                text = state.selectedCategory,
                                 modifier = Modifier.weight(1f)
                             )
                             Text("▼")
                         }
 
                         DropdownMenu(
-                            expanded = categoryMenuExpanded,
+                            expanded = state.categoryMenuExpanded,
                             onDismissRequest = {
-                                categoryMenuExpanded = false
+                                vm.setCategoryMenuExpanded(false)
                             }
                         ) {
                             issueCategories.forEach { category ->
                                 DropdownMenuItem(
                                     text = { Text(category) },
                                     onClick = {
-                                        selectedCategory = category
-                                        categoryMenuExpanded = false
+                                        vm.onCategorySelected(category)
                                     }
                                 )
                             }
@@ -229,24 +149,21 @@ fun SupportScreen() {
                     }
 
                     OutlinedTextField(
-                        value = description,
-                        onValueChange = {
-                            description = it
-                            message = null
-                        },
+                        value = state.description,
+                        onValueChange = vm::onDescriptionChange,
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Describe the issue") },
                         placeholder = { Text("Explain what happened...") },
                         minLines = 4,
                         maxLines = 7,
                         shape = RoundedCornerShape(9.dp),
-                        enabled = !submitting
+                        enabled = !state.submitting
                     )
 
-                    message?.let { currentMessage ->
+                    state.message?.let { currentMessage ->
                         Text(
                             text = currentMessage,
-                            color = if (isError) {
+                            color = if (state.isError) {
                                 MaterialTheme.colorScheme.error
                             } else {
                                 MaterialTheme.colorScheme.primary
@@ -256,79 +173,15 @@ fun SupportScreen() {
                     }
 
                     Button(
-                        onClick = {
-                            val userId = Firebase.auth.currentUser?.uid
-                            val issueDescription = description.trim()
-
-                            when {
-                                userId.isNullOrBlank() -> {
-                                    isError = true
-                                    message = "Please sign in before submitting a report."
-                                }
-
-                                issueDescription.length < 10 -> {
-                                    isError = true
-                                    message =
-                                        "Please describe the issue in at least 10 characters."
-                                }
-
-                                issueDescription.length > 3000 -> {
-                                    isError = true
-                                    message =
-                                        "The description cannot exceed 3,000 characters."
-                                }
-
-                                else -> {
-                                    submitting = true
-                                    message = null
-
-                                    scope.launch {
-                                        try {
-                                            val reportId =
-                                                "report-${Random.nextLong()}"
-
-                                            Firebase.firestore
-                                                .collection("issueReports")
-                                                .document(reportId)
-                                                .set(
-                                                    mapOf(
-                                                        "customerId" to userId,
-                                                        "category" to selectedCategory,
-                                                        "description" to issueDescription,
-                                                        "status" to "Open",
-                                                        "createdAt" to Clock.System
-                                                            .now()
-                                                            .toEpochMilliseconds()
-                                                    )
-                                                )
-
-                                            description = ""
-                                            isError = false
-                                            message =
-                                                "Your report was submitted successfully."
-
-                                            // Refresh My Reports after submission.
-                                            loadReports()
-                                        } catch (e: Exception) {
-                                            isError = true
-                                            message =
-                                                "Could not submit your report: " +
-                                                        (e.message ?: "Please try again.")
-                                        } finally {
-                                            submitting = false
-                                        }
-                                    }
-                                }
-                            }
-                        },
+                        onClick = vm::submitReport,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
                         shape = RoundedCornerShape(9.dp),
-                        enabled = !submitting
+                        enabled = !state.submitting
                     ) {
                         Text(
-                            text = if (submitting) "Submitting..." else "Submit report",
+                            text = if (state.submitting) "Submitting..." else "Submit report",
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -350,10 +203,8 @@ fun SupportScreen() {
                 )
 
                 OutlinedButton(
-                    onClick = {
-                        scope.launch { loadReports() }
-                    },
-                    enabled = !loadingReports
+                    onClick = vm::loadReports,
+                    enabled = !state.loadingReports
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
@@ -366,24 +217,22 @@ fun SupportScreen() {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (loadingReports && reports.isEmpty()) {
+            if (state.loadingReports && state.reports.isEmpty()) {
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(12.dp))
-            } else if (reportsError != null) {
+            } else if (state.reportsError != null) {
                 Text(
-                    text = reportsError!!,
+                    text = state.reportsError,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 OutlinedButton(
-                    onClick = {
-                        scope.launch { loadReports() }
-                    }
+                    onClick = vm::loadReports
                 ) {
                     Text("Try again")
                 }
-            } else if (reports.isEmpty()) {
+            } else if (state.reports.isEmpty()) {
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -395,12 +244,12 @@ fun SupportScreen() {
                     )
                 }
             } else {
-                reports.forEach { item ->
+                state.reports.forEach { item ->
                     ReportCard(item = item)
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                if (loadingReports) {
+                if (state.loadingReports) {
                     CircularProgressIndicator()
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -442,8 +291,10 @@ private fun ReportCard(item: DisplayIssueReport) {
             )
 
             Text(
-                text = "Submitted: ${formatDisplayDateTime(report.createdAt)
-                    .ifBlank { "Date unavailable" }}",
+                text = "Submitted: ${
+                    formatDisplayDateTime(report.createdAt)
+                        .ifBlank { "Date unavailable" }
+                }",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
