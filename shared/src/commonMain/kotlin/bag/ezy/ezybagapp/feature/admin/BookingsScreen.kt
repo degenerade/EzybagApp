@@ -69,7 +69,8 @@ fun BookingsScreen(onBack: () -> Unit = {}) {
         bookings
     } else {
         bookings.filter {
-            it.status.equals(selectedStatus, ignoreCase = true)
+            val effStatus = if (it.paymentstatus.equals("pending", ignoreCase = true)) "Pending" else it.status
+            effStatus.equals(selectedStatus, ignoreCase = true)
         }
     }
 
@@ -187,7 +188,8 @@ fun BookingsScreen(onBack: () -> Unit = {}) {
                                     style = MaterialTheme.typography.titleMedium
                                 )
 
-                                Text("Status: ${booking.status}")
+                                val displayStatus = if (booking.paymentstatus.equals("pending", ignoreCase = true)) "Pending" else booking.status
+                                Text("Status: $displayStatus")
 
                                 Text(
                                     text = "Address: " +

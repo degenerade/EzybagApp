@@ -25,7 +25,9 @@ import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
 import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
+import bag.ezy.ezybagapp.feature.bookings.BookingCanceledScreen
 import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
+import bag.ezy.ezybagapp.feature.bookings.BookingFailedScreen
 import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
 import bag.ezy.ezybagapp.feature.contractorapproval.ContractorApprovalPendingScreen
 import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
@@ -37,6 +39,7 @@ import bag.ezy.ezybagapp.feature.main.MainTab
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingDetailsScreen
 import bag.ezy.ezybagapp.feature.newbooking.NewBookingViewModel
 import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
+import bag.ezy.ezybagapp.feature.payment.CheckoutScreen
 import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.feature.startpage.StartScreen
 import bag.ezy.ezybagapp.model.queries.AdminRepository
@@ -56,8 +59,11 @@ enum class Screen {
     Home,
     NewBookingDetails,
     NewBookingSchedule,
+    Checkout,
     BookingDetails,
     BookingConfirmation,
+    BookingFailed,
+    BookingCanceled,
     Ratings,
     AdminDashboard,
     ContractorsAdmin,
@@ -90,6 +96,18 @@ fun App() {
         }
 
         var confirmedBookingId by rememberSaveable {
+            mutableStateOf("")
+        }
+
+        var paymentErrorMessage by rememberSaveable {
+            mutableStateOf("")
+        }
+
+        var ratingsBookingId by rememberSaveable {
+            mutableStateOf("")
+        }
+
+        var ratingsContractorId by rememberSaveable {
             mutableStateOf("")
         }
 
@@ -271,9 +289,27 @@ fun App() {
                         screen = Screen.NewBookingDetails
                     },
                     onBooked = { bookingId ->
-                        newBookingVm.reset()
                         confirmedBookingId = bookingId
+                        screen = Screen.Checkout
+                    }
+                )
+
+                Screen.Checkout -> CheckoutScreen(
+                    bookingId = confirmedBookingId,
+                    price = newBookingVm.state.estimate?.toInt() ?: 0,
+                    onPaymentSuccess = {
+                        newBookingVm.reset()
                         screen = Screen.BookingConfirmation
+                    },
+                    onPaymentFailed = { errorMsg ->
+                        paymentErrorMessage = errorMsg
+                        screen = Screen.BookingFailed
+                    },
+                    onPaymentCanceled = {
+                        screen = Screen.BookingCanceled
+                    },
+                    onBack = {
+                        screen = Screen.NewBookingSchedule
                     }
                 )
 
@@ -281,6 +317,11 @@ fun App() {
                     bookingId = selectedBookingId ?: "",
                     onBack = {
                         screen = Screen.Home
+                    },
+                    onRateContractor = { bId, cId ->
+                        ratingsBookingId = bId
+                        ratingsContractorId = cId
+                        screen = Screen.Ratings
                     }
                 )
 
@@ -299,9 +340,36 @@ fun App() {
                     }
                 )
 
+                Screen.BookingFailed -> BookingFailedScreen(
+                    onReturnHome = {
+                        customerTab = MainTab.Home
+                        screen = Screen.Home
+                    },
+                    onBookAnother = {
+                        startBooking(null)
+                    },
+                    message = paymentErrorMessage.ifBlank {
+                        "Something went wrong and your payment could not be processed."
+                    }
+                )
+
+                Screen.BookingCanceled -> BookingCanceledScreen(
+                    bookingId = confirmedBookingId,
+                    onReturnHome = {
+                        customerTab = MainTab.Home
+                        screen = Screen.Home
+                    },
+                    onBookAnother = {
+                        startBooking(null)
+                    }
+                )
+
                 Screen.Ratings -> RatingsScreen(
-                    bookingId = "demo",
-                    onReportIssue = { /* TODO */ }
+                    bookingId = ratingsBookingId,
+                    contractorId = ratingsContractorId,
+                    onBack = {
+                        screen = Screen.BookingDetails
+                    }
                 )
 
                 Screen.AdminDashboard -> AdminDashboardScreen(
