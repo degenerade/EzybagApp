@@ -71,9 +71,9 @@ class BookingDetailsViewModel(
                         contractorRepo.getContractor(contractorId)
                             .onSuccess { contractor ->
                                 if (contractor != null) {
-                                    val fullName = "${contractor.firstName} ${contractor.lastName}".trim()
-                                    contractorName = if (fullName.isNotBlank()) fullName else "Assigned Contractor"
-                                    contractorInitial = contractor.firstName.take(1).uppercase().ifBlank { "C" }
+                                    val name = contractor.contactName.trim()
+                                    contractorName = if (name.isNotBlank()) name else "Assigned Contractor"
+                                    contractorInitial = contractor.contactName.take(1).uppercase().ifBlank { "C" }
                                     contractorCompanyName = contractor.companyName.ifBlank { "Independent Contractor" }
                                 }
                             }
