@@ -15,6 +15,7 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.stripe.android.PaymentConfiguration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -23,6 +24,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        PaymentConfiguration.init(
+            applicationContext,
+            BuildConfig.STRIPE_PUBLISHABLE_KEY
+        )
 
         // Register the native Android Google Sign-In handler callback using Credential Manager
         GoogleAuthHandler.onGoogleSignInRequested = {

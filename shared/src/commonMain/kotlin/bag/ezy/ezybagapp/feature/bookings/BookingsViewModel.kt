@@ -107,7 +107,7 @@ class BookingsViewModel(
         tab = when (status) {
             "En route", "On site" -> BookingTab.Active
             "Completed" -> BookingTab.Completed
-            "Cancelled" -> null
+            "Cancelled", "Failed" -> null
             else -> BookingTab.Upcoming
         }
     )

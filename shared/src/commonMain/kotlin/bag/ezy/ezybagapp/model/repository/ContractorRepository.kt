@@ -14,6 +14,7 @@ interface ContractorRepository {
 
     suspend fun getCurrentContractor(): Result<Contractor?>
 
+<<<<<<< Updated upstream
     suspend fun getAllContractors(): Result<List<Contractor>>
     suspend fun getVerifiedContractors(): Result<List<Contractor>>
     suspend fun countAllContractors(): Result<Int>
@@ -21,6 +22,8 @@ interface ContractorRepository {
     suspend fun countUnverifiedContractors(): Result<Int>
     suspend fun changeContractorStatus(contractorId: String = "", isApproved: Boolean = true): Result<Unit>
     suspend fun deleteContractor(contractorId: String = ""): Result<Unit>
+=======
+>>>>>>> Stashed changes
     suspend fun getContractor(contractorId: String): Result<Contractor?>
 }
 
@@ -135,6 +138,7 @@ class FirebaseContractorRepository : ContractorRepository {
             }
         }
 
+<<<<<<< Updated upstream
     // Delete a contractor record from both contractors and users collections
     override suspend fun deleteContractor(contractorId: String): Result<Unit> = runCatching {
         require(contractorId.isNotBlank()) { "Contractor ID is required." }
@@ -155,3 +159,20 @@ class FirebaseContractorRepository : ContractorRepository {
         }
     }
 }
+=======
+    override suspend fun getContractor(contractorId: String): Result<Contractor?> =
+        runCatching {
+            if (contractorId.isBlank()) return@runCatching null
+
+            val document = contractors
+                .document(contractorId)
+                .get()
+
+            if (!document.exists) {
+                null
+            } else {
+                document.data<Contractor>()
+            }
+        }
+}
+>>>>>>> Stashed changes

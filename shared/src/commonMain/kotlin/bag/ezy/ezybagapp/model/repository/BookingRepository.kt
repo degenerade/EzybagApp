@@ -39,11 +39,18 @@ interface BookingRepository {
         contractorId: String
     ): Result<Unit>
 
+<<<<<<< Updated upstream
     suspend fun getAllBookings(): Result<List<Booking>>
     suspend fun countAllBookings(): Result<Int>
     suspend fun deleteBooking(bookingId: String = ""): Result<Unit>
     suspend fun getBookingsForContractor(contractorId: String): Result<List<Booking>>
 
+=======
+    suspend fun updatePaymentStatus(
+        bookingId: String,
+        status: String
+    ): Result<Unit>
+>>>>>>> Stashed changes
 }
 
 
@@ -192,12 +199,42 @@ class FirebaseBookingRepository : BookingRepository {
             customerId = uid,
             contractorId = null,
             status = "Upcoming",
+            paymentstatus = "pending",
             assigned = false,
             createdAt = now
         )
 
         document.set(bookingToSave)
         document.id
+    }
+
+    override suspend fun updatePaymentStatus(
+        bookingId: String,
+        status: String
+    ): Result<Unit> = runCatching {
+        require(bookingId.isNotBlank()) {
+            "Booking ID is required."
+        }
+
+        val updates: Map<String, Any> = when (status.lowercase()) {
+            "failed" -> mapOf(
+                "paymentstatus" to "failed",
+                "status" to "Failed"
+            )
+            "canceled", "cancelled" -> mapOf(
+                "paymentstatus" to "canceled",
+                "status" to "Cancelled"
+            )
+            "successful", "completed" -> mapOf(
+                "paymentstatus" to "successful",
+                "status" to "Upcoming"
+            )
+            else -> mapOf(
+                "paymentstatus" to status
+            )
+        }
+
+        bookingsCollection.document(bookingId).update(updates)
     }
 
     override suspend fun requestFinalQuote(
