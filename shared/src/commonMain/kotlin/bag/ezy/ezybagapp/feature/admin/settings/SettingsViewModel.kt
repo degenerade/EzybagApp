@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp.feature.admin.Settings
+package bag.ezy.ezybagapp.feature.admin.settings
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

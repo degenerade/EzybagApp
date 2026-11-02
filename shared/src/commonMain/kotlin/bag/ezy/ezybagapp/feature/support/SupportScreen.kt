@@ -90,7 +90,7 @@ fun SupportScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            EmailUs(companyEmail = "support@clearaway.example")
+            EmailUs(companyEmail = "support@ezybag.example")
 
             Text(
                 text = "We usually reply within one working day.",

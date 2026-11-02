@@ -37,18 +37,17 @@ private val devGroups: List<Pair<String, List<Pair<Screen, String>>>> = listOf(
     ),
     "Contractor" to listOf(
         Screen.ContractorSignup to "Contractor signup",
-        Screen.ContractorJobs to "Jobs near you",
     ),
     "Admin" to listOf(
         Screen.AdminDashboard to "Admin Dashboard",
-        Screen.ContractorsAdmin to "Admin Contractors Screen",
     )
 )
 
 @Composable
 fun DevMenu(onOpen: (Screen) -> Unit) {
     val listed = devGroups.flatMap { (_, items) -> items.map { it.first } }.toSet()
-    val others = Screen.entries.filter { it != Screen.DevMenu && it !in listed }
+    val hidden = setOf(Screen.DevMenu, Screen.Loading)
+    val others = Screen.entries.filter { it !in hidden && it !in listed }
 
     Column(
         modifier = Modifier

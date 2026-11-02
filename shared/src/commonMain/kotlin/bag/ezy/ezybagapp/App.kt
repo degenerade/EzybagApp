@@ -5,22 +5,26 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import bag.ezy.ezybagapp.app.UserRole
+import bag.ezy.ezybagapp.app.resolveCurrentRole
 import bag.ezy.ezybagapp.dev.DEV_MENU_ENABLED
 import bag.ezy.ezybagapp.dev.DevMenu
 import bag.ezy.ezybagapp.dev.DevMenuButton
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.feature.admin.dashboard.AdminDashboardScreen
-import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
@@ -30,10 +34,9 @@ import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
 import bag.ezy.ezybagapp.feature.bookings.BookingFailedScreen
 import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
 import bag.ezy.ezybagapp.feature.contractorapproval.ContractorApprovalPendingScreen
-import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
+import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobDetailsScreen
 import bag.ezy.ezybagapp.feature.contractormain.ContractorMainContainer
 import bag.ezy.ezybagapp.feature.contractormain.ContractorTab
-import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobDetailsScreen
 import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
 import bag.ezy.ezybagapp.feature.main.MainContainer
 import bag.ezy.ezybagapp.feature.main.MainTab
@@ -43,11 +46,9 @@ import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
 import bag.ezy.ezybagapp.feature.payment.CheckoutScreen
 import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.feature.startpage.StartScreen
-import bag.ezy.ezybagapp.model.queries.AdminRepository
-import bag.ezy.ezybagapp.model.repository.FirebaseContractorRepository
 import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import kotlinx.coroutines.launch
-
+import androidx.compose.ui.backhandler.BackHandler
 
 enum class Screen {
     DevMenu,
@@ -57,8 +58,6 @@ enum class Screen {
     ContractorSignup,
     ContractorApprovalPending,
     ContractorHome,
-    ContractorJobs,
-
     ContractorJobDetails,
     Home,
     NewBookingDetails,
@@ -70,17 +69,16 @@ enum class Screen {
     BookingCanceled,
     Ratings,
     AdminDashboard,
-    ContractorsAdmin,
     DbTest,
+    Loading,
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun App() {
     EzybagTheme {
         var screen by rememberSaveable {
-            mutableStateOf(
-                if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn
-            )
+            mutableStateOf(Screen.Loading)
         }
 
         var customerTab by rememberSaveable {
@@ -137,6 +135,34 @@ fun App() {
             screen = Screen.NewBookingDetails
         }
 
+        fun goTo(role: UserRole) {
+            when (role) {
+                UserRole.SignedOut -> screen = Screen.Start
+                UserRole.Admin -> screen = Screen.AdminDashboard
+                UserRole.Contractor, UserRole.PendingContractor -> {
+                    contractorApproved = role == UserRole.Contractor
+                    contractorTab = ContractorTab.Home
+                    screen = Screen.ContractorHome
+                }
+                UserRole.Customer -> {
+                    customerTab = MainTab.Home
+                    screen = Screen.Home
+                }
+            }
+        }
+
+        fun routeCurrentUser() {
+            scope.launch {
+                resolveCurrentRole()
+                    .onSuccess { goTo(it) }
+                    .onFailure { authVm.signOut { screen = Screen.Start } }
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            if (screen == Screen.Loading) routeCurrentUser()
+        }
+
         Box(Modifier.fillMaxSize()) {
             when (screen) {
                 Screen.DevMenu -> DevMenu(
@@ -150,6 +176,13 @@ fun App() {
                         screen = target
                     }
                 )
+
+                Screen.Loading -> Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
 
                 Screen.Start -> StartScreen(
                     onCustomerSignUp = {
@@ -166,55 +199,15 @@ fun App() {
                 Screen.SignIn -> SignInScreen(
                     vm = authVm,
                     onSignedIn = {
-                        scope.launch {
-                            // 1. Check for an active administrator.
-                            val adminResult =
-                                AdminRepository().isCurrentUserAdmin()
-
-                            if (adminResult.isFailure) {
-                                // Do not silently route to customer screens
-                                // if admin verification fails.
-                                authVm.signOut {
-                                    screen = Screen.SignIn
-                                }
-                                return@launch
-                            }
-
-                            if (adminResult.getOrDefault(false)) {
-                                screen = Screen.AdminDashboard
-                                return@launch
-                            }
-
-                            // 2. If not an admin, check for a contractor.
-                            val contractorResult =
-                                FirebaseContractorRepository()
-                                    .getCurrentContractor()
-
-                            if (contractorResult.isFailure) {
-                                authVm.signOut {
-                                    screen = Screen.SignIn
-                                }
-                                return@launch
-                            }
-
-                            val contractor =
-                                contractorResult.getOrNull()
-
-                            if (contractor != null) {
-                                contractorApproved = contractor.isApproved
-                                contractorTab = ContractorTab.Home
-                                screen = Screen.ContractorHome
-                            } else {
-                                // 3. Otherwise, open the customer home.
-                                contractorApproved = false
-                                customerTab = MainTab.Home
-                                screen = Screen.Home
-                            }
-                        }
+                        routeCurrentUser()
                     },
                     onCreateAccount = {
                         authVm.clearMessage()
                         screen = Screen.SignUp
+                    },
+                    onBack = {
+                        authVm.clearMessage()
+                        screen = Screen.Start
                     }
                 )
 
@@ -222,7 +215,7 @@ fun App() {
                     vm = authVm,
                     onSignedUp = {
                         authVm.clearMessage()
-                        screen = Screen.SignIn
+                        routeCurrentUser()
                     },
                     onBackToSignIn = {
                         authVm.clearMessage()
@@ -235,40 +228,34 @@ fun App() {
                 Screen.ContractorSignup -> ContractorSignupScreen(
                     onSubmitted = {
                         screen = Screen.ContractorApprovalPending
+                    },
+                    onBack = {
+                        screen = Screen.Start
                     }
                 )
 
                 Screen.ContractorApprovalPending ->
                     ContractorApprovalPendingScreen(
                         onBackToSignIn = {
-                            screen = Screen.SignIn
+                            authVm.signOut { screen = Screen.SignIn }
                         }
                     )
 
                 Screen.ContractorHome -> ContractorMainContainer(
                     selectedTab = contractorTab,
                     isApproved = contractorApproved,
-
                     onTabSelected = {
                         contractorTab = it
                     },
-
                     onSignOut = {
                         authVm.signOut {
                             contractorTab = ContractorTab.Home
                             contractorApproved = false
                             selectedContractorJobId = null
-                            screen = Screen.SignIn
+                            screen = Screen.Start
                         }
                     },
 
-                    onOpenJob = { jobId ->
-                        selectedContractorJobId = jobId
-                        screen = Screen.ContractorJobDetails
-                    }
-                )
-
-                Screen.ContractorJobs -> ContractorJobsScreen(
                     onOpenJob = { jobId ->
                         selectedContractorJobId = jobId
                         screen = Screen.ContractorJobDetails
@@ -282,8 +269,6 @@ fun App() {
                         screen = Screen.ContractorHome
                     }
                 )
-
-
 
                 Screen.Home -> MainContainer(
                     selectedTab = customerTab,
@@ -300,13 +285,17 @@ fun App() {
                     onSignOut = {
                         authVm.signOut {
                             customerTab = MainTab.Home
-                            screen = Screen.SignIn
+                            screen = Screen.Start
                         }
                     }
                 )
 
                 Screen.NewBookingDetails -> NewBookingDetailsScreen(
                     vm = newBookingVm,
+                    onBack = {
+                        newBookingVm.reset()
+                        screen = Screen.Home
+                    },
                     onContinue = {
                         screen = Screen.NewBookingSchedule
                     }
@@ -404,16 +393,39 @@ fun App() {
                 Screen.AdminDashboard -> AdminDashboardScreen(
                     onOpenAccount = {
                         authVm.signOut {
-                            screen = Screen.SignIn
+                            screen = Screen.Start
                         }
                     }
                 )
+            }
 
-                Screen.ContractorsAdmin -> ContractorsAdminScreen(
-                    onBack = {
-                        screen = Screen.AdminDashboard
+            val backTargets = setOf(
+                Screen.SignIn, Screen.SignUp, Screen.ContractorSignup, Screen.NewBookingDetails,
+                Screen.NewBookingSchedule, Screen.Checkout, Screen.BookingDetails,
+                Screen.Ratings, Screen.BookingConfirmation, Screen.BookingFailed,
+                Screen.BookingCanceled, Screen.ContractorJobDetails,
+            )
+
+            BackHandler(enabled = screen in backTargets) {
+                when (screen) {
+                    Screen.SignIn, Screen.SignUp, Screen.ContractorSignup -> {
+                        authVm.clearMessage()
+                        screen = Screen.Start
                     }
-                )
+
+                    Screen.NewBookingDetails -> {
+                        newBookingVm.reset()
+                        screen = Screen.Home
+                    }
+                    Screen.NewBookingSchedule -> screen = Screen.NewBookingDetails
+                    Screen.Checkout -> screen = Screen.NewBookingSchedule
+                    Screen.Ratings -> screen = Screen.NewBookingDetails
+                    Screen.ContractorJobDetails -> {
+                        contractorTab = ContractorTab.Jobs
+                        screen = Screen.ContractorHome
+                    }
+                    else -> screen = Screen.Home
+                }
             }
 
             if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {

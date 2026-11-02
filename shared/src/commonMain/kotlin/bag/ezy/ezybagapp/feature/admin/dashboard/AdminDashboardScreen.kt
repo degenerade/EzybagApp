@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +32,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,7 +46,7 @@ import bag.ezy.ezybagapp.feature.admin.IssuesScreen
 import bag.ezy.ezybagapp.feature.admin.ReportsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsTab
-import bag.ezy.ezybagapp.feature.admin.Settings.SettingsScreen
+import bag.ezy.ezybagapp.feature.admin.settings.SettingsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.contractordetailsadmin.ContractorDetailsAdminScreen
 import bag.ezy.ezybagapp.ui.format.formatPrice
 import bag.ezy.ezybagapp.feature.admin.RevenueScreen
@@ -85,6 +86,7 @@ private fun AccountAvatar(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AdminDashboardScreen(
     onOpenAccount: () -> Unit = {},
@@ -106,6 +108,11 @@ fun AdminDashboardScreen(
             }
             delay(30_000L)
         }
+    }
+
+    BackHandler(enabled = subScreen != null) {
+        subScreen = if (subScreen == AdminSubScreen.ContractorDetails)
+            AdminSubScreen.Contractors else null
     }
 
     when (subScreen) {

@@ -1,4 +1,4 @@
-package bag.ezy.ezybagapp.feature.admin.Settings
+package bag.ezy.ezybagapp.feature.admin.settings
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
