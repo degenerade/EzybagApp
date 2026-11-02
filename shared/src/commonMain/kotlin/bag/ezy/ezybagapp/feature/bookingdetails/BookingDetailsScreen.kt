@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -61,6 +62,7 @@ import org.jetbrains.compose.resources.stringResource
 fun BookingDetailsScreen(
     bookingId: String,
     onBack: () -> Unit,
+    onRateContractor: ((bookingId: String, contractorId: String) -> Unit)? = null,
     vm: BookingDetailsViewModel = viewModel(key = "booking-$bookingId") {
         BookingDetailsViewModel(bookingId, AppContainer.bookingRepository, AppContainer.contractorRepository)
     }
@@ -70,7 +72,8 @@ fun BookingDetailsScreen(
         onBack = onBack,
         onCancelBooking = {
             vm.cancelBooking(onDeleted = onBack)
-        }
+        },
+        onRateContractor = onRateContractor
     )
 }
 
@@ -80,6 +83,7 @@ fun BookingDetailsContent(
     state: BookingDetailsUiState,
     onBack: () -> Unit,
     onCancelBooking: () -> Unit = {},
+    onRateContractor: ((bookingId: String, contractorId: String) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var showCancelDialog by remember { mutableStateOf(false) }
@@ -139,6 +143,22 @@ fun BookingDetailsContent(
                     paymentStatus = state.paymentStatus,
                     paymentMethod = state.paymentMethod
                 )
+                if (state.status.equals("Completed", ignoreCase = true) && onRateContractor != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onRateContractor(state.bookingId, state.contractorId)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "Rate contractor",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
                 ButtonsRow(
                     onCancelClick = { showCancelDialog = true }
                 )
@@ -548,18 +568,7 @@ private fun ButtonsRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-//        OutlinedButton(
-//            onClick = {},
-//            modifier = Modifier.weight(1f).height(40.dp),
-//            shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
-//        ) {
-//            Text(
-//                text = stringResource(Res.string.edit_booking),
-//                fontSize = 13.sp,
-//                fontWeight = FontWeight.SemiBold
-//            )
-//        }
-        OutlinedButton(
+        Button(
             onClick = onCancelClick,
             modifier = Modifier.weight(1f).height(40.dp),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)

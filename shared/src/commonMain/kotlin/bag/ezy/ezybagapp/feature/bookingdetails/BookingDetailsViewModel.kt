@@ -19,9 +19,13 @@ import kotlinx.coroutines.launch
 data class BookingDetailsUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
+    val bookingId: String = "",
+    val contractorId: String = "",
     val title: String = "",
     val volume: String = "",
     val status: String = "",
+    val paymentStatus: String = "Pending",
+    val paymentMethod: String = "Card",
     val date: String = "",
     val time: String = "",
     val description: String = "",
@@ -29,9 +33,9 @@ data class BookingDetailsUiState(
     val address: String = "",
     val accessInfo: String = "None provided",
     val instructions: String = "None provided",
+    val specialInstructions: String = "None provided",
     val price: String = "",
-    val paymentStatus: String = "Pending",
-    val paymentMethod: String = "Card",
+    val assigned: Boolean = false,
     val hasContractor: Boolean = false,
     val contractorName: String = "",
     val contractorInitial: String = "C",
@@ -103,6 +107,7 @@ class BookingDetailsViewModel(
                                         }
                                         val initial = displayName.firstOrNull()?.uppercase() ?: "C"
                                         state = baseState.copy(
+                                            assigned = true,
                                             hasContractor = true,
                                             contractorName = displayName,
                                             contractorInitial = initial,
@@ -114,6 +119,7 @@ class BookingDetailsViewModel(
                                         )
                                     } else {
                                         state = baseState.copy(
+                                            assigned = false,
                                             hasContractor = false,
                                             contractorError = "Contractor document '$contractorId' not found."
                                         )
@@ -121,12 +127,14 @@ class BookingDetailsViewModel(
                                 }
                                 .onFailure { exception ->
                                     state = baseState.copy(
+                                        assigned = false,
                                         hasContractor = false,
                                         contractorError = "Failed to fetch contractor ($contractorId): ${exception.message}"
                                     )
                                 }
                         } else {
                             state = baseState.copy(
+                                assigned = false,
                                 hasContractor = false,
                                 contractorError = null
                             )
@@ -141,20 +149,31 @@ class BookingDetailsViewModel(
         }
     }
 
-    private fun Booking.toUiState() = BookingDetailsUiState(
-        isLoading = false,
-        title = "${wasteDetails.type} waste",
-        volume = wasteDetails.estimatedVolume,
-        status = status,
-        date = formatDisplayDate(schedule.preferredDate),
-        time = formatDisplayTime(schedule.preferredTime),
-        description = wasteDetails.description,
-        bag = if (wasteDetails.bagRequired) "${wasteDetails.bagSize ?: ""} bag".trim() else "No bag required",
-        address = listOf(collectionAddress.street, collectionAddress.city, collectionAddress.postcode).filter { it.isNotBlank() }.joinToString(", "),
-        accessInfo = accessInfo.ifBlank { "None provided" },
-        instructions = specialInstructions.ifBlank { "None provided" },
-        price = if (pricing.estimatedQuote > 0) formatPrice(pricing.estimatedQuote) else "—",
-        paymentStatus = if (pricing.estimatedQuote > 0) "Paid" else "Pending",
-        paymentMethod = "Card"
-    )
+    private fun Booking.toUiState(): BookingDetailsUiState {
+        val effectiveStatus = if (paymentstatus.equals("pending", ignoreCase = true)) {
+            "Pending"
+        } else {
+            status
+        }
+
+        return BookingDetailsUiState(
+            isLoading = false,
+            bookingId = bookingId,
+            contractorId = contractorId ?: "",
+            title = "${wasteDetails.type} waste",
+            volume = wasteDetails.estimatedVolume,
+            status = effectiveStatus,
+            date = formatDisplayDate(schedule.preferredDate),
+            time = formatDisplayTime(schedule.preferredTime),
+            description = wasteDetails.description,
+            bag = if (wasteDetails.bagRequired) "${wasteDetails.bagSize ?: ""} bag".trim() else "No bag required",
+            address = listOf(collectionAddress.street, collectionAddress.city, collectionAddress.postcode).filter { it.isNotBlank() }.joinToString(", "),
+            accessInfo = accessInfo.ifBlank { "None provided" },
+            instructions = specialInstructions.ifBlank { "None provided" },
+            specialInstructions = specialInstructions.ifBlank { "None provided" },
+            price = if (pricing.estimatedQuote > 0) formatPrice(pricing.estimatedQuote) else "—",
+            paymentStatus = if (paymentstatus.isNotBlank()) paymentstatus.replaceFirstChar { it.uppercase() } else if (pricing.estimatedQuote > 0) "Paid" else "Pending",
+            paymentMethod = "Card"
+        )
+    }
 }
