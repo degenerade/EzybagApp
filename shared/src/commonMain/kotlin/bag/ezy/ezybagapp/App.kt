@@ -14,6 +14,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,6 +48,7 @@ import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.feature.startpage.StartScreen
 import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import kotlinx.coroutines.launch
+import androidx.compose.ui.backhandler.BackHandler
 
 enum class Screen {
     DevMenu,
@@ -71,6 +73,7 @@ enum class Screen {
     Loading,
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun App() {
     EzybagTheme {
@@ -394,6 +397,35 @@ fun App() {
                         }
                     }
                 )
+            }
+
+            val backTargets = setOf(
+                Screen.SignIn, Screen.SignUp, Screen.ContractorSignup, Screen.NewBookingDetails,
+                Screen.NewBookingSchedule, Screen.Checkout, Screen.BookingDetails,
+                Screen.Ratings, Screen.BookingConfirmation, Screen.BookingFailed,
+                Screen.BookingCanceled, Screen.ContractorJobDetails,
+            )
+
+            BackHandler(enabled = screen in backTargets) {
+                when (screen) {
+                    Screen.SignIn, Screen.SignUp, Screen.ContractorSignup -> {
+                        authVm.clearMessage()
+                        screen = Screen.Start
+                    }
+
+                    Screen.NewBookingDetails -> {
+                        newBookingVm.reset()
+                        screen = Screen.Home
+                    }
+                    Screen.NewBookingSchedule -> screen = Screen.NewBookingDetails
+                    Screen.Checkout -> screen = Screen.NewBookingSchedule
+                    Screen.Ratings -> screen = Screen.NewBookingDetails
+                    Screen.ContractorJobDetails -> {
+                        contractorTab = ContractorTab.Jobs
+                        screen = Screen.ContractorHome
+                    }
+                    else -> screen = Screen.Home
+                }
             }
 
             if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {

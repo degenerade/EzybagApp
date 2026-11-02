@@ -77,6 +77,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation("com.stripe:stripe-java:34.0.0")
             implementation("io.github.cdimascio:dotenv-java:3.2.0")
+            implementation("org.jetbrains.compose.ui:ui-backhandler:1.12.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
