@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.model.repository
 
 import bag.ezy.ezybagapp.model.data.Booking
@@ -8,6 +9,7 @@ import dev.gitlive.firebase.firestore.firestore
 import kotlin.time.Clock
 
 interface BookingRepository {
+
     suspend fun getBookings(
         customerId: String
     ): Result<List<Booking>>
@@ -38,16 +40,37 @@ interface BookingRepository {
         contractorId: String
     ): Result<Unit>
 
+    // Contractor accepts an available job.
+    suspend fun acceptAvailableBooking(
+        bookingId: String
+    ): Result<Unit>
+
+    // Contractor completes an assigned job.
+    suspend fun completeContractorJob(
+        bookingId: String
+    ): Result<Unit>
+
+    // Contractor progresses an assigned job through its permitted statuses.
+    suspend fun updateContractorJobStatus(
+        bookingId: String,
+        newStatus: String
+    ): Result<Unit>
+
     suspend fun getAllBookings(): Result<List<Booking>>
+
     suspend fun countAllBookings(): Result<Int>
+
     suspend fun deleteBooking(bookingId: String = ""): Result<Unit>
-    suspend fun getBookingsForContractor(contractorId: String): Result<List<Booking>>
+
+    suspend fun getBookingsForContractor(
+        contractorId: String
+    ): Result<List<Booking>>
+
     suspend fun updatePaymentStatus(
         bookingId: String,
         status: String
     ): Result<Unit>
 }
-
 
 class FirebaseBookingRepository : BookingRepository {
 
@@ -69,6 +92,7 @@ class FirebaseBookingRepository : BookingRepository {
     override suspend fun getBookings(
         customerId: String
     ): Result<List<Booking>> = runCatching {
+
         val uid = requireCurrentUserId()
 
         require(customerId == uid) {
@@ -156,6 +180,7 @@ class FirebaseBookingRepository : BookingRepository {
     override suspend fun createBooking(
         booking: Booking
     ): Result<String> = runCatching {
+
         val uid = requireCurrentUserId()
 
         require(booking.customerId == uid) {
@@ -193,7 +218,13 @@ class FirebaseBookingRepository : BookingRepository {
             bookingId = document.id,
             customerId = uid,
             contractorId = null,
-            status = if (booking.paymentstatus.equals("pending", ignoreCase = true)) "Pending" else booking.status.ifBlank { "Pending" },
+            status = if (
+                booking.paymentstatus.equals("pending", ignoreCase = true)
+            ) {
+                "Pending"
+            } else {
+                booking.status.ifBlank { "Pending" }
+            },
             paymentstatus = booking.paymentstatus.ifBlank { "pending" },
             assigned = false,
             createdAt = now
@@ -207,6 +238,7 @@ class FirebaseBookingRepository : BookingRepository {
         bookingId: String,
         status: String
     ): Result<Unit> = runCatching {
+
         require(bookingId.isNotBlank()) {
             "Booking ID is required."
         }
@@ -216,18 +248,22 @@ class FirebaseBookingRepository : BookingRepository {
                 "paymentstatus" to "pending",
                 "status" to "Pending"
             )
+
             "failed" -> mapOf(
                 "paymentstatus" to "failed",
                 "status" to "Failed"
             )
+
             "canceled", "cancelled" -> mapOf(
                 "paymentstatus" to "canceled",
                 "status" to "Cancelled"
             )
+
             "successful", "completed" -> mapOf(
                 "paymentstatus" to "successful",
                 "status" to "Upcoming"
             )
+
             else -> mapOf(
                 "paymentstatus" to status
             )
@@ -239,6 +275,7 @@ class FirebaseBookingRepository : BookingRepository {
     override suspend fun requestFinalQuote(
         booking: Booking
     ): Result<Unit> = runCatching {
+
         val uid = requireCurrentUserId()
 
         require(booking.bookingId.isNotBlank()) {
@@ -268,6 +305,7 @@ class FirebaseBookingRepository : BookingRepository {
     }
 
     override suspend fun getAllBookings(): Result<List<Booking>> = runCatching {
+
         val snapshot = bookingsCollection.get()
 
         snapshot.documents.mapNotNull { document ->
@@ -278,12 +316,19 @@ class FirebaseBookingRepository : BookingRepository {
     }
 
     override suspend fun countAllBookings(): Result<Int> = runCatching {
+
         val snapshot = bookingsCollection.get()
         snapshot.documents.size
     }
 
-    override suspend fun deleteBooking(bookingId: String): Result<Unit> = runCatching {
-        require(bookingId.isNotBlank()) { "Booking ID is required." }
+    override suspend fun deleteBooking(
+        bookingId: String
+    ): Result<Unit> = runCatching {
+
+        require(bookingId.isNotBlank()) {
+            "Booking ID is required."
+        }
+
         bookingsCollection.document(bookingId).delete()
     }
 
@@ -291,6 +336,7 @@ class FirebaseBookingRepository : BookingRepository {
         bookingId: String,
         contractorId: String
     ): Result<Unit> = runCatching {
+
         val customerUid = requireCurrentUserId()
 
         require(bookingId.isNotBlank()) {
@@ -347,12 +393,193 @@ class FirebaseBookingRepository : BookingRepository {
             "This booking is not available for contractor selection."
         }
 
-        // The Firestore rules must validate ownership,
-        // assignment, status, and contractor approval again.
+        // Firestore Rules validate ownership, assignment,
+        // status, and contractor approval again.
         bookingsCollection.document(bookingId).update(
             "contractorId" to contractorId,
             "status" to "Active",
             "assigned" to true
+        )
+    }
+
+    // Contractor accepts an available job.
+    override suspend fun acceptAvailableBooking(
+        bookingId: String
+    ): Result<Unit> = runCatching {
+
+        val contractorUid = requireCurrentUserId()
+
+        require(bookingId.isNotBlank()) {
+            "Booking ID is required."
+        }
+
+        // Confirm that the signed-in contractor exists and is approved.
+        val contractorDocument =
+            contractorsCollection.document(contractorUid).get()
+
+        require(contractorDocument.exists) {
+            "Contractor profile not found."
+        }
+
+        val contractor =
+            contractorDocument.data<Contractor>()
+
+        require(
+            contractor.uid == contractorUid &&
+                    contractor.isApproved
+        ) {
+            "Only approved contractors can accept jobs."
+        }
+        val currentBookings = getCurrentContractorBookings()
+            .getOrThrow()
+
+        val hasUnfinishedJob = currentBookings.any { currentBooking ->
+            currentBooking.status != "Completed"
+        }
+
+        require(!hasUnfinishedJob) {
+            "You must complete your current job before accepting another one."
+        }
+
+        // Check that the booking is still available.
+        val bookingDocument =
+            bookingsCollection.document(bookingId).get()
+
+        require(bookingDocument.exists) {
+            "Booking not found."
+        }
+
+        val booking =
+            bookingDocument.data<Booking>()
+
+        require(
+            booking.status == "Upcoming" &&
+                    booking.contractorId == null &&
+                    !booking.assigned
+        ) {
+            "Sorry, this job has already been taken or is no longer available."
+        }
+
+        // Assign the job to the signed-in contractor.
+        bookingsCollection.document(bookingId).update(
+            "contractorId" to contractorUid,
+            "status" to "Active",
+            "assigned" to true
+        )
+    }
+
+    // Contractor completes an assigned job.
+    override suspend fun completeContractorJob(
+        bookingId: String
+    ): Result<Unit> = runCatching {
+
+        val contractorUid = requireCurrentUserId()
+
+        require(bookingId.isNotBlank()) {
+            "Booking ID is required."
+        }
+
+        // Confirm that the contractor exists and is approved.
+        val contractorDocument =
+            contractorsCollection.document(contractorUid).get()
+
+        require(contractorDocument.exists) {
+            "Contractor profile not found."
+        }
+
+        val contractor =
+            contractorDocument.data<Contractor>()
+
+        require(
+            contractor.uid == contractorUid &&
+                    contractor.isApproved
+        ) {
+            "Only approved contractors can complete jobs."
+        }
+
+        // Load the booking and verify that it belongs to this contractor.
+        val bookingDocument =
+            bookingsCollection.document(bookingId).get()
+
+        require(bookingDocument.exists) {
+            "Booking not found."
+        }
+
+        val booking =
+            bookingDocument.data<Booking>()
+
+        require(booking.contractorId == contractorUid) {
+            "You are not assigned to this job."
+        }
+
+        require(
+            booking.status in listOf(
+                "Active",
+                "En Route",
+                "On Site"
+            )
+        ) {
+            "This job cannot be marked as completed."
+        }
+
+        // Only update the status; preserve all other booking details.
+        bookingsCollection.document(bookingId).update(
+            "status" to "Completed"
+        )
+    }
+
+    override suspend fun updateContractorJobStatus(
+        bookingId: String,
+        newStatus: String
+    ): Result<Unit> = runCatching {
+
+        val contractorUid = requireCurrentUserId()
+
+        require(bookingId.isNotBlank()) {
+            "Booking ID is required."
+        }
+
+        require(newStatus == "En Route" || newStatus == "On Site") {
+            "Invalid job status."
+        }
+
+        val contractorDocument =
+            contractorsCollection.document(contractorUid).get()
+
+        require(contractorDocument.exists) {
+            "Contractor profile not found."
+        }
+
+        val contractor = contractorDocument.data<Contractor>()
+
+        require(contractor.uid == contractorUid && contractor.isApproved) {
+            "Only approved contractors can update job status."
+        }
+
+        val bookingDocument =
+            bookingsCollection.document(bookingId).get()
+
+        require(bookingDocument.exists) {
+            "Booking not found."
+        }
+
+        val booking = bookingDocument.data<Booking>()
+
+        require(booking.contractorId == contractorUid) {
+            "You are not assigned to this job."
+        }
+
+        val validTransition =
+            (booking.status == "Active" && newStatus == "En Route") ||
+                    (booking.status == "En Route" && newStatus == "On Site")
+
+        require(validTransition) {
+            "Invalid status change from ${booking.status} to $newStatus."
+        }
+
+        // Only status changes, matching the existing Firestore security rules.
+        bookingsCollection.document(bookingId).update(
+            "status" to newStatus
         )
     }
 
@@ -373,6 +600,7 @@ class FirebaseBookingRepository : BookingRepository {
             }.getOrNull()
         }
     }
+
     override suspend fun getAvailableBookings():
             Result<List<Booking>> = runCatching {
 
@@ -383,7 +611,7 @@ class FirebaseBookingRepository : BookingRepository {
                 "status" equalTo "Upcoming"
             }
             .where {
-                "assigned" equalTo false
+                "contractorId" equalTo null
             }
             .get()
 
@@ -394,13 +622,22 @@ class FirebaseBookingRepository : BookingRepository {
         }
     }
 
-    override suspend fun getBookingsForContractor(contractorId: String): Result<List<Booking>> = runCatching {
-        require(contractorId.isNotBlank()) { "Contractor ID is required." }
+    override suspend fun getBookingsForContractor(
+        contractorId: String
+    ): Result<List<Booking>> = runCatching {
+
+        require(contractorId.isNotBlank()) {
+            "Contractor ID is required."
+        }
 
         bookingsCollection
             .where { "contractorId" equalTo contractorId }
             .get()
             .documents
-            .mapNotNull { document -> runCatching { document.data<Booking>() }.getOrNull() }
+            .mapNotNull { document ->
+                runCatching {
+                    document.data<Booking>()
+                }.getOrNull()
+            }
     }
 }

@@ -37,6 +37,7 @@ import bag.ezy.ezybagapp.feature.contractorapproval.ContractorApprovalPendingScr
 import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
 import bag.ezy.ezybagapp.feature.contractormain.ContractorMainContainer
 import bag.ezy.ezybagapp.feature.contractormain.ContractorTab
+import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobDetailsScreen
 import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
 import bag.ezy.ezybagapp.feature.main.MainContainer
 import bag.ezy.ezybagapp.feature.main.MainTab
@@ -60,6 +61,8 @@ enum class Screen {
     ContractorApprovalPending,
     ContractorHome,
     ContractorJobs,
+
+    ContractorJobDetails,
     Home,
     NewBookingDetails,
     NewBookingSchedule,
@@ -92,6 +95,10 @@ fun App() {
 
         var contractorApproved by rememberSaveable {
             mutableStateOf(false)
+        }
+
+        var selectedContractorJobId by rememberSaveable {
+            mutableStateOf<String?>(null)
         }
 
         var selectedBookingId by rememberSaveable {
@@ -241,14 +248,33 @@ fun App() {
                         authVm.signOut {
                             contractorTab = ContractorTab.Home
                             contractorApproved = false
+                            selectedContractorJobId = null
                             screen = Screen.Start
                         }
+                    },
+
+                    onOpenJob = { jobId ->
+                        selectedContractorJobId = jobId
+                        screen = Screen.ContractorJobDetails
                     }
                 )
 
                 Screen.ContractorJobs -> ContractorJobsScreen(
-                    onOpenJob = { }
+                    onOpenJob = { jobId ->
+                        selectedContractorJobId = jobId
+                        screen = Screen.ContractorJobDetails
+                    }
                 )
+
+                Screen.ContractorJobDetails -> ContractorJobDetailsScreen(
+                    bookingId = selectedContractorJobId ?: "",
+                    onBack = {
+                        contractorTab = ContractorTab.Jobs
+                        screen = Screen.ContractorHome
+                    }
+                )
+
+
 
                 Screen.Home -> MainContainer(
                     selectedTab = customerTab,

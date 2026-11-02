@@ -1,11 +1,14 @@
+
 package bag.ezy.ezybagapp.feature.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import bag.ezy.ezybagapp.di.AppContainer
@@ -161,12 +164,14 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
+        // Back to Dashboard
         TextButton(onClick = onBack) {
             Text("← Back to Dashboard")
         }
 
+        // Main heading changes depending on the current screen
         Text(
-            "Reports & Analytics",
+            text = if (generatedReport) selectedReport else "Available Reports",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -177,25 +182,12 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
             CircularProgressIndicator()
         }
 
+        // Error message
         if (errorMessage != null) {
             Text(
                 errorMessage!!,
                 color = MaterialTheme.colorScheme.error
             )
-
-            Button(onClick = {
-                when (selectedReport) {
-                    "Contractor Performance" ->
-                        generateContractorPerformanceReport()
-
-                    "Customer Activity" ->
-                        generateCustomerActivityReport()
-
-                    else -> loadBookings()
-                }
-            }) {
-                Text("Try Again")
-            }
         }
 
         // Show the selected report
@@ -203,6 +195,7 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
             generatedReport && selectedReport.isNotBlank()
         ) {
 
+            // Back to Reports
             TextButton(
                 onClick = {
                     generatedReport = false
@@ -210,44 +203,33 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
                     contractorReport = null
                     customerReport = null
                     selectedReport = ""
-                }
+                },
+                contentPadding = PaddingValues(
+                    horizontal = 0.dp,
+                    vertical = 4.dp
+                )
             ) {
-                Text("← Back to Reports")
+                Text(
+                    "← Back to Reports",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             when (selectedReport) {
 
                 "Booking Report" -> {
-                    Text(
-                        "Booking Report",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-
                     report?.let {
                         BookingStatistics(it)
                     }
                 }
 
                 "Contractor Performance" -> {
-                    Text(
-                        "Contractor Performance",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-
                     contractorReport?.let {
                         ContractorPerformanceStatistics(it)
                     }
                 }
 
                 "Customer Activity" -> {
-                    Text(
-                        "Customer Activity",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-
                     customerReport?.let {
                         CustomerActivityStatistics(it)
                     }
@@ -257,12 +239,6 @@ fun ReportsScreen(onBack: () -> Unit = {}) {
 
         // Show report categories
         else if (!isLoading && errorMessage == null && !generatedReport) {
-
-            Text(
-                "Available reports",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
 
             ReportCard(
                 title = "Booking Report",
@@ -415,9 +391,10 @@ private fun ContractorPerformanceStatistics(
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
+            // Total contractors
             Text(
                 "Total Contractors",
                 style = MaterialTheme.typography.titleMedium,
@@ -426,12 +403,13 @@ private fun ContractorPerformanceStatistics(
 
             Text(
                 report.totalContractors.toString(),
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary
             )
 
             HorizontalDivider()
 
+            // Job overview
             Text(
                 "Job Overview",
                 style = MaterialTheme.typography.titleLarge,
@@ -440,38 +418,29 @@ private fun ContractorPerformanceStatistics(
 
             Text(
                 "Assigned jobs: ${report.assignedJobs}",
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
                 "Completed jobs: ${report.completedJobs}",
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
-                "Completion Rate",
-                style = MaterialTheme.typography.titleMedium,
+                "Completion Rate: ${(report.completionRate * 10).toInt() / 10.0}%",
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                "${(report.completionRate * 10).toInt() / 10.0}%",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary
             )
 
             HorizontalDivider()
 
+            // Jobs by contractor
             Text(
                 "Jobs by Contractor",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                "Comparison of assigned and completed jobs for each contractor.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             if (report.contractorStats.isEmpty()) {
@@ -486,27 +455,52 @@ private fun ContractorPerformanceStatistics(
 
                 report.contractorStats.forEach { contractor ->
 
-                    Text(
-                        contractor.contractorName.ifBlank {
-                            "Unnamed Contractor"
-                        },
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    // Individual contractor section
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 1.dp
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
 
-                    BookingBar(
-                        title = "Assigned",
-                        value = contractor.assignedJobs,
-                        maxValue = maxValue
-                    )
+                            Text(
+                                contractor.contractorName.ifBlank {
+                                    "Unnamed Contractor"
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
 
-                    BookingBar(
-                        title = "Completed",
-                        value = contractor.completedJobs,
-                        maxValue = maxValue
-                    )
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
 
-                    HorizontalDivider()
+                            BookingBar(
+                                title = "Assigned",
+                                value = contractor.assignedJobs,
+                                maxValue = maxValue
+                            )
+
+                            BookingBar(
+                                title = "Completed",
+                                value = contractor.completedJobs,
+                                maxValue = maxValue
+                            )
+                        }
+                    }
                 }
             }
         }

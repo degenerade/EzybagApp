@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.admin.dashboard
 
 import androidx.compose.foundation.background
@@ -34,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,6 +48,7 @@ import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsTab
 import bag.ezy.ezybagapp.feature.admin.Settings.SettingsScreen
 import bag.ezy.ezybagapp.feature.admin.contractors.contractordetailsadmin.ContractorDetailsAdminScreen
 import bag.ezy.ezybagapp.ui.format.formatPrice
+import bag.ezy.ezybagapp.feature.admin.RevenueScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
@@ -58,6 +59,7 @@ private enum class AdminSubScreen {
     ContractorDetails,
     Issues,
     Reports,
+    Revenue,
     Settings
 }
 
@@ -108,7 +110,9 @@ fun AdminDashboardScreen(
 
     when (subScreen) {
         AdminSubScreen.Bookings -> BookingsScreen(onBack = { subScreen = null })
+
         AdminSubScreen.Customers -> CustomersAdminScreen(onBack = { subScreen = null })
+
         AdminSubScreen.Contractors -> ContractorsAdminScreen(
             initialTab = contractorInitialTab,
             onBack = { subScreen = null },
@@ -118,18 +122,27 @@ fun AdminDashboardScreen(
             },
             onTabChange = { contractorInitialTab = it }
         )
+
         AdminSubScreen.ContractorDetails -> ContractorDetailsAdminScreen(
             contractorId = selectedContractorId.orEmpty(),
-            onBack = { subScreen = AdminSubScreen.Contractors },
+            onBack = { subScreen = AdminSubScreen.Contractors }
         )
+
         AdminSubScreen.Issues -> IssuesScreen(
             onBack = { subScreen = null }
         )
+
         AdminSubScreen.Reports -> ReportsScreen(onBack = { subScreen = null })
+
+        AdminSubScreen.Revenue -> RevenueScreen(
+            onBack = { subScreen = null }
+        )
+
         AdminSubScreen.Settings -> SettingsScreen(
             onSignOut = onOpenAccount,
             onBack = { subScreen = null }
         )
+
         null -> {
             Column(
                 modifier = Modifier
@@ -140,9 +153,10 @@ fun AdminDashboardScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Dashboard header with user avatar in top-right corner
+                // Dashboard header
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primary,
@@ -156,27 +170,12 @@ fun AdminDashboardScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = state.userName.ifBlank { "Admin" },
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontSize = 25.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-
-                            Text(
-                                text = "Admin Page",
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
-                                fontSize = 15.sp
-                            )
-                        }
-
-                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            text = "Admin",
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontSize = 25.sp,
+                            fontWeight = FontWeight.Bold
+                        )
 
                         AccountAvatar(
                             onClick = { subScreen = AdminSubScreen.Settings }
@@ -222,7 +221,7 @@ fun AdminDashboardScreen(
                     MetricCard(
                         title = "Revenue",
                         value = state.totalRevenue?.let { formatPrice(it) } ?: "—",
-                        onClick = { subScreen = AdminSubScreen.Reports },
+                        onClick = { subScreen = AdminSubScreen.Revenue },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -260,6 +259,7 @@ fun AdminDashboardScreen(
                     } else {
                         "Unresolved Issues ($unresolvedCount)"
                     }
+
                     PendingActionCard(
                         text = issueText,
                         onClick = { subScreen = AdminSubScreen.Issues }
@@ -273,6 +273,7 @@ fun AdminDashboardScreen(
                     } else {
                         "$unverifiedCount contractors are waiting for approval"
                     }
+
                     PendingActionCard(
                         text = contractorText,
                         onClick = {

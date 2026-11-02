@@ -1,3 +1,4 @@
+
 package bag.ezy.ezybagapp.feature.contractormain
 
 import androidx.compose.foundation.layout.Box
@@ -44,6 +45,7 @@ fun ContractorMainContainer(
     isApproved: Boolean,
     onTabSelected: (ContractorTab) -> Unit,
     onSignOut: () -> Unit,
+    onOpenJob: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(
@@ -90,7 +92,8 @@ fun ContractorMainContainer(
                         selectedTab = selectedTab,
                         isApproved = isApproved,
                         onTabSelected = onTabSelected,
-                        onSignOut = onSignOut
+                        onSignOut = onSignOut,
+                        onOpenJob = onOpenJob
                     )
                 }
             }
@@ -124,6 +127,7 @@ fun ContractorMainContainer(
                     }
                 }
             ) { innerPadding ->
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -133,7 +137,8 @@ fun ContractorMainContainer(
                         selectedTab = selectedTab,
                         isApproved = isApproved,
                         onTabSelected = onTabSelected,
-                        onSignOut = onSignOut
+                        onSignOut = onSignOut,
+                        onOpenJob = onOpenJob
                     )
                 }
             }
@@ -146,15 +151,15 @@ private fun ContractorScreenContent(
     selectedTab: ContractorTab,
     isApproved: Boolean,
     onTabSelected: (ContractorTab) -> Unit,
-    onSignOut: () -> Unit
+    onSignOut: () -> Unit,
+    onOpenJob: (String) -> Unit
 ) {
     when (selectedTab) {
+
         ContractorTab.Home -> ContractorHomeScreen(
             onViewJobs = {
                 if (isApproved) {
-                    onTabSelected(
-                        ContractorTab.Jobs
-                    )
+                    onTabSelected(ContractorTab.Jobs)
                 }
             }
         )
@@ -162,7 +167,7 @@ private fun ContractorScreenContent(
         ContractorTab.Jobs -> {
             if (isApproved) {
                 ContractorJobsScreen(
-                    onOpenJob = { }
+                    onOpenJob = onOpenJob
                 )
             } else {
                 ContractorHomeScreen(
