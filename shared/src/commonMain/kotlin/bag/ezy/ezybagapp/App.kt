@@ -201,6 +201,10 @@ fun App() {
                     onCreateAccount = {
                         authVm.clearMessage()
                         screen = Screen.SignUp
+                    },
+                    onBack = {
+                        authVm.clearMessage()
+                        screen = Screen.Start
                     }
                 )
 
@@ -221,6 +225,9 @@ fun App() {
                 Screen.ContractorSignup -> ContractorSignupScreen(
                     onSubmitted = {
                         screen = Screen.ContractorApprovalPending
+                    },
+                    onBack = {
+                        screen = Screen.Start
                     }
                 )
 
