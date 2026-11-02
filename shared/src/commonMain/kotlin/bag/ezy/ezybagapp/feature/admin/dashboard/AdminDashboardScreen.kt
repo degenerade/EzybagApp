@@ -33,7 +33,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,6 +87,7 @@ private fun AccountAvatar(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AdminDashboardScreen(
     onOpenAccount: () -> Unit = {},
@@ -106,6 +109,11 @@ fun AdminDashboardScreen(
             }
             delay(30_000L)
         }
+    }
+
+    BackHandler(enabled = subScreen != null) {
+        subScreen = if (subScreen == AdminSubScreen.ContractorDetails)
+            AdminSubScreen.Contractors else null
     }
 
     when (subScreen) {
