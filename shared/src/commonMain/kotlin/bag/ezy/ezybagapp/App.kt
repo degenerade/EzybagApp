@@ -1,48 +1,443 @@
+
 package bag.ezy.ezybagapp
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import bag.ezy.ezybagapp.app.UserRole
+import bag.ezy.ezybagapp.app.resolveCurrentRole
+import bag.ezy.ezybagapp.dev.DEV_MENU_ENABLED
+import bag.ezy.ezybagapp.dev.DevMenu
+import bag.ezy.ezybagapp.dev.DevMenuButton
+import bag.ezy.ezybagapp.di.AppContainer
+import bag.ezy.ezybagapp.feature.admin.dashboard.AdminDashboardScreen
+import bag.ezy.ezybagapp.feature.auth.AuthViewModel
+import bag.ezy.ezybagapp.feature.auth.SignInScreen
+import bag.ezy.ezybagapp.feature.auth.SignUpScreen
+import bag.ezy.ezybagapp.feature.bookingdetails.BookingDetailsScreen
+import bag.ezy.ezybagapp.feature.bookings.BookingCanceledScreen
+import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
+import bag.ezy.ezybagapp.feature.bookings.BookingFailedScreen
+import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
+import bag.ezy.ezybagapp.feature.contractorapproval.ContractorApprovalPendingScreen
+import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobDetailsScreen
+import bag.ezy.ezybagapp.feature.contractormain.ContractorMainContainer
+import bag.ezy.ezybagapp.feature.contractormain.ContractorTab
+import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
+import bag.ezy.ezybagapp.feature.main.MainContainer
+import bag.ezy.ezybagapp.feature.main.MainTab
+import bag.ezy.ezybagapp.feature.newbooking.NewBookingDetailsScreen
+import bag.ezy.ezybagapp.feature.newbooking.NewBookingViewModel
+import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
+import bag.ezy.ezybagapp.feature.payment.CheckoutScreen
+import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
+import bag.ezy.ezybagapp.feature.startpage.StartScreen
+import bag.ezy.ezybagapp.ui.theme.EzybagTheme
+import kotlinx.coroutines.launch
+import androidx.compose.ui.backhandler.BackHandler
 
-import ezybagapp.shared.generated.resources.Res
-import ezybagapp.shared.generated.resources.compose_multiplatform
+enum class Screen {
+    DevMenu,
+    Start,
+    SignIn,
+    SignUp,
+    ContractorSignup,
+    ContractorApprovalPending,
+    ContractorHome,
+    ContractorJobDetails,
+    Home,
+    NewBookingDetails,
+    NewBookingSchedule,
+    Checkout,
+    BookingDetails,
+    BookingConfirmation,
+    BookingFailed,
+    BookingCanceled,
+    Ratings,
+    AdminDashboard,
+    DbTest,
+    Loading,
+}
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+    EzybagTheme {
+        var screen by rememberSaveable {
+            mutableStateOf(Screen.Loading)
+        }
+
+        var customerTab by rememberSaveable {
+            mutableStateOf(MainTab.Home)
+        }
+
+        var contractorTab by rememberSaveable {
+            mutableStateOf(ContractorTab.Home)
+        }
+
+        var contractorApproved by rememberSaveable {
+            mutableStateOf(false)
+        }
+
+        var selectedContractorJobId by rememberSaveable {
+            mutableStateOf<String?>(null)
+        }
+
+        var selectedBookingId by rememberSaveable {
+            mutableStateOf<String?>(null)
+        }
+
+        var confirmedBookingId by rememberSaveable {
+            mutableStateOf("")
+        }
+
+        var paymentErrorMessage by rememberSaveable {
+            mutableStateOf("")
+        }
+
+        var ratingsBookingId by rememberSaveable {
+            mutableStateOf("")
+        }
+
+        var ratingsContractorId by rememberSaveable {
+            mutableStateOf("")
+        }
+
+        val authVm = viewModel { AuthViewModel() }
+        val scope = rememberCoroutineScope()
+
+        val newBookingVm = viewModel {
+            NewBookingViewModel(
+                AppContainer.bookingRepository,
+                AppContainer.authRepository
+            )
+        }
+
+        fun startBooking(wasteType: String?) {
+            newBookingVm.reset()
+            wasteType?.let {
+                newBookingVm.onWasteTypeSelected(it)
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+            screen = Screen.NewBookingDetails
+        }
+
+        fun goTo(role: UserRole) {
+            when (role) {
+                UserRole.SignedOut -> screen = Screen.Start
+                UserRole.Admin -> screen = Screen.AdminDashboard
+                UserRole.Contractor, UserRole.PendingContractor -> {
+                    contractorApproved = role == UserRole.Contractor
+                    contractorTab = ContractorTab.Home
+                    screen = Screen.ContractorHome
                 }
+                UserRole.Customer -> {
+                    customerTab = MainTab.Home
+                    screen = Screen.Home
+                }
+            }
+        }
+
+        fun routeCurrentUser() {
+            scope.launch {
+                resolveCurrentRole()
+                    .onSuccess { goTo(it) }
+                    .onFailure { authVm.signOut { screen = Screen.Start } }
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            if (screen == Screen.Loading) routeCurrentUser()
+        }
+
+        Box(Modifier.fillMaxSize()) {
+            when (screen) {
+                Screen.DevMenu -> DevMenu(
+                    onOpen = { target ->
+                        if (
+                            target == Screen.BookingDetails &&
+                            selectedBookingId == null
+                        ) {
+                            selectedBookingId = "CC-10482"
+                        }
+                        screen = target
+                    }
+                )
+
+                Screen.Loading -> Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+
+                Screen.Start -> StartScreen(
+                    onCustomerSignUp = {
+                        screen = Screen.SignUp
+                    },
+                    onContractorSignUp = {
+                        screen = Screen.ContractorSignup
+                    },
+                    onSignIn = {
+                        screen = Screen.SignIn
+                    }
+                )
+
+                Screen.SignIn -> SignInScreen(
+                    vm = authVm,
+                    onSignedIn = {
+                        routeCurrentUser()
+                    },
+                    onCreateAccount = {
+                        authVm.clearMessage()
+                        screen = Screen.SignUp
+                    },
+                    onBack = {
+                        authVm.clearMessage()
+                        screen = Screen.Start
+                    }
+                )
+
+                Screen.SignUp -> SignUpScreen(
+                    vm = authVm,
+                    onSignedUp = {
+                        authVm.clearMessage()
+                        routeCurrentUser()
+                    },
+                    onBackToSignIn = {
+                        authVm.clearMessage()
+                        screen = Screen.SignIn
+                    }
+                )
+
+                Screen.DbTest -> DbScreen()
+
+                Screen.ContractorSignup -> ContractorSignupScreen(
+                    onSubmitted = {
+                        screen = Screen.ContractorApprovalPending
+                    },
+                    onBack = {
+                        screen = Screen.Start
+                    }
+                )
+
+                Screen.ContractorApprovalPending ->
+                    ContractorApprovalPendingScreen(
+                        onBackToSignIn = {
+                            authVm.signOut { screen = Screen.SignIn }
+                        }
+                    )
+
+                Screen.ContractorHome -> ContractorMainContainer(
+                    selectedTab = contractorTab,
+                    isApproved = contractorApproved,
+                    onTabSelected = {
+                        contractorTab = it
+                    },
+                    onSignOut = {
+                        authVm.signOut {
+                            contractorTab = ContractorTab.Home
+                            contractorApproved = false
+                            selectedContractorJobId = null
+                            screen = Screen.Start
+                        }
+                    },
+
+                    onOpenJob = { jobId ->
+                        selectedContractorJobId = jobId
+                        screen = Screen.ContractorJobDetails
+                    }
+                )
+
+                Screen.ContractorJobDetails -> ContractorJobDetailsScreen(
+                    bookingId = selectedContractorJobId ?: "",
+                    onBack = {
+                        contractorTab = ContractorTab.Jobs
+                        screen = Screen.ContractorHome
+                    }
+                )
+
+                Screen.Home -> MainContainer(
+                    selectedTab = customerTab,
+                    onTabSelected = {
+                        customerTab = it
+                    },
+                    onStartBooking = {
+                        startBooking(it)
+                    },
+                    onOpenBooking = { id ->
+                        selectedBookingId = id
+                        screen = Screen.BookingDetails
+                    },
+                    onSignOut = {
+                        authVm.signOut {
+                            customerTab = MainTab.Home
+                            screen = Screen.Start
+                        }
+                    }
+                )
+
+                Screen.NewBookingDetails -> NewBookingDetailsScreen(
+                    vm = newBookingVm,
+                    onBack = {
+                        newBookingVm.reset()
+                        screen = Screen.Home
+                    },
+                    onContinue = {
+                        screen = Screen.NewBookingSchedule
+                    }
+                )
+
+                Screen.NewBookingSchedule -> ScheduleBagQuoteScreen(
+                    vm = newBookingVm,
+                    onBack = {
+                        screen = Screen.NewBookingDetails
+                    },
+                    onBooked = { bookingId ->
+                        confirmedBookingId = bookingId
+                        screen = Screen.Checkout
+                    }
+                )
+
+                Screen.Checkout -> CheckoutScreen(
+                    bookingId = confirmedBookingId,
+                    price = newBookingVm.state.estimate?.toInt() ?: 0,
+                    onPaymentSuccess = {
+                        newBookingVm.reset()
+                        screen = Screen.BookingConfirmation
+                    },
+                    onPaymentFailed = { errorMsg ->
+                        paymentErrorMessage = errorMsg
+                        screen = Screen.BookingFailed
+                    },
+                    onPaymentCanceled = {
+                        screen = Screen.BookingCanceled
+                    },
+                    onBack = {
+                        screen = Screen.NewBookingSchedule
+                    }
+                )
+
+                Screen.BookingDetails -> BookingDetailsScreen(
+                    bookingId = selectedBookingId ?: "",
+                    onBack = {
+                        screen = Screen.Home
+                    },
+                    onRateContractor = { bId, cId ->
+                        ratingsBookingId = bId
+                        ratingsContractorId = cId
+                        screen = Screen.Ratings
+                    }
+                )
+
+                Screen.BookingConfirmation -> BookingConfirmationScreen(
+                    bookingId = confirmedBookingId,
+                    onViewBookings = {
+                        customerTab = MainTab.Bookings
+                        screen = Screen.Home
+                    },
+                    onReturnHome = {
+                        customerTab = MainTab.Home
+                        screen = Screen.Home
+                    },
+                    onBookAnother = {
+                        startBooking(null)
+                    }
+                )
+
+                Screen.BookingFailed -> BookingFailedScreen(
+                    onReturnHome = {
+                        customerTab = MainTab.Home
+                        screen = Screen.Home
+                    },
+                    onBookAnother = {
+                        startBooking(null)
+                    },
+                    message = paymentErrorMessage.ifBlank {
+                        "Something went wrong and your payment could not be processed."
+                    }
+                )
+
+                Screen.BookingCanceled -> BookingCanceledScreen(
+                    bookingId = confirmedBookingId,
+                    onReturnHome = {
+                        customerTab = MainTab.Home
+                        screen = Screen.Home
+                    },
+                    onBookAnother = {
+                        startBooking(null)
+                    }
+                )
+
+                Screen.Ratings -> RatingsScreen(
+                    bookingId = ratingsBookingId,
+                    contractorId = ratingsContractorId,
+                    onBack = {
+                        screen = Screen.BookingDetails
+                    }
+                )
+
+                Screen.AdminDashboard -> AdminDashboardScreen(
+                    onOpenAccount = {
+                        authVm.signOut {
+                            screen = Screen.Start
+                        }
+                    }
+                )
+            }
+
+            val backTargets = setOf(
+                Screen.SignIn, Screen.SignUp, Screen.ContractorSignup, Screen.NewBookingDetails,
+                Screen.NewBookingSchedule, Screen.Checkout, Screen.BookingDetails,
+                Screen.Ratings, Screen.BookingConfirmation, Screen.BookingFailed,
+                Screen.BookingCanceled, Screen.ContractorJobDetails,
+            )
+
+            BackHandler(enabled = screen in backTargets) {
+                when (screen) {
+                    Screen.SignIn, Screen.SignUp, Screen.ContractorSignup -> {
+                        authVm.clearMessage()
+                        screen = Screen.Start
+                    }
+
+                    Screen.NewBookingDetails -> {
+                        newBookingVm.reset()
+                        screen = Screen.Home
+                    }
+                    Screen.NewBookingSchedule -> screen = Screen.NewBookingDetails
+                    Screen.Checkout -> screen = Screen.NewBookingSchedule
+                    Screen.Ratings -> screen = Screen.NewBookingDetails
+                    Screen.ContractorJobDetails -> {
+                        contractorTab = ContractorTab.Jobs
+                        screen = Screen.ContractorHome
+                    }
+                    else -> screen = Screen.Home
+                }
+            }
+
+            if (DEV_MENU_ENABLED && screen != Screen.DevMenu) {
+                DevMenuButton(
+                    onClick = {
+                        screen = Screen.DevMenu
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .safeContentPadding()
+                        .padding(8.dp)
+                )
             }
         }
     }
