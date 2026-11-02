@@ -24,7 +24,6 @@ import bag.ezy.ezybagapp.dev.DevMenu
 import bag.ezy.ezybagapp.dev.DevMenuButton
 import bag.ezy.ezybagapp.di.AppContainer
 import bag.ezy.ezybagapp.feature.admin.dashboard.AdminDashboardScreen
-import bag.ezy.ezybagapp.feature.admin.contractors.ContractorsAdminScreen
 import bag.ezy.ezybagapp.feature.auth.AuthViewModel
 import bag.ezy.ezybagapp.feature.auth.SignInScreen
 import bag.ezy.ezybagapp.feature.auth.SignUpScreen
@@ -34,10 +33,9 @@ import bag.ezy.ezybagapp.feature.bookings.BookingConfirmationScreen
 import bag.ezy.ezybagapp.feature.bookings.BookingFailedScreen
 import bag.ezy.ezybagapp.feature.contractor.ContractorSignupScreen
 import bag.ezy.ezybagapp.feature.contractorapproval.ContractorApprovalPendingScreen
-import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobsScreen
+import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobDetailsScreen
 import bag.ezy.ezybagapp.feature.contractormain.ContractorMainContainer
 import bag.ezy.ezybagapp.feature.contractormain.ContractorTab
-import bag.ezy.ezybagapp.feature.contractorjobs.ContractorJobDetailsScreen
 import bag.ezy.ezybagapp.feature.dbdevpage.DbScreen
 import bag.ezy.ezybagapp.feature.main.MainContainer
 import bag.ezy.ezybagapp.feature.main.MainTab
@@ -47,8 +45,6 @@ import bag.ezy.ezybagapp.feature.newbooking.ScheduleBagQuoteScreen
 import bag.ezy.ezybagapp.feature.payment.CheckoutScreen
 import bag.ezy.ezybagapp.feature.ratings.RatingsScreen
 import bag.ezy.ezybagapp.feature.startpage.StartScreen
-import bag.ezy.ezybagapp.model.queries.AdminRepository
-import bag.ezy.ezybagapp.model.repository.FirebaseContractorRepository
 import bag.ezy.ezybagapp.ui.theme.EzybagTheme
 import kotlinx.coroutines.launch
 
@@ -60,8 +56,6 @@ enum class Screen {
     ContractorSignup,
     ContractorApprovalPending,
     ContractorHome,
-    ContractorJobs,
-
     ContractorJobDetails,
     Home,
     NewBookingDetails,
@@ -73,7 +67,6 @@ enum class Screen {
     BookingCanceled,
     Ratings,
     AdminDashboard,
-    ContractorsAdmin,
     DbTest,
     Loading,
 }
@@ -259,13 +252,6 @@ fun App() {
                     }
                 )
 
-                Screen.ContractorJobs -> ContractorJobsScreen(
-                    onOpenJob = { jobId ->
-                        selectedContractorJobId = jobId
-                        screen = Screen.ContractorJobDetails
-                    }
-                )
-
                 Screen.ContractorJobDetails -> ContractorJobDetailsScreen(
                     bookingId = selectedContractorJobId ?: "",
                     onBack = {
@@ -273,8 +259,6 @@ fun App() {
                         screen = Screen.ContractorHome
                     }
                 )
-
-
 
                 Screen.Home -> MainContainer(
                     selectedTab = customerTab,
@@ -401,12 +385,6 @@ fun App() {
                         authVm.signOut {
                             screen = Screen.Start
                         }
-                    }
-                )
-
-                Screen.ContractorsAdmin -> ContractorsAdminScreen(
-                    onBack = {
-                        screen = Screen.AdminDashboard
                     }
                 )
             }
