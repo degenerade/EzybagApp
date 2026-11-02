@@ -50,5 +50,5 @@ data class Booking(
     val contractorCurrentLocation: GeoLocation? = null,
     val disposalDetails: DisposalDetails? = null,
     val assigned: Boolean = false,
-    val createdAt: String = "" //having such info is useful :D
+    val createdAt: String = "" // having such info is useful :D
 )
