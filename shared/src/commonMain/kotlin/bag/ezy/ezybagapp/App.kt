@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -15,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import bag.ezy.ezybagapp.app.UserRole
+import bag.ezy.ezybagapp.app.resolveCurrentRole
 import bag.ezy.ezybagapp.dev.DEV_MENU_ENABLED
 import bag.ezy.ezybagapp.dev.DevMenu
 import bag.ezy.ezybagapp.dev.DevMenuButton
@@ -68,15 +72,14 @@ enum class Screen {
     AdminDashboard,
     ContractorsAdmin,
     DbTest,
+    Loading,
 }
 
 @Composable
 fun App() {
     EzybagTheme {
         var screen by rememberSaveable {
-            mutableStateOf(
-                if (DEV_MENU_ENABLED) Screen.DevMenu else Screen.SignIn
-            )
+            mutableStateOf(Screen.Loading)
         }
 
         var customerTab by rememberSaveable {
@@ -129,6 +132,34 @@ fun App() {
             screen = Screen.NewBookingDetails
         }
 
+        fun goTo(role: UserRole) {
+            when (role) {
+                UserRole.SignedOut -> screen = Screen.Start
+                UserRole.Admin -> screen = Screen.AdminDashboard
+                UserRole.Contractor, UserRole.PendingContractor -> {
+                    contractorApproved = role == UserRole.Contractor
+                    contractorTab = ContractorTab.Home
+                    screen = Screen.ContractorHome
+                }
+                UserRole.Customer -> {
+                    customerTab = MainTab.Home
+                    screen = Screen.Home
+                }
+            }
+        }
+
+        fun routeCurrentUser() {
+            scope.launch {
+                resolveCurrentRole()
+                    .onSuccess { goTo(it) }
+                    .onFailure { authVm.signOut { screen = Screen.Start } }
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            if (screen == Screen.Loading) routeCurrentUser()
+        }
+
         Box(Modifier.fillMaxSize()) {
             when (screen) {
                 Screen.DevMenu -> DevMenu(
@@ -142,6 +173,13 @@ fun App() {
                         screen = target
                     }
                 )
+
+                Screen.Loading -> Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
 
                 Screen.Start -> StartScreen(
                     onCustomerSignUp = {
@@ -158,51 +196,7 @@ fun App() {
                 Screen.SignIn -> SignInScreen(
                     vm = authVm,
                     onSignedIn = {
-                        scope.launch {
-                            // 1. Check for an active administrator.
-                            val adminResult =
-                                AdminRepository().isCurrentUserAdmin()
-
-                            if (adminResult.isFailure) {
-                                // Do not silently route to customer screens
-                                // if admin verification fails.
-                                authVm.signOut {
-                                    screen = Screen.SignIn
-                                }
-                                return@launch
-                            }
-
-                            if (adminResult.getOrDefault(false)) {
-                                screen = Screen.AdminDashboard
-                                return@launch
-                            }
-
-                            // 2. If not an admin, check for a contractor.
-                            val contractorResult =
-                                FirebaseContractorRepository()
-                                    .getCurrentContractor()
-
-                            if (contractorResult.isFailure) {
-                                authVm.signOut {
-                                    screen = Screen.SignIn
-                                }
-                                return@launch
-                            }
-
-                            val contractor =
-                                contractorResult.getOrNull()
-
-                            if (contractor != null) {
-                                contractorApproved = contractor.isApproved
-                                contractorTab = ContractorTab.Home
-                                screen = Screen.ContractorHome
-                            } else {
-                                // 3. Otherwise, open the customer home.
-                                contractorApproved = false
-                                customerTab = MainTab.Home
-                                screen = Screen.Home
-                            }
-                        }
+                        routeCurrentUser()
                     },
                     onCreateAccount = {
                         authVm.clearMessage()
@@ -214,7 +208,7 @@ fun App() {
                     vm = authVm,
                     onSignedUp = {
                         authVm.clearMessage()
-                        screen = Screen.SignIn
+                        routeCurrentUser()
                     },
                     onBackToSignIn = {
                         authVm.clearMessage()
@@ -233,7 +227,7 @@ fun App() {
                 Screen.ContractorApprovalPending ->
                     ContractorApprovalPendingScreen(
                         onBackToSignIn = {
-                            screen = Screen.SignIn
+                            authVm.signOut { screen = Screen.SignIn }
                         }
                     )
 
@@ -247,7 +241,7 @@ fun App() {
                         authVm.signOut {
                             contractorTab = ContractorTab.Home
                             contractorApproved = false
-                            screen = Screen.SignIn
+                            screen = Screen.Start
                         }
                     }
                 )
@@ -271,13 +265,17 @@ fun App() {
                     onSignOut = {
                         authVm.signOut {
                             customerTab = MainTab.Home
-                            screen = Screen.SignIn
+                            screen = Screen.Start
                         }
                     }
                 )
 
                 Screen.NewBookingDetails -> NewBookingDetailsScreen(
                     vm = newBookingVm,
+                    onBack = {
+                        newBookingVm.reset()
+                        screen = Screen.Home
+                    },
                     onContinue = {
                         screen = Screen.NewBookingSchedule
                     }
@@ -375,7 +373,7 @@ fun App() {
                 Screen.AdminDashboard -> AdminDashboardScreen(
                     onOpenAccount = {
                         authVm.signOut {
-                            screen = Screen.SignIn
+                            screen = Screen.Start
                         }
                     }
                 )
